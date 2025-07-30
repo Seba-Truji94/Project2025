@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nuestros Productos - Dulce Bias{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-5" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-12 text-center">
+                <h1 class="display-4 fw-bold text-dark mb-3">Nuestros Productos</h1>
+                <p class="lead text-dark-50">Descubre nuestra deliciosa variedad de galletas artesanales</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filters Section -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="{% url 'shop:product_list' %}" 
+                       class="btn btn-outline-primary {% if not current_category %}active{% endif %}">
+                        Todos los Productos
+                    </a>
+                    {% for category in categories %}
+                    <a href="{% url 'shop:category_detail' category.slug %}" 
+                       class="btn btn-outline-primary {% if category == current_category %}active{% endif %}">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products Grid -->
+<section class="py-5">
+    <div class="container">
+        {% if current_category %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="h3 mb-3">{{ current_category.name }}</h2>
+                <p class="text-muted">{{ current_category.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            {% for product in products %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card product-card h-100 shadow-sm">
+                    <div class="card-img-top-wrapper" style="height: 250px; overflow: hidden;">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" 
+                             class="card-img-top" 
+                             alt="{{ product.name }}"
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                            <i class="fas fa-cookie-bite fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-2">
+                            <small class="badge bg-secondary">{{ product.category.name }}</small>
+                            {% if product.featured %}
+                            <small class="badge bg-warning text-dark">Destacado</small>
+                            {% endif %}
+                        </div>
+                        
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted flex-grow-1">
+                            {{ product.description|truncatewords:15 }}
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <div>
+                                <span class="h5 text-primary fw-bold">{{ product.formatted_price }}</span>
+                                <br>
+                                <small class="text-muted">{{ product.weight }}g</small>
+                            </div>
+                            
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'shop:product_detail' product.slug %}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if product.is_in_stock %}
+                                <button class="btn btn-primary btn-sm add-to-cart" 
+                                        data-product-id="{{ product.id }}">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if not product.is_in_stock %}
+                        <small class="text-danger mt-1">
+                            <i class="fas fa-exclamation-triangle"></i> Agotado
+                        </small>
+                        {% else %}
+                        <small class="text-success mt-1">
+                            <i class="fas fa-check-circle"></i> {{ product.stock }} disponibles
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-cookie-bite fa-4x text-muted mb-3"></i>
+                    <h3 class="text-muted">No hay productos disponibles</h3>
+                    <p class="text-muted">Pronto tendremos deliciosas galletas para ti.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <nav aria-label="Navegación de productos">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">&laquo; Primera</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funcionalidad para agregar al carrito
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            
+            // Aquí puedes agregar la lógica AJAX para agregar al carrito
+            // Por ahora, mostraremos un mensaje
+            this.innerHTML = '<i class="fas fa-check"></i>';
+            this.classList.remove('btn-primary');
+            this.classList.add('btn-success');
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-shopping-cart"></i>';
+                this.classList.remove('btn-success');
+                this.classList.add('btn-primary');
+            }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

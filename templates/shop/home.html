@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Este es el contenido de la página original convertido a Django -->
+<section id="inicio" class="hero">
+    <div class="hero-background">
+        <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-badges">
+            <span class="badge">⭐ #1 Más Vendidas</span>
+            <span class="badge">🏆 Premio Calidad 2024</span>
+        </div>
+        <h1 class="hero-title">
+            Las Galletas Más <span class="highlight">Irresistibles</span> de Chile
+        </h1>
+        <p class="hero-subtitle">
+            Ingredientes 100% naturales chilenos • Recetas familiares • Horneadas diariamente en Valparaíso
+        </p>
+        <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-number">25,000+</span>
+                <span class="stat-label">Clientes Felices</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">4.8/5</span>
+                <span class="stat-label">⭐ Calificación</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">12+</span>
+                <span class="stat-label">Variedades</span>
+            </div>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'shop:product_list' %}" class="cta-primary">
+                <span>🛒 Comprar Ahora</span>
+                <small>Envío gratis disponible</small>
+            </a>
+            <button class="cta-secondary">
+                <i class="fas fa-play"></i>
+                Ver Proceso Artesanal
+            </button>
+        </div>
+        <div class="hero-trust">
+            <div class="trust-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>Compra 100% Segura</span>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-undo"></i>
+                <span>Garantía de Satisfacción</span>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-truck"></i>
+                <span>Entrega Rápida</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-image">
+        <div class="floating-cookie cookie-1">🍪</div>
+        <div class="floating-cookie cookie-2">🧈</div>
+        <div class="floating-cookie cookie-3">🍫</div>
+        <div class="floating-cookie cookie-4">🥜</div>
+    </div>
+</section>
+
+<!-- Social Proof Section -->
+<section class="social-proof">
+    <div class="container">
+        <div class="social-proof-content">
+            <div class="social-item">
+                <span class="social-number">25,000+</span>
+                <span class="social-text">Galletas vendidas este mes</span>
+            </div>
+            <div class="social-item">
+                <span class="social-number">4.8★</span>
+                <span class="social-text">Calificación promedio</span>
+            </div>
+            <div class="social-item">
+                <span class="social-number">96%</span>
+                <span class="social-text">Clientes recompran</span>
+            </div>
+            <div class="social-item">
+                <span class="social-number">2-3 días</span>
+                <span class="social-text">Entrega promedio</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="productos" class="products">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-subtitle">Nuestras Especialidades</span>
+            <h2 class="section-title">Galletas <span class="highlight">Premium</span></h2>
+            <p class="section-description">Cada galleta es una obra maestra horneada con pasión</p>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="product-filters">
+            <a href="{% url 'shop:product_list' %}" class="filter-btn active">Todas</a>
+            <a href="{% url 'shop:product_list' %}?category=bestseller" class="filter-btn">🔥 Más Vendidas</a>
+            <a href="{% url 'shop:product_list' %}?category=premium" class="filter-btn">⭐ Premium</a>
+            <a href="{% url 'shop:product_list' %}?category=healthy" class="filter-btn">🌱 Saludables</a>
+        </div>
+        
+        <div class="product-grid" id="product-grid">
+            {% for product in featured_products %}
+            <div class="product-card">
+                <div class="product-image">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="placeholder-image">🍪</div>
+                    {% endif %}
+                    <div class="product-badges">
+                        {% if product.product_type == 'bestseller' %}
+                            <span class="badge badge-bestseller">🔥 Más Vendida</span>
+                        {% elif product.product_type == 'premium' %}
+                            <span class="badge badge-premium">⭐ Premium</span>
+                        {% elif product.product_type == 'healthy' %}
+                            <span class="badge badge-healthy">🌱 Saludable</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.description|truncatechars:80 }}</p>
+                    <div class="product-price">
+                        <span class="price">{{ product.formatted_price }}</span>
+                        <small>{{ product.weight }}g</small>
+                    </div>
+                    <div class="product-actions">
+                        <a href="{% url 'shop:product_detail' product.slug %}" class="btn-view">Ver Detalles</a>
+                        <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="add-to-cart-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-add-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                Agregar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p>No hay productos destacados disponibles.</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Load More Button -->
+        <div class="load-more-container">
+            <a href="{% url 'shop:product_list' %}" class="load-more-btn">
+                <span>Ver Todos los Productos</span>
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Incluir el resto del contenido de la página original -->
+<!-- Testimonials Section -->
+<section id="testimonios" class="testimonials">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-subtitle">Lo que dicen nuestros clientes</span>
+            <h2 class="section-title">Reseñas <span class="highlight">Reales</span></h2>
+        </div>
+        
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-rating">
+                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                    <span class="rating-text">5.0</span>
+                </div>
+                <p class="testimonial-text">"¡Increíbles! Pedí para mi cumpleaños y todos quedaron fascinados. La textura perfecta y el sabor auténtico chileno."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">M</div>
+                    <div class="author-info">
+                        <h4>María González</h4>
+                        <span>Cliente verificada - Viña del Mar</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-rating">
+                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                    <span class="rating-text">5.0</span>
+                </div>
+                <p class="testimonial-text">"Llevo 3 meses comprando aquí. La calidad es consistente y el servicio excelente. Las mejores galletas de Santiago."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">C</div>
+                    <div class="author-info">
+                        <h4>Carlos Ruiz</h4>
+                        <span>Cliente frecuente - Santiago</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-rating">
+                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                    <span class="rating-text">5.0</span>
+                </div>
+                <p class="testimonial-text">"Perfectas para el once. Llegaron súper frescas y el empaque es hermoso. ¡Volveré a comprar sin duda!"</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">A</div>
+                    <div class="author-info">
+                        <h4>Ana López</h4>
+                        <span>Nueva cliente - Valparaíso</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why-choose-us">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">¿Por qué elegir <span class="highlight">Dulces Bias</span>?</h2>
+        </div>
+        
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-icon">🌱</div>
+                <h3>Ingredientes Premium</h3>
+                <p>Solo utilizamos ingredientes naturales de la más alta calidad, sin conservadores artificiales.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <div class="benefit-icon">👩‍🍳</div>
+                <h3>Recetas Artesanales</h3>
+                <p>Cada galleta se hornea siguiendo recetas familiares transmitidas por generaciones.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <div class="benefit-icon">🚚</div>
+                <h3>Entrega en Todo Chile</h3>
+                <p>Envío a Santiago, V Región y todo Chile. Galletas frescas directo desde Valparaíso a tu puerta.</p>
+            </div>
+            
+            <div class="benefit-card">
+                <div class="benefit-icon">💎</div>
+                <h3>Calidad Garantizada</h3>
+                <p>100% garantía de satisfacción. Si no te encantan, te devolvemos tu dinero.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contacto" class="contact">
+    <div class="container">
+        <div class="contact-content">
+            <div class="contact-info">
+                <div class="section-header">
+                    <span class="section-subtitle">Contáctanos</span>
+                    <h2 class="section-title">¿Tienes <span class="highlight">Preguntas</span>?</h2>
+                    <p>Estamos aquí para ayudarte con cualquier duda</p>
+                </div>
+                
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <div class="method-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="method-info">
+                            <h4>Teléfono</h4>
+                            <p>+56 9 8765 4321</p>
+                            <small>Lun-Vie 9:00-18:00</small>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <div class="method-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="method-info">
+                            <h4>Email</h4>
+                            <p>info@dulcesbias.com</p>
+                            <small>Respuesta en 2-4 horas</small>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <div class="method-icon">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <div class="method-info">
+                            <h4>WhatsApp</h4>
+                            <p>+56 9 1234 5678</p>
+                            <small>Atención inmediata</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            
+            <div class="contact-form">
+                <form class="quick-contact" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Tu email" required>
+                    </div>
+                    <div class="form-group">
+                        <select name="subject" required>
+                            <option value="">Tipo de consulta</option>
+                            <option value="pedido">Información de pedido</option>
+                            <option value="producto">Consulta de producto</option>
+                            <option value="envio">Información de envío</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="message" placeholder="Tu mensaje" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Enviar Mensaje</span>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
