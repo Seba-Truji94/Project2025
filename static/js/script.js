@@ -804,6 +804,7 @@ class CookieShopApp {
 
     setupNavbarScroll() {
         const navbar = document.querySelector('.navbar');
+        const body = document.body;
         let lastScrollY = window.scrollY;
         
         window.addEventListener('scroll', () => {
@@ -811,8 +812,10 @@ class CookieShopApp {
             
             if (currentScrollY > 100) {
                 navbar.classList.add('scrolled');
+                body.classList.add('navbar-scrolled');
             } else {
                 navbar.classList.remove('scrolled');
+                body.classList.remove('navbar-scrolled');
             }
             
             // Hide/show navbar on scroll

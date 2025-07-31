@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Perfil - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="profile-header mb-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Perfil
+                    </a>
+                    <h1 class="h3 mb-0">Editar Mi Perfil</h1>
+                </div>
+                <p class="text-muted">Actualiza tu información personal y preferencias</p>
+            </div>
+
+            <!-- Form -->
+            <form method="post" enctype="multipart/form-data" class="profile-edit-form">
+                {% csrf_token %}
+                
+                <!-- Avatar Section -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-camera text-primary"></i>
+                            Foto de Perfil
+                        </h5>
+                        
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <div class="current-avatar">
+                                    {% if user.profile.avatar %}
+                                        <img src="{{ user.profile.avatar.url }}" 
+                                             alt="Avatar actual" 
+                                             class="rounded-circle"
+                                             style="width: 80px; height: 80px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 80px; height: 80px; background: var(--primary-blue); color: white; font-size: 2rem;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="mb-3">
+                                    {{ profile_form.avatar.label_tag }}
+                                    {{ profile_form.avatar }}
+                                    {% if profile_form.avatar.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in profile_form.avatar.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-user text-primary"></i>
+                            Información Personal
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ user_form.first_name.label_tag }}
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in user_form.first_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ user_form.last_name.label_tag }}
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in user_form.last_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ user_form.email.label_tag }}
+                                {{ user_form.email }}
+                                {% if user_form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in user_form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ profile_form.phone.label_tag }}
+                                {{ profile_form.phone }}
+                                {% if profile_form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in profile_form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ profile_form.birth_date.label_tag }}
+                            {{ profile_form.birth_date }}
+                            {% if profile_form.birth_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in profile_form.birth_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-map-marker-alt text-primary"></i>
+                            Dirección Principal
+                        </h5>
+                        
+                        <div class="mb-3">
+                            {{ profile_form.address.label_tag }}
+                            {{ profile_form.address }}
+                            {% if profile_form.address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in profile_form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ profile_form.city.label_tag }}
+                                {{ profile_form.city }}
+                                {% if profile_form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in profile_form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ profile_form.region.label_tag }}
+                                {{ profile_form.region }}
+                                {% if profile_form.region.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in profile_form.region.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ profile_form.postal_code.label_tag }}
+                            {{ profile_form.postal_code }}
+                            {% if profile_form.postal_code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in profile_form.postal_code.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-cog text-primary"></i>
+                            Preferencias
+                        </h5>
+                        
+                        <div class="form-check mb-3">
+                            {{ profile_form.newsletter_subscription }}
+                            {{ profile_form.newsletter_subscription.label_tag }}
+                            <div class="form-text">
+                                Recibir noticias sobre nuevos productos y promociones especiales
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ profile_form.receives_offers }}
+                            {{ profile_form.receives_offers.label_tag }}
+                            <div class="form-text">
+                                Recibir ofertas personalizadas y descuentos exclusivos
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-3 justify-content-between">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-edit-form .card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+}
+
+.profile-edit-form .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    color: var(--black);
+    font-weight: 600;
+}
+
+.avatar-placeholder {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink)) !important;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 12px 16px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--primary-blue-dark);
+    transform: translateY(-2px);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+</style>
+{% endblock %}

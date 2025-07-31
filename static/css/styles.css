@@ -63,12 +63,19 @@ body {
     color: var(--black);
     background-color: var(--white);
     overflow-x: hidden;
+    padding-top: 140px; /* Espacio para announcement bar + navbar */
 }
 
 .container {
     max-width: var(--container-max-width);
     margin: 0 auto;
     padding: 0 1.5rem;
+}
+
+/* Ajuste para main para evitar solapamiento con navbar fijo */
+main {
+    position: relative;
+    z-index: 1;
 }
 
 /* Typography System */
@@ -165,6 +172,11 @@ h1, h2, h3, h4, h5, h6 {
 .navbar.scrolled {
     top: 0;
     box-shadow: var(--shadow-md);
+}
+
+/* Ajuste del body cuando el navbar está scrolled */
+body.navbar-scrolled {
+    padding-top: 100px; /* Solo espacio para navbar sin announcement bar */
 }
 
 .nav-container {
