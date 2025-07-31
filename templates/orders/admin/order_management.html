@@ -59,6 +59,28 @@
             </div>
         </div>
         <div class="col-md-2">
+            <div class="stat-card bg-success">
+                <div class="stat-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.paid_orders }}</h3>
+                    <p>Pagados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-card bg-danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.unpaid_orders }}</h3>
+                    <p>Sin Pagar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
             <div class="stat-card bg-info">
                 <div class="stat-icon">
                     <i class="fas fa-cogs"></i>
@@ -71,17 +93,6 @@
         </div>
         <div class="col-md-2">
             <div class="stat-card bg-secondary">
-                <div class="stat-icon">
-                    <i class="fas fa-shipping-fast"></i>
-                </div>
-                <div class="stat-content">
-                    <h3>{{ stats.shipped_orders }}</h3>
-                    <p>Enviados</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="stat-card bg-success">
                 <div class="stat-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
@@ -97,12 +108,23 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="status" class="form-label">Estado</label>
                     <select name="status" id="status" class="form-select">
                         <option value="all" {% if current_filters.status == 'all' %}selected{% endif %}>Todos los Estados</option>
                         {% for value, display in status_choices %}
                             <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                                {{ display }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="payment_status" class="form-label">Estado de Pago</label>
+                    <select name="payment_status" id="payment_status" class="form-select">
+                        <option value="all" {% if current_filters.payment_status == 'all' %}selected{% endif %}>Todos los Pagos</option>
+                        {% for value, display in payment_status_choices %}
+                            <option value="{{ value }}" {% if current_filters.payment_status == value %}selected{% endif %}>
                                 {{ display }}
                             </option>
                         {% endfor %}
@@ -195,9 +217,10 @@
                                 <th>Pedido</th>
                                 <th>Cliente</th>
                                 <th>Estado</th>
+                                <th>Estado Pago</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
-                                <th width="120px">Acciones</th>
+                                <th width="150px">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -239,12 +262,22 @@
                                     </span>
                                 </td>
                                 <td>
+                                    <span class="badge payment-badge payment-{{ order.payment_status }}">
+                                        {% if order.payment_status == 'pending' %}
+                                            <i class="fas fa-clock text-warning"></i> Pendiente
+                                        {% elif order.payment_status == 'paid' %}
+                                            <i class="fas fa-check-circle text-success"></i> Pagado
+                                        {% elif order.payment_status == 'failed' %}
+                                            <i class="fas fa-times-circle text-danger"></i> Fallido
+                                        {% elif order.payment_status == 'refunded' %}
+                                            <i class="fas fa-undo text-info"></i> Reembolsado
+                                        {% endif %}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ order.get_payment_method_display }}</small>
+                                </td>
+                                <td>
                                     <strong>{{ order.formatted_total }}</strong>
-                                    {% if order.payment_status == 'paid' %}
-                                        <br><small class="text-success">Pagado</small>
-                                    {% else %}
-                                        <br><small class="text-warning">{{ order.get_payment_status_display }}</small>
-                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="date-info">
@@ -254,7 +287,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="btn-group" role="group">
+                                    <div class="btn-group-vertical d-grid gap-1" role="group">
                                         <a href="{% url 'orders:admin_detail' order.order_number %}" 
                                            class="btn btn-sm btn-outline-primary" title="Ver Detalle">
                                             <i class="fas fa-eye"></i>
@@ -262,9 +295,24 @@
                                         <button class="btn btn-sm btn-outline-secondary quick-status-btn" 
                                                 data-order-id="{{ order.id }}" 
                                                 data-current-status="{{ order.status }}"
-                                                title="Cambio Rápido">
+                                                title="Cambiar Estado">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        {% if order.payment_status == 'pending' %}
+                                            <button class="btn btn-sm btn-outline-success payment-btn" 
+                                                    data-order-id="{{ order.id }}" 
+                                                    data-action="mark_paid"
+                                                    title="Marcar como Pagado">
+                                                <i class="fas fa-credit-card"></i>
+                                            </button>
+                                        {% elif order.payment_status == 'paid' %}
+                                            <button class="btn btn-sm btn-outline-warning payment-btn" 
+                                                    data-order-id="{{ order.id }}" 
+                                                    data-action="mark_unpaid"
+                                                    title="Marcar como No Pagado">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -507,6 +555,36 @@
 .status-delivered { background-color: #28a745; color: white; }
 .status-cancelled { background-color: #dc3545; color: white; }
 
+.payment-badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.375rem;
+}
+
+.payment-pending { 
+    background-color: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeaa7;
+}
+
+.payment-paid { 
+    background-color: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb;
+}
+
+.payment-failed { 
+    background-color: #f8d7da; 
+    color: #721c24; 
+    border: 1px solid #f5c6cb;
+}
+
+.payment-refunded { 
+    background-color: #d1ecf1; 
+    color: #0c5460; 
+    border: 1px solid #bee5eb;
+}
+
 .order-row:hover {
     background-color: #f8f9fa;
 }
@@ -699,6 +777,116 @@ document.addEventListener('DOMContentLoaded', function() {
             if (statusCell) {
                 statusCell.textContent = statusDisplay || newStatus;
                 statusCell.className = `badge bg-${getStatusClass(newStatus)}`;
+            }
+        }
+    }
+    
+    // Gestión de pagos
+    const paymentBtns = document.querySelectorAll('.payment-btn');
+    
+    paymentBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.dataset.orderId;
+            const action = this.dataset.action; // 'mark_paid' or 'mark_unpaid'
+            
+            // Confirmar acción
+            const actionText = action === 'mark_paid' ? 'marcar como PAGADO' : 'marcar como NO PAGADO';
+            const confirmMessage = `¿Estás seguro de que deseas ${actionText} este pedido?`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // Deshabilitar botón temporalmente
+            const originalContent = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Determinar nuevo estado de pago
+            const newPaymentStatus = action === 'mark_paid' ? 'paid' : 'pending';
+            
+            // Hacer petición AJAX
+            fetch('/orders/admin/ajax/change-payment-status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    payment_status: newPaymentStatus,
+                    action: action
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensaje de éxito
+                    const successIcon = action === 'mark_paid' ? 'check-circle' : 'exclamation-triangle';
+                    showAlert('success', `<i class="fas fa-${successIcon} me-2"></i>${data.message}`);
+                    
+                    // Actualizar la interfaz
+                    updatePaymentStatusDisplay(orderId, newPaymentStatus, action);
+                    
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', `<i class="fas fa-exclamation-triangle me-2"></i>Error: ${error.message}`);
+            })
+            .finally(() => {
+                // Restaurar botón
+                this.disabled = false;
+                this.innerHTML = originalContent;
+            });
+        });
+    });
+    
+    function updatePaymentStatusDisplay(orderId, newPaymentStatus, action) {
+        // Encontrar la fila del pedido
+        const orderRow = document.querySelector(`tr[data-order-id="${orderId}"]`);
+        if (!orderRow) return;
+        
+        // Actualizar la columna de estado de pago
+        const paymentStatusCell = orderRow.children[4]; // Columna de estado de pago
+        const badge = paymentStatusCell.querySelector('.payment-badge');
+        
+        if (badge) {
+            // Actualizar clase y contenido del badge
+            badge.className = `badge payment-badge payment-${newPaymentStatus}`;
+            
+            if (newPaymentStatus === 'paid') {
+                badge.innerHTML = '<i class="fas fa-check-circle text-success"></i> Pagado';
+            } else {
+                badge.innerHTML = '<i class="fas fa-clock text-warning"></i> Pendiente';
+            }
+        }
+        
+        // Actualizar botón de acción
+        const actionsCell = orderRow.children[7]; // Columna de acciones
+        const paymentBtn = actionsCell.querySelector('.payment-btn');
+        
+        if (paymentBtn) {
+            if (newPaymentStatus === 'paid') {
+                // Cambiar a botón "marcar como no pagado"
+                paymentBtn.className = 'btn btn-sm btn-outline-warning payment-btn';
+                paymentBtn.dataset.action = 'mark_unpaid';
+                paymentBtn.title = 'Marcar como No Pagado';
+                paymentBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            } else {
+                // Cambiar a botón "marcar como pagado"
+                paymentBtn.className = 'btn btn-sm btn-outline-success payment-btn';
+                paymentBtn.dataset.action = 'mark_paid';
+                paymentBtn.title = 'Marcar como Pagado';
+                paymentBtn.innerHTML = '<i class="fas fa-credit-card"></i>';
             }
         }
     }

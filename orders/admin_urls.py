@@ -11,6 +11,7 @@ urlpatterns = [
     path('statistics/', admin_views.order_statistics, name='admin_statistics'),
     path('bulk/update-status/', admin_views.bulk_update_orders, name='admin_bulk_update_status'),
     path('ajax/change-status/', admin_views.ajax_change_status, name='admin_ajax_change_status'),
+    path('ajax/change-payment-status/', admin_views.ajax_change_payment_status, name='admin_ajax_change_payment_status'),
     path('ajax/stats/', admin_views.ajax_stats, name='admin_ajax_stats'),
     
     # RUTAS DINÁMICAS AL FINAL

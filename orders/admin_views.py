@@ -43,12 +43,16 @@ class OrderManagementView(SuperuserRequiredMixin, ListView):
         
         # Filtros
         status_filter = self.request.GET.get('status')
+        payment_status_filter = self.request.GET.get('payment_status')
         search_query = self.request.GET.get('search')
         date_from = self.request.GET.get('date_from')
         date_to = self.request.GET.get('date_to')
         
         if status_filter and status_filter != 'all':
             queryset = queryset.filter(status=status_filter)
+        
+        if payment_status_filter and payment_status_filter != 'all':
+            queryset = queryset.filter(payment_status=payment_status_filter)
         
         if search_query:
             queryset = queryset.filter(
@@ -75,13 +79,15 @@ class OrderManagementView(SuperuserRequiredMixin, ListView):
             'total_orders': Order.objects.count(),
             'pending_orders': Order.objects.filter(status='pending').count(),
             'processing_orders': Order.objects.filter(status='processing').count(),
-            'shipped_orders': Order.objects.filter(status='shipped').count(),
             'delivered_orders': Order.objects.filter(status='delivered').count(),
+            'paid_orders': Order.objects.filter(payment_status='paid').count(),
+            'unpaid_orders': Order.objects.filter(payment_status='pending').count(),
         }
         
         # Filtros actuales
         context['current_filters'] = {
             'status': self.request.GET.get('status', 'all'),
+            'payment_status': self.request.GET.get('payment_status', 'all'),
             'search': self.request.GET.get('search', ''),
             'date_from': self.request.GET.get('date_from', ''),
             'date_to': self.request.GET.get('date_to', ''),
@@ -89,6 +95,7 @@ class OrderManagementView(SuperuserRequiredMixin, ListView):
         
         # Opciones de estado
         context['status_choices'] = Order.STATUS_CHOICES
+        context['payment_status_choices'] = Order.PAYMENT_STATUS_CHOICES
         
         return context
 
@@ -331,3 +338,77 @@ def ajax_stats(request):
     }
     
     return JsonResponse(stats)
+
+
+@require_POST
+@user_passes_test(is_superuser)
+def ajax_change_payment_status(request):
+    """Cambio de estado de pago vía AJAX"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Sin permisos'})
+    
+    try:
+        data = json.loads(request.body)
+        order_id = data.get('order_id')
+        new_payment_status = data.get('payment_status')
+        action = data.get('action')
+        
+        if not order_id or not new_payment_status:
+            return JsonResponse({'success': False, 'error': 'Datos incompletos'})
+        
+        order = get_object_or_404(Order, id=order_id)
+        old_payment_status = order.payment_status
+        
+        # Validar transición de estado
+        valid_transitions = {
+            'pending': ['paid', 'failed'],
+            'paid': ['pending', 'refunded'],
+            'failed': ['pending', 'paid'],
+            'refunded': ['pending']
+        }
+        
+        if new_payment_status not in valid_transitions.get(old_payment_status, []):
+            return JsonResponse({
+                'success': False, 
+                'error': f'Transición inválida de {old_payment_status} a {new_payment_status}'
+            })
+        
+        # Actualizar estado de pago
+        order.payment_status = new_payment_status
+        
+        # Lógica adicional según el nuevo estado
+        if new_payment_status == 'paid' and old_payment_status == 'pending':
+            # Si se marca como pagado, confirmar el pedido si está pendiente
+            if order.status == 'pending':
+                order.status = 'confirmed'
+                status_message = " y confirmado"
+            else:
+                status_message = ""
+        elif new_payment_status == 'pending' and old_payment_status == 'paid':
+            # Si se desmarca como pagado, podría requerir revisión
+            status_message = " - requiere revisión"
+        else:
+            status_message = ""
+        
+        order.save()
+        
+        # Crear mensaje de éxito
+        action_text = "marcado como pagado" if action == "mark_paid" else "marcado como no pagado"
+        message = f'Pedido #{order.order_number} {action_text} exitosamente{status_message}'
+        
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'order_id': order.id,
+            'order_number': order.order_number,
+            'old_payment_status': old_payment_status,
+            'new_payment_status': new_payment_status,
+            'current_status': order.status,
+            'status_display': order.get_status_display(),
+            'payment_status_display': order.get_payment_status_display()
+        })
+        
+    except Order.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Pedido no encontrado'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error interno: {str(e)}'})
