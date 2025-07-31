@@ -510,30 +510,41 @@ class CookieShopApp {
         if (cartBtn) {
             cartBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                cartModal.style.display = 'block';
-                this.renderCartItems();
-                document.body.style.overflow = 'hidden';
+                if (cartModal) {
+                    cartModal.style.display = 'block';
+                    this.renderCartItems();
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    console.warn('Modal del carrito no encontrado');
+                }
             });
         }
         
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                cartModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
+                if (cartModal) {
+                    cartModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
             });
         }
         
         if (continueShoppingBtn) {
             continueShoppingBtn.addEventListener('click', () => {
-                cartModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-                document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
+                if (cartModal) {
+                    cartModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    const productosSection = document.getElementById('productos');
+                    if (productosSection) {
+                        productosSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
             });
         }
         
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
-            if (e.target === cartModal) {
+            if (cartModal && e.target === cartModal) {
                 cartModal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }
@@ -843,11 +854,13 @@ class CookieShopApp {
     animateCartButton() {
         const cartBtn = document.querySelector('.cart-btn');
         if (cartBtn) {
-            cartBtn.style.transform = 'scale(1.1)';
-            cartBtn.style.transition = 'transform 0.2s ease';
+            // Agregar clase de animación
+            cartBtn.classList.add('cart-bounce');
+            
+            // Remover la clase después de la animación
             setTimeout(() => {
-                cartBtn.style.transform = 'scale(1)';
-            }, 200);
+                cartBtn.classList.remove('cart-bounce');
+            }, 600);
         }
     }
 

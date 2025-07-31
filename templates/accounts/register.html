@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Crear Cuenta - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title text-primary">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Crear Cuenta
+                        </h2>
+                        <p class="text-muted">Únete a la familia Dulce Bias</p>
+                    </div>
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Por favor corrige los errores a continuación.
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Nombre
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="id_first_name" 
+                                       name="first_name" 
+                                       placeholder="Tu nombre"
+                                       autofocus>
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.first_name.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_last_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Apellido
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="id_last_name" 
+                                       name="last_name" 
+                                       placeholder="Tu apellido">
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.last_name.errors|first }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-at me-2"></i>Nombre de Usuario
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="id_username" 
+                                   name="username" 
+                                   placeholder="Elige un nombre de usuario"
+                                   required>
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.username.errors|first }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Mínimo 3 caracteres. Solo letras, números y @/./+/-/_</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="id_email" 
+                                   name="email" 
+                                   placeholder="tu@email.com"
+                                   required>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.email.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password1" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Contraseña
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="id_password1" 
+                                   name="password1" 
+                                   placeholder="Crea una contraseña segura"
+                                   required>
+                            {% if form.password1.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.password1.errors|first }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Mínimo 8 caracteres. No puede ser muy común.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password2" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Confirmar Contraseña
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="id_password2" 
+                                   name="password2" 
+                                   placeholder="Repite tu contraseña"
+                                   required>
+                            {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.password2.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                Acepto los <a href="#" class="text-primary">términos y condiciones</a> 
+                                y la <a href="#" class="text-primary">política de privacidad</a>
+                            </label>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="newsletter">
+                            <label class="form-check-label" for="newsletter">
+                                Quiero recibir ofertas especiales y novedades por email
+                            </label>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Crear Mi Cuenta
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-2">¿Ya tienes una cuenta?</p>
+                        <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beneficios de crear cuenta -->
+            <div class="row mt-5">
+                <div class="col-md-4 text-center mb-3">
+                    <div class="text-primary">
+                        <i class="fas fa-shopping-bag fa-3x mb-3"></i>
+                        <h5>Compras Rápidas</h5>
+                        <p class="text-muted small">Guarda tus direcciones y métodos de pago</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <div class="text-primary">
+                        <i class="fas fa-heart fa-3x mb-3"></i>
+                        <h5>Lista de Deseos</h5>
+                        <p class="text-muted small">Guarda tus galletas favoritas para después</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <div class="text-primary">
+                        <i class="fas fa-gift fa-3x mb-3"></i>
+                        <h5>Ofertas Exclusivas</h5>
+                        <p class="text-muted small">Accede a descuentos y promociones especiales</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+}
+
+/* Estilos para los campos de formulario */
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    background-color: #fff;
+}
+
+.form-control::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+</style>
+{% endblock %}

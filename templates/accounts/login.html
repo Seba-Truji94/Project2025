@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Iniciar Sesión - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title text-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Iniciar Sesión
+                        </h2>
+                        <p class="text-muted">Accede a tu cuenta de Dulce Bias</p>
+                    </div>
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Por favor corrige los errores a continuación.
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-user me-2"></i>Usuario o Email
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="id_username" 
+                                   name="username" 
+                                   placeholder="Ingresa tu usuario o email"
+                                   required
+                                   autofocus>
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.username.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Contraseña
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="id_password" 
+                                   name="password" 
+                                   placeholder="Ingresa tu contraseña"
+                                   required>
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.password.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me">
+                            <label class="form-check-label" for="remember_me">
+                                Recordar mi sesión
+                            </label>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Iniciar Sesión
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <a href="{% url 'accounts:password_reset' %}" class="text-decoration-none">
+                                <i class="fas fa-key me-1"></i>
+                                ¿Olvidaste tu contraseña?
+                            </a>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-2">¿No tienes una cuenta?</p>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Crear cuenta nueva
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="text-center mt-4">
+                <div class="row">
+                    <div class="col-4">
+                        <div class="text-primary">
+                            <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                            <p class="small">Seguro</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-primary">
+                            <i class="fas fa-truck fa-2x mb-2"></i>
+                            <p class="small">Envío Gratis</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-primary">
+                            <i class="fas fa-heart fa-2x mb-2"></i>
+                            <p class="small">Calidad</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Estilos para los campos de formulario */
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    background-color: #fff;
+}
+
+.form-control::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+</style>
+{% endblock %}

@@ -91,7 +91,7 @@
                         </button>
                         
                         <a href="{% url 'cart:cart_detail' %}" class="cart-btn">
-                            <i class="fas fa-shopping-bag"></i>
+                            <i class="fas fa-shopping-cart"></i>
                             <span class="cart-text">Carrito</span>
                             <span class="cart-count">{{ cart_items_count|default:0 }}</span>
                             <span class="cart-total-preview">{{ cart_total|default:"$0" }}</span>
@@ -228,6 +228,64 @@
             </div>
         </div>
     </footer>
+
+    <!-- Enhanced Shopping Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content cart-modal-content">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-shopping-cart"></i>
+                    Tu Carrito
+                </h2>
+                <button class="close-btn" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="cart-body">
+                <div id="cart-items" class="cart-items-container">
+                    <!-- Cart items will be inserted here -->
+                </div>
+                
+                <div class="cart-empty" id="cart-empty" style="display: none;">
+                    <div class="empty-cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h3>Tu carrito está vacío</h3>
+                    <p>¡Agrega algunas galletas deliciosas!</p>
+                    <button class="continue-shopping-btn">Continuar Comprando</button>
+                </div>
+            </div>
+            
+            <div class="cart-footer" id="cart-footer">
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Envío:</span>
+                        <span id="shipping-cost">GRATIS</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span>Total:</span>
+                        <span id="cart-total-final">$0</span>
+                    </div>
+                </div>
+                
+                <div class="cart-actions">
+                    <button class="continue-shopping">
+                        <i class="fas fa-arrow-left"></i>
+                        Seguir Comprando
+                    </button>
+                    <button class="checkout-btn">
+                        <i class="fas fa-credit-card"></i>
+                        Proceder al Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

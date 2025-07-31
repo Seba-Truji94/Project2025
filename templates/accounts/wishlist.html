@@ -1,0 +1,750 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Lista de Deseos - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-6">
+                    <i class="fas fa-heart me-3 text-danger"></i>
+                    Mi Lista de Deseos
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'shop:home' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>
+                        Seguir Comprando
+                    </a>
+                    <button class="btn btn-outline-secondary" id="clearWishlist">
+                        <i class="fas fa-trash me-2"></i>
+                        Limpiar Lista
+                    </button>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+                <!-- Estadísticas de la wishlist -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                                <h4 class="text-primary mb-1">5</h4>
+                                <small class="text-muted">Productos Favoritos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-tag fa-2x text-success mb-2"></i>
+                                <h4 class="text-primary mb-1">2</h4>
+                                <small class="text-muted">En Oferta</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-box fa-2x text-info mb-2"></i>
+                                <h4 class="text-primary mb-1">4</h4>
+                                <small class="text-muted">Disponibles</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-dollar-sign fa-2x text-warning mb-2"></i>
+                                <h4 class="text-primary mb-1">$89.950</h4>
+                                <small class="text-muted">Valor Total</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros y ordenamiento -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-sm btn-primary filter-btn active" data-filter="all">
+                                        Todos
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success filter-btn" data-filter="available">
+                                        <i class="fas fa-check me-1"></i>
+                                        Disponibles
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="sale">
+                                        <i class="fas fa-percentage me-1"></i>
+                                        En Oferta
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger filter-btn" data-filter="out-of-stock">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        Agotados
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="d-flex gap-2 justify-content-end align-items-center">
+                                    <label class="form-label mb-0">Ordenar por:</label>
+                                    <select class="form-select form-select-sm" style="width: auto;" id="sortSelect">
+                                        <option value="newest">Más Recientes</option>
+                                        <option value="price-low">Precio: Menor a Mayor</option>
+                                        <option value="price-high">Precio: Mayor a Menor</option>
+                                        <option value="name">Nombre A-Z</option>
+                                        <option value="availability">Disponibilidad</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de productos de la wishlist -->
+                <div class="wishlist-items">
+                    <!-- Producto 1 - Disponible y en oferta -->
+                    <div class="card mb-3 wishlist-item" data-status="available sale" data-price="8990" data-name="Galletas de Chocolate Premium">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div class="position-relative">
+                                        <img src="https://via.placeholder.com/120x120/8B4513/ffffff?text=🍪" 
+                                             alt="Galletas Chocolate" class="img-fluid rounded">
+                                        <span class="badge bg-danger position-absolute top-0 start-0 m-1">
+                                            -15%
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-2">Galletas de Chocolate Premium</h5>
+                                    <p class="text-muted mb-1">Caja de 12 unidades</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Disponible
+                                        </span>
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-fire me-1"></i>
+                                            Oferta
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Agregado el 25 jul 2025</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="price-container">
+                                        <div class="current-price h5 text-primary mb-1">$8.990</div>
+                                        <div class="original-price text-muted text-decoration-line-through">$10.590</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="rating mb-2">
+                                        <span class="text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </span>
+                                        <div><small class="text-muted">(24 reseñas)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar al Carrito
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm remove-from-wishlist">
+                                            <i class="fas fa-heart-broken me-1"></i>
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producto 2 - Disponible -->
+                    <div class="card mb-3 wishlist-item" data-status="available" data-price="7990" data-name="Galletas de Nuez y Canela">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="https://via.placeholder.com/120x120/A0522D/ffffff?text=🥜" 
+                                         alt="Galletas Nuez" class="img-fluid rounded">
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-2">Galletas de Nuez y Canela</h5>
+                                    <p class="text-muted mb-1">Caja de 8 unidades</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Disponible
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Agregado el 28 jul 2025</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="price-container">
+                                        <div class="current-price h5 text-primary mb-1">$7.990</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="rating mb-2">
+                                        <span class="text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                        </span>
+                                        <div><small class="text-muted">(18 reseñas)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar al Carrito
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm remove-from-wishlist">
+                                            <i class="fas fa-heart-broken me-1"></i>
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producto 3 - En oferta -->
+                    <div class="card mb-3 wishlist-item" data-status="available sale" data-price="12990" data-name="Mix de Galletas Artesanales">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div class="position-relative">
+                                        <img src="https://via.placeholder.com/120x120/D2691E/ffffff?text=🍪" 
+                                             alt="Mix Galletas" class="img-fluid rounded">
+                                        <span class="badge bg-danger position-absolute top-0 start-0 m-1">
+                                            -20%
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-2">Mix de Galletas Artesanales</h5>
+                                    <p class="text-muted mb-1">Caja grande - 20 unidades variadas</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Disponible
+                                        </span>
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-fire me-1"></i>
+                                            Oferta
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Agregado el 20 jul 2025</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="price-container">
+                                        <div class="current-price h5 text-primary mb-1">$12.990</div>
+                                        <div class="original-price text-muted text-decoration-line-through">$16.190</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="rating mb-2">
+                                        <span class="text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </span>
+                                        <div><small class="text-muted">(31 reseñas)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar al Carrito
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm remove-from-wishlist">
+                                            <i class="fas fa-heart-broken me-1"></i>
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producto 4 - Disponible -->
+                    <div class="card mb-3 wishlist-item" data-status="available" data-price="11990" data-name="Galletas de Miel y Avena">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="https://via.placeholder.com/120x120/CD853F/ffffff?text=🍯" 
+                                         alt="Galletas Miel" class="img-fluid rounded">
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-2">Galletas de Miel y Avena</h5>
+                                    <p class="text-muted mb-1">Caja de 10 unidades</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>
+                                            Disponible
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Agregado el 22 jul 2025</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="price-container">
+                                        <div class="current-price h5 text-primary mb-1">$11.990</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="rating mb-2">
+                                        <span class="text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                        </span>
+                                        <div><small class="text-muted">(15 reseñas)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar al Carrito
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm remove-from-wishlist">
+                                            <i class="fas fa-heart-broken me-1"></i>
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producto 5 - Agotado -->
+                    <div class="card mb-3 wishlist-item" data-status="out-of-stock" data-price="14990" data-name="Galletas Premium de Almendras">
+                        <div class="card-body opacity-75">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div class="position-relative">
+                                        <img src="https://via.placeholder.com/120x120/DEB887/ffffff?text=🌰" 
+                                             alt="Galletas Almendras" class="img-fluid rounded">
+                                        <div class="position-absolute top-50 start-50 translate-middle">
+                                            <span class="badge bg-danger fs-6">AGOTADO</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-2">Galletas Premium de Almendras</h5>
+                                    <p class="text-muted mb-1">Caja de 6 unidades - Edición Limitada</p>
+                                    <div class="mb-2">
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>
+                                            Agotado
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Agregado el 15 jul 2025</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="price-container">
+                                        <div class="current-price h5 text-muted mb-1">$14.990</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="rating mb-2">
+                                        <span class="text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </span>
+                                        <div><small class="text-muted">(8 reseñas)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-bell me-1"></i>
+                                            Notificar Disponibilidad
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm remove-from-wishlist">
+                                            <i class="fas fa-heart-broken me-1"></i>
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción masiva -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="mb-0">Acciones Rápidas</h6>
+                                <small class="text-muted">Gestiona todos tus productos favoritos</small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success" id="addAllToCart">
+                                        <i class="fas fa-cart-plus me-2"></i>
+                                        Agregar Disponibles al Carrito
+                                    </button>
+                                    <button class="btn btn-outline-info" id="shareWishlist">
+                                        <i class="fas fa-share me-2"></i>
+                                        Compartir Lista
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje cuando no hay productos -->
+                <div class="no-items-message text-center py-5" style="display: none;">
+                    <i class="fas fa-heart-broken fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No hay productos con este filtro</h4>
+                    <p class="text-muted">Prueba con otro filtro o agrega más productos a tu lista de deseos</p>
+                </div>
+
+            {% else %}
+                <!-- Usuario no autenticado -->
+                <div class="text-center py-5">
+                    <i class="fas fa-heart-broken fa-3x text-muted mb-4"></i>
+                    <h3 class="text-muted mb-3">Inicia Sesión para Ver tu Lista de Deseos</h3>
+                    <p class="text-muted mb-4">
+                        Guarda tus productos favoritos y accede a ellos cuando quieras
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Iniciar Sesión
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Registrarse
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.wishlist-item {
+    transition: all 0.3s ease;
+}
+
+.wishlist-item:hover {
+    border-color: var(--primary-color);
+}
+
+.filter-btn {
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.price-container {
+    border-left: 2px solid var(--primary-color);
+    padding-left: 15px;
+}
+
+.badge {
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.rating {
+    font-size: 14px;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+/* Animaciones */
+.container {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.add-to-cart-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.add-to-cart-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.add-to-cart-btn:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .wishlist-item .row > div {
+        margin-bottom: 15px;
+    }
+    
+    .wishlist-item .col-md-2 {
+        text-align: center;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 10px !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtros
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const wishlistItems = document.querySelectorAll('.wishlist-item');
+    const noItemsMessage = document.querySelector('.no-items-message');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Actualizar botones activos
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.dataset.filter;
+            let visibleItems = 0;
+
+            // Filtrar productos
+            wishlistItems.forEach(item => {
+                const status = item.dataset.status;
+                if (filter === 'all' || status.includes(filter)) {
+                    item.style.display = 'block';
+                    visibleItems++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Mostrar mensaje si no hay productos
+            if (visibleItems === 0) {
+                noItemsMessage.style.display = 'block';
+            } else {
+                noItemsMessage.style.display = 'none';
+            }
+        });
+    });
+
+    // Ordenamiento
+    const sortSelect = document.getElementById('sortSelect');
+    sortSelect.addEventListener('change', function() {
+        const sortBy = this.value;
+        const container = document.querySelector('.wishlist-items');
+        const items = Array.from(wishlistItems);
+
+        items.sort((a, b) => {
+            switch (sortBy) {
+                case 'price-low':
+                    return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+                case 'price-high':
+                    return parseInt(b.dataset.price) - parseInt(a.dataset.price);
+                case 'name':
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                case 'availability':
+                    if (a.dataset.status.includes('available') && !b.dataset.status.includes('available')) return -1;
+                    if (!a.dataset.status.includes('available') && b.dataset.status.includes('available')) return 1;
+                    return 0;
+                default: // newest
+                    return 0;
+            }
+        });
+
+        // Reordenar elementos
+        items.forEach(item => container.appendChild(item));
+    });
+
+    // Agregar al carrito
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productName = this.closest('.wishlist-item').dataset.name;
+            
+            // Efecto visual
+            this.innerHTML = '<i class="fas fa-check me-1"></i>¡Agregado!';
+            this.classList.remove('btn-primary');
+            this.classList.add('btn-success');
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-cart-plus me-1"></i>Agregar al Carrito';
+                this.classList.remove('btn-success');
+                this.classList.add('btn-primary');
+            }, 2000);
+
+            // Mostrar notificación
+            showNotification(`${productName} agregado al carrito`, 'success');
+        });
+    });
+
+    // Quitar de la wishlist
+    document.querySelectorAll('.remove-from-wishlist').forEach(button => {
+        button.addEventListener('click', function() {
+            const item = this.closest('.wishlist-item');
+            const productName = item.dataset.name;
+            
+            if (confirm(`¿Estás seguro de que quieres quitar "${productName}" de tu lista de deseos?`)) {
+                item.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    item.remove();
+                    showNotification(`${productName} quitado de la lista de deseos`, 'info');
+                }, 300);
+            }
+        });
+    });
+
+    // Limpiar wishlist
+    document.getElementById('clearWishlist').addEventListener('click', function() {
+        if (confirm('¿Estás seguro de que quieres limpiar toda tu lista de deseos?')) {
+            wishlistItems.forEach(item => {
+                item.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => item.remove(), 300);
+            });
+            setTimeout(() => {
+                showNotification('Lista de deseos limpiada', 'info');
+            }, 300);
+        }
+    });
+
+    // Agregar todos al carrito
+    document.getElementById('addAllToCart').addEventListener('click', function() {
+        const availableItems = document.querySelectorAll('[data-status*="available"]');
+        if (availableItems.length > 0) {
+            showNotification(`${availableItems.length} productos agregados al carrito`, 'success');
+        }
+    });
+
+    // Compartir wishlist
+    document.getElementById('shareWishlist').addEventListener('click', function() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Mi Lista de Deseos - Dulce Bias',
+                text: 'Mira mis galletas favoritas en Dulce Bias',
+                url: window.location.href
+            });
+        } else {
+            // Fallback para navegadores sin soporte nativo
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('Enlace copiado al portapapeles', 'info');
+            });
+        }
+    });
+
+    // Función para mostrar notificaciones
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'info' ? 'info' : 'warning'} position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+});
+
+// Animación de salida
+const style = document.createElement('style');
+style.textContent = `
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar de perfil -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" width="80" height="80">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="card-title">{{ user.profile.display_name }}</h5>
+                    <p class="text-muted small">{{ user.email }}</p>
+                </div>
+            </div>
+
+            <div class="list-group mt-3">
+                <a href="#profile-info" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
+                    <i class="fas fa-user me-2"></i>Información Personal
+                </a>
+                <a href="#addresses" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    <i class="fas fa-map-marker-alt me-2"></i>Direcciones
+                </a>
+                <a href="#orders" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    <i class="fas fa-shopping-bag me-2"></i>Mis Pedidos
+                </a>
+                <a href="#wishlist" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    <i class="fas fa-heart me-2"></i>Lista de Deseos
+                </a>
+                <a href="#settings" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    <i class="fas fa-cog me-2"></i>Configuración
+                </a>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Información Personal -->
+                <div class="tab-pane fade show active" id="profile-info">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2"></i>Información Personal
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="first_name" class="form-label">Nombre</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="last_name" class="form-label">Apellido</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Teléfono</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.profile.phone }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="birth_date" class="form-label">Fecha de Nacimiento</label>
+                                        <input type="date" class="form-control" id="birth_date" name="birth_date" value="{{ user.profile.birth_date|date:'Y-m-d' }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="avatar" class="form-label">Foto de Perfil</label>
+                                        <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Direcciones -->
+                <div class="tab-pane fade" id="addresses">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>Mis Direcciones
+                            </h5>
+                            <button class="btn btn-light btn-sm">
+                                <i class="fas fa-plus me-1"></i>Nueva Dirección
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            {% if user.addresses.all %}
+                                {% for address in user.addresses.all %}
+                                <div class="card mb-3 {% if address.is_default %}border-primary{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title">
+                                                    {{ address.name }}
+                                                    {% if address.is_default %}
+                                                        <span class="badge bg-primary ms-2">Principal</span>
+                                                    {% endif %}
+                                                </h6>
+                                                <p class="card-text">
+                                                    <strong>{{ address.full_name }}</strong><br>
+                                                    {{ address.full_address }}<br>
+                                                    <i class="fas fa-phone me-1"></i>{{ address.phone }}
+                                                </p>
+                                            </div>
+                                            <div class="btn-group">
+                                                <button class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger btn-sm">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                                    <h5>No tienes direcciones guardadas</h5>
+                                    <p class="text-muted">Agrega una dirección para hacer compras más rápidas</p>
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Agregar Primera Dirección
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedidos -->
+                <div class="tab-pane fade" id="orders">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-bag me-2"></i>Historial de Pedidos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if user.orders.all %}
+                                {% for order in user.orders.all %}
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-3">
+                                                <h6 class="mb-1">Pedido #{{ order.order_number }}</h6>
+                                                <small class="text-muted">{{ order.created_at|date:"d/m/Y" }}</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>{{ order.formatted_total }}</strong>
+                                            </div>
+                                            <div class="col-md-3 text-end">
+                                                <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-primary btn-sm">
+                                                    Ver Detalle
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                                    <h5>No tienes pedidos aún</h5>
+                                    <p class="text-muted">¡Descubre nuestras deliciosas galletas!</p>
+                                    <a href="{% url 'shop:product_list' %}" class="btn btn-primary">
+                                        <i class="fas fa-shopping-cart me-2"></i>Comenzar a Comprar
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Deseos -->
+                <div class="tab-pane fade" id="wishlist">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-heart me-2"></i>Mi Lista de Deseos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if user.wishlist.items.all %}
+                                <div class="row">
+                                    {% for item in user.wishlist.items.all %}
+                                    <div class="col-md-6 col-lg-4 mb-4">
+                                        <div class="card h-100">
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" class="card-img-top" alt="{{ item.product.name }}" style="height: 200px; object-fit: cover;">
+                                            {% endif %}
+                                            <div class="card-body">
+                                                <h6 class="card-title">{{ item.product.name }}</h6>
+                                                <p class="card-text text-primary fw-bold">{{ item.product.formatted_price }}</p>
+                                                <div class="btn-group w-100">
+                                                    <button class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-shopping-cart me-1"></i>Agregar
+                                                    </button>
+                                                    <button class="btn btn-outline-danger btn-sm">
+                                                        <i class="fas fa-heart-broken"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                                    <h5>Tu lista de deseos está vacía</h5>
+                                    <p class="text-muted">Guarda tus galletas favoritas para después</p>
+                                    <a href="{% url 'shop:product_list' %}" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i>Explorar Productos
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración -->
+                <div class="tab-pane fade" id="settings">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>Configuración de Cuenta
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>Notificaciones</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="newsletter" {% if user.profile.newsletter_subscription %}checked{% endif %}>
+                                        <label class="form-check-label" for="newsletter">
+                                            Recibir newsletter con ofertas especiales
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="offers" {% if user.profile.receives_offers %}checked{% endif %}>
+                                        <label class="form-check-label" for="offers">
+                                            Recibir notificaciones de nuevos productos
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Cambiar Contraseña</h6>
+                                    <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                                    </a>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="text-danger">Zona de Peligro</h6>
+                                    <p class="text-muted small">Estas acciones son irreversibles</p>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                        <i class="fas fa-trash me-2"></i>Eliminar Cuenta
+                                    </button>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Guardar Configuración
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar cuenta -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Eliminar Cuenta
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar tu cuenta?</p>
+                <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+                <ul class="text-muted">
+                    <li>Se eliminarán todos tus pedidos</li>
+                    <li>Se perderá tu lista de deseos</li>
+                    <li>Se eliminarán todas tus direcciones guardadas</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Sí, Eliminar Mi Cuenta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.card-header.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+</style>
+{% endblock %}

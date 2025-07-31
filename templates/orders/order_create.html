@@ -1,0 +1,566 @@
+{% extends 'base.html' %}
+
+{% block title %}Finalizar Compra - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Progress Bar -->
+            <div class="checkout-progress mb-5">
+                <div class="progress-bar-container">
+                    <div class="progress-step active">
+                        <div class="step-number">1</div>
+                        <span>Carrito</span>
+                    </div>
+                    <div class="progress-step active">
+                        <div class="step-number">2</div>
+                        <span>Información</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">3</div>
+                        <span>Pago</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">4</div>
+                        <span>Confirmación</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Formulario de información -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4 class="mb-0">
+                                <i class="fas fa-user me-2"></i>
+                                Información de Entrega
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="checkoutForm">
+                                {% csrf_token %}
+                                
+                                <!-- Información personal -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="firstName" class="form-label">
+                                            <i class="fas fa-user me-1"></i>Nombre *
+                                        </label>
+                                        <input type="text" class="form-control" id="firstName" 
+                                               name="firstName" required value="Juan">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="lastName" class="form-label">
+                                            <i class="fas fa-user me-1"></i>Apellido *
+                                        </label>
+                                        <input type="text" class="form-control" id="lastName" 
+                                               name="lastName" required value="Pérez">
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label">
+                                            <i class="fas fa-envelope me-1"></i>Email *
+                                        </label>
+                                        <input type="email" class="form-control" id="email" 
+                                               name="email" required value="juan.perez@email.com">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="phone" class="form-label">
+                                            <i class="fas fa-phone me-1"></i>Teléfono *
+                                        </label>
+                                        <input type="tel" class="form-control" id="phone" 
+                                               name="phone" required value="+56 9 8765 4321">
+                                    </div>
+                                </div>
+
+                                <!-- Dirección -->
+                                <div class="mb-4">
+                                    <label for="address" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Dirección *
+                                    </label>
+                                    <input type="text" class="form-control" id="address" 
+                                           name="address" required value="Av. Providencia 1234, Depto 505">
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="city" class="form-label">
+                                            <i class="fas fa-city me-1"></i>Ciudad *
+                                        </label>
+                                        <input type="text" class="form-control" id="city" 
+                                               name="city" required value="Providencia">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="region" class="form-label">
+                                            <i class="fas fa-map me-1"></i>Región *
+                                        </label>
+                                        <select class="form-select" id="region" name="region" required>
+                                            <option value="">Selecciona una región</option>
+                                            <option value="rm" selected>Región Metropolitana</option>
+                                            <option value="v">V Región - Valparaíso</option>
+                                            <option value="viii">VIII Región - Biobío</option>
+                                            <option value="iv">IV Región - Coquimbo</option>
+                                            <option value="other">Otra Región</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="postalCode" class="form-label">
+                                        <i class="fas fa-mail-bulk me-1"></i>Código Postal
+                                    </label>
+                                    <input type="text" class="form-control" id="postalCode" 
+                                           name="postalCode" value="7500000">
+                                </div>
+
+                                <!-- Notas especiales -->
+                                <div class="mb-4">
+                                    <label for="notes" class="form-label">
+                                        <i class="fas fa-sticky-note me-1"></i>Notas Especiales (Opcional)
+                                    </label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                              placeholder="Instrucciones de entrega, referencias del lugar, etc."></textarea>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Método de envío -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-truck me-2"></i>
+                                Método de Envío
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="shipping-options">
+                                <div class="form-check shipping-option">
+                                    <input class="form-check-input" type="radio" name="shipping" 
+                                           id="standardShipping" value="standard" checked>
+                                    <label class="form-check-label" for="standardShipping">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">Envío Estándar</h6>
+                                                <small class="text-muted">3-5 días hábiles</small>
+                                            </div>
+                                            <span class="text-success fw-bold">GRATIS</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check shipping-option">
+                                    <input class="form-check-input" type="radio" name="shipping" 
+                                           id="expressShipping" value="express">
+                                    <label class="form-check-label" for="expressShipping">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">Envío Express</h6>
+                                                <small class="text-muted">1-2 días hábiles</small>
+                                            </div>
+                                            <span class="fw-bold">$2.990</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Método de pago -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Método de Pago
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="payment-methods">
+                                <div class="form-check payment-option mb-3">
+                                    <input class="form-check-input" type="radio" name="payment" 
+                                           id="creditCard" value="credit_card" checked>
+                                    <label class="form-check-label" for="creditCard">
+                                        <div class="d-flex align-items-center">
+                                            <div class="payment-icons me-3">
+                                                <i class="fab fa-cc-visa fa-2x me-2"></i>
+                                                <i class="fab fa-cc-mastercard fa-2x me-2"></i>
+                                                <i class="fab fa-cc-amex fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1">Tarjeta de Crédito/Débito</h6>
+                                                <small class="text-muted">Pago seguro con WebPay Plus</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check payment-option mb-3">
+                                    <input class="form-check-input" type="radio" name="payment" 
+                                           id="bankTransfer" value="bank_transfer">
+                                    <label class="form-check-label" for="bankTransfer">
+                                        <div class="d-flex align-items-center">
+                                            <div class="payment-icons me-3">
+                                                <i class="fas fa-university fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1">Transferencia Bancaria</h6>
+                                                <small class="text-muted">Pago manual, requiere confirmación</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="col-lg-4">
+                    <div class="card sticky-top" style="top: 120px;">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                Resumen del Pedido
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Productos -->
+                            <div class="order-items mb-4">
+                                <div class="order-item d-flex mb-3">
+                                    <img src="https://via.placeholder.com/60x60/8B4513/ffffff?text=🍪" 
+                                         alt="Galletas Chocolate" class="rounded me-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Galletas de Chocolate Premium</h6>
+                                        <small class="text-muted">Cantidad: 2</small>
+                                        <div class="d-flex justify-content-between">
+                                            <span>$8.990 x 2</span>
+                                            <strong>$17.980</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="order-item d-flex mb-3">
+                                    <img src="https://via.placeholder.com/60x60/A0522D/ffffff?text=🥜" 
+                                         alt="Galletas Nuez" class="rounded me-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Galletas de Nuez y Canela</h6>
+                                        <small class="text-muted">Cantidad: 1</small>
+                                        <div class="d-flex justify-content-between">
+                                            <span>$7.990 x 1</span>
+                                            <strong>$7.990</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Totales -->
+                            <div class="order-totals">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal (3 productos)</span>
+                                    <span>$25.970</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Descuento</span>
+                                    <span class="text-success">-$980</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Envío</span>
+                                    <span class="shipping-cost text-success">GRATIS</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-4">
+                                    <strong>Total</strong>
+                                    <strong class="text-primary fs-5 total-amount">$24.990</strong>
+                                </div>
+                            </div>
+
+                            <!-- Botón de pago -->
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary btn-lg" id="continueToPayment">
+                                    <i class="fas fa-lock me-2"></i>
+                                    Continuar al Pago
+                                </button>
+                                <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Volver al Carrito
+                                </a>
+                            </div>
+
+                            <!-- Información de seguridad -->
+                            <div class="security-info mt-4">
+                                <div class="d-flex align-items-center text-muted">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    <small>Compra 100% segura con SSL</small>
+                                </div>
+                                <div class="d-flex align-items-center text-muted mt-2">
+                                    <i class="fas fa-truck me-2"></i>
+                                    <small>Envío gratis en compras sobre $20.000</small>
+                                </div>
+                                <div class="d-flex align-items-center text-muted mt-2">
+                                    <i class="fas fa-undo me-2"></i>
+                                    <small>Política de devolución 30 días</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Progress Bar */
+.checkout-progress {
+    text-align: center;
+}
+
+.progress-bar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.progress-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: calc(100% + 15px);
+    width: 30px;
+    height: 2px;
+    background: #e9ecef;
+}
+
+.progress-step.active::after {
+    background: var(--primary-color);
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.progress-step.active .step-number {
+    background: var(--primary-color);
+    color: white;
+}
+
+.progress-step span {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.progress-step.active span {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Cards */
+.card {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Form elements */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+}
+
+/* Shipping and Payment options */
+.shipping-option, .payment-option {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.shipping-option:hover, .payment-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(139, 69, 19, 0.05);
+}
+
+.shipping-option:has(input:checked), 
+.payment-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background: rgba(139, 69, 19, 0.1);
+}
+
+.form-check-input {
+    border: 2px solid #dee2e6;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Order items */
+.order-item {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f8f9fa;
+    margin-bottom: 15px;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+/* Payment icons */
+.payment-icons i {
+    color: #6c757d;
+}
+
+.fab.fa-cc-visa {
+    color: #1a1f71;
+}
+
+.fab.fa-cc-mastercard {
+    color: #eb001b;
+}
+
+.fab.fa-cc-amex {
+    color: #006fcf;
+}
+
+/* Security info */
+.security-info {
+    background: rgba(139, 69, 19, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+/* Animations */
+.container {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .progress-bar-container {
+        gap: 15px;
+    }
+    
+    .progress-step:not(:last-child)::after {
+        width: 15px;
+        left: calc(100% + 7px);
+    }
+    
+    .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    
+    .progress-step span {
+        font-size: 12px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cambio en método de envío
+    const shippingOptions = document.querySelectorAll('input[name="shipping"]');
+    const shippingCost = document.querySelector('.shipping-cost');
+    const totalAmount = document.querySelector('.total-amount');
+    
+    shippingOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            if (this.value === 'express') {
+                shippingCost.textContent = '$2.990';
+                shippingCost.classList.remove('text-success');
+                totalAmount.textContent = '$27.980';
+            } else {
+                shippingCost.textContent = 'GRATIS';
+                shippingCost.classList.add('text-success');
+                totalAmount.textContent = '$24.990';
+            }
+        });
+    });
+    
+    // Continuar al pago
+    document.getElementById('continueToPayment').addEventListener('click', function() {
+        const form = document.getElementById('checkoutForm');
+        if (form.checkValidity()) {
+            // Aquí iría la lógica para procesar el pago
+            alert('Redirigiendo a WebPay Plus para completar el pago...');
+        } else {
+            form.reportValidity();
+        }
+    });
+});
+</script>
+{% endblock %}

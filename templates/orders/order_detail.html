@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Pedido #DB-20250730-0001 - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'shop:home' %}" class="text-decoration-none">
+                            <i class="fas fa-home me-1"></i>Inicio
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'orders:order_list' %}" class="text-decoration-none">
+                            Mis Pedidos
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Pedido #DB-20250730-0001
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Header del pedido -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">
+                                <i class="fas fa-receipt me-2"></i>
+                                Pedido #DB-20250730-0001
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Realizado el 28 de julio, 2025 a las 14:30
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="badge bg-success fs-6 mb-2">
+                                <i class="fas fa-check-circle me-1"></i>
+                                Entregado
+                            </span>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-download me-1"></i>
+                                    Factura
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-print me-1"></i>
+                                    Imprimir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Información del pedido -->
+                <div class="col-lg-8">
+                    <!-- Productos del pedido -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-box me-2"></i>
+                                Productos del Pedido
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Precio Unit.</th>
+                                            <th>Cantidad</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="https://via.placeholder.com/60x60/8B4513/ffffff?text=🍪" 
+                                                         alt="Galletas Chocolate" class="rounded me-3">
+                                                    <div>
+                                                        <h6 class="mb-1">Galletas de Chocolate Premium</h6>
+                                                        <small class="text-muted">Caja de 12 unidades</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">$8.990</td>
+                                            <td class="align-middle">2</td>
+                                            <td class="align-middle text-end fw-bold">$17.980</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="https://via.placeholder.com/60x60/A0522D/ffffff?text=🥜" 
+                                                         alt="Galletas Nuez" class="rounded me-3">
+                                                    <div>
+                                                        <h6 class="mb-1">Galletas de Nuez y Canela</h6>
+                                                        <small class="text-muted">Caja de 8 unidades</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">$7.990</td>
+                                            <td class="align-middle">1</td>
+                                            <td class="align-middle text-end fw-bold">$7.990</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado del pedido -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-route me-2"></i>
+                                Estado del Pedido
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-container">
+                                <div class="progress-step completed">
+                                    <div class="step-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <h6>Pedido Confirmado</h6>
+                                        <small>28 jul 2025, 14:30</small>
+                                    </div>
+                                </div>
+                                <div class="progress-step completed">
+                                    <div class="step-icon">
+                                        <i class="fas fa-cog"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <h6>En Preparación</h6>
+                                        <small>28 jul 2025, 16:45</small>
+                                    </div>
+                                </div>
+                                <div class="progress-step completed">
+                                    <div class="step-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <h6>Enviado</h6>
+                                        <small>29 jul 2025, 09:15</small>
+                                    </div>
+                                </div>
+                                <div class="progress-step completed">
+                                    <div class="step-icon">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <h6>Entregado</h6>
+                                        <small>30 jul 2025, 11:30</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de entrega -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                Información de Entrega
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-2">Dirección de Entrega</h6>
+                                    <p class="mb-1"><strong>Juan Pérez</strong></p>
+                                    <p class="mb-1">Av. Providencia 1234, Depto 505</p>
+                                    <p class="mb-1">Providencia, Región Metropolitana</p>
+                                    <p class="mb-1">Código Postal: 7500000</p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-phone me-1"></i>
+                                        +56 9 8765 4321
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-2">Método de Envío</h6>
+                                    <p class="mb-1">Envío Express</p>
+                                    <p class="mb-1">Tiempo estimado: 1-2 días hábiles</p>
+                                    <p class="mb-1">
+                                        <strong>Número de seguimiento:</strong>
+                                        <span class="text-primary">DB-TRACK-456789</span>
+                                    </p>
+                                    <p class="mb-0">
+                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>
+                                            Rastrear Envío
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calculator me-2"></i>
+                                Resumen del Pedido
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="summary-item d-flex justify-content-between mb-2">
+                                <span>Subtotal (3 productos)</span>
+                                <span>$25.970</span>
+                            </div>
+                            <div class="summary-item d-flex justify-content-between mb-2">
+                                <span>Envío Express</span>
+                                <span class="text-success">GRATIS</span>
+                            </div>
+                            <div class="summary-item d-flex justify-content-between mb-2">
+                                <span>Descuento</span>
+                                <span class="text-success">-$980</span>
+                            </div>
+                            <hr>
+                            <div class="summary-total d-flex justify-content-between mb-3">
+                                <strong>Total</strong>
+                                <strong class="text-primary fs-5">$24.990</strong>
+                            </div>
+
+                            <div class="payment-info mb-3">
+                                <h6 class="text-muted mb-2">Método de Pago</h6>
+                                <div class="d-flex align-items-center">
+                                    <i class="fab fa-cc-visa fa-2x me-2 text-primary"></i>
+                                    <div>
+                                        <p class="mb-0">**** **** **** 1234</p>
+                                        <small class="text-muted">Pagado el 28 jul 2025</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-redo me-2"></i>
+                                    Comprar de Nuevo
+                                </button>
+                                <button class="btn btn-outline-secondary">
+                                    <i class="fas fa-star me-2"></i>
+                                    Calificar Productos
+                                </button>
+                                <button class="btn btn-outline-info">
+                                    <i class="fas fa-headset me-2"></i>
+                                    Contactar Soporte
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Productos relacionados -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-heart me-2"></i>
+                                Te Podría Interesar
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="related-product mb-3">
+                                <div class="d-flex">
+                                    <img src="https://via.placeholder.com/60x60/D2691E/ffffff?text=🍪" 
+                                         alt="Mix Galletas" class="rounded me-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Mix Artesanal</h6>
+                                        <p class="text-primary mb-1">$12.990</p>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="related-product">
+                                <div class="d-flex">
+                                    <img src="https://via.placeholder.com/60x60/CD853F/ffffff?text=🍯" 
+                                         alt="Galletas Miel" class="rounded me-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Miel y Avena</h6>
+                                        <p class="text-primary mb-1">$11.990</p>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.breadcrumb {
+    background: none;
+    padding: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.card {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.badge {
+    border-radius: 20px;
+    padding: 8px 16px;
+}
+
+.progress-container {
+    position: relative;
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.progress-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 50px;
+    width: 2px;
+    height: 30px;
+    background: #e9ecef;
+}
+
+.progress-step.completed::after {
+    background: var(--primary-color);
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.progress-step.completed .step-icon {
+    background: var(--primary-color);
+    color: white;
+}
+
+.step-content h6 {
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.step-content small {
+    color: #6c757d;
+}
+
+.summary-item {
+    font-size: 14px;
+}
+
+.summary-total {
+    font-size: 16px;
+}
+
+.related-product {
+    border-bottom: 1px solid #f8f9fa;
+    padding-bottom: 15px;
+}
+
+.related-product:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+/* Animación de entrada */
+.container {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
