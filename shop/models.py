@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
+from decimal import Decimal
 
 
 class Category(models.Model):
@@ -36,8 +37,12 @@ class Product(models.Model):
     description = models.TextField()
     ingredients = models.TextField(help_text="Lista de ingredientes separados por comas")
     price = models.DecimalField(max_digits=10, decimal_places=0)  # Precios en CLP sin decimales
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Porcentaje de descuento (0-100)")
+    discount_price = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True, help_text="Precio con descuento manual")
+    is_on_sale = models.BooleanField(default=False, help_text="¿Está en oferta?")
     image = models.ImageField(upload_to='products/')
     stock = models.PositiveIntegerField(default=0)
+    min_stock_alert = models.PositiveIntegerField(default=5, help_text="Alerta cuando el stock sea menor a este valor")
     available = models.BooleanField(default=True)
     featured = models.BooleanField(default=False)
     weight = models.PositiveIntegerField(help_text="Peso en gramos", default=100)
@@ -65,8 +70,58 @@ class Product(models.Model):
         return f"${int(self.price):,}".replace(',', '.')
     
     @property
+    def current_price(self):
+        """Retorna el precio actual (con descuento si aplica)"""
+        if self.is_on_sale:
+            if self.discount_price:
+                return self.discount_price
+            elif self.discount_percentage > 0:
+                discount_amount = self.price * (Decimal(str(self.discount_percentage)) / Decimal('100'))
+                return self.price - discount_amount
+        return self.price
+    
+    @property
+    def formatted_current_price(self):
+        """Retorna el precio actual formateado"""
+        return f"${int(self.current_price):,}".replace(',', '.')
+    
+    @property
+    def discount_amount(self):
+        """Retorna la cantidad de descuento en pesos"""
+        if self.is_on_sale and self.current_price < self.price:
+            return self.price - self.current_price
+        return 0
+    
+    @property
+    def formatted_discount_amount(self):
+        """Retorna el descuento formateado"""
+        return f"${int(self.discount_amount):,}".replace(',', '.')
+    
+    @property
+    def has_discount(self):
+        """Retorna True si el producto tiene descuento activo"""
+        return self.is_on_sale and self.current_price < self.price
+    
+    @property
     def is_in_stock(self):
         return self.stock > 0 and self.available
+    
+    @property
+    def is_low_stock(self):
+        """Retorna True si el stock está bajo"""
+        return self.stock <= self.min_stock_alert and self.stock > 0
+    
+    @property
+    def stock_status(self):
+        """Retorna el estado del stock como texto"""
+        if not self.available:
+            return "No disponible"
+        elif self.stock == 0:
+            return "Sin stock"
+        elif self.is_low_stock:
+            return f"¡Últimas {self.stock} unidades!"
+        else:
+            return f"{self.stock} disponibles"
 
 
 class ProductImage(models.Model):

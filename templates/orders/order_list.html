@@ -19,6 +19,42 @@
             </div>
 
             {% if user.is_authenticated %}
+                <!-- Estadísticas de pedidos -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{ total_orders }}</h5>
+                                <p class="card-text">Total de Pedidos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">${{ total_spent|floatformat:0 }}</h5>
+                                <p class="card-text">Total Gastado</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-info">{{ pending_orders }}</h5>
+                                <p class="card-text">Pedidos Pendientes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning">{{ processing_orders }}</h5>
+                                <p class="card-text">En Proceso</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filtros de estado -->
                 <div class="card mb-4">
                     <div class="card-body">
@@ -52,181 +88,171 @@
                                     Entregados
                                 </button>
                             </div>
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-outline-danger filter-btn" data-status="cancelled">
+                                    <i class="fas fa-times me-1"></i>
+                                    Cancelados
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Lista de pedidos (demo con datos estáticos) -->
+                <!-- Lista de pedidos reales -->
                 <div class="orders-container">
-                    <!-- Pedido 1 -->
-                    <div class="card mb-4 order-card" data-status="delivered">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1">
-                                    <i class="fas fa-hashtag me-2"></i>
-                                    Pedido #DB-20250730-0001
-                                </h5>
-                                <small class="text-muted">Realizado el 28 de julio, 2025</small>
-                            </div>
-                            <span class="badge bg-success fs-6">
-                                <i class="fas fa-check-circle me-1"></i>
-                                Entregado
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <img src="https://via.placeholder.com/80x80/8B4513/ffffff?text=🍪" 
-                                             alt="Galletas Chocolate" class="rounded me-3">
-                                        <div>
-                                            <h6 class="mb-1">Galletas de Chocolate Premium</h6>
-                                            <small class="text-muted">Cantidad: 2 cajas</small>
-                                        </div>
+                    {% if orders %}
+                        {% for order in orders %}
+                            <div class="card mb-4 order-card" data-status="{{ order.status }}">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <i class="fas fa-hashtag me-2"></i>
+                                            Pedido #{{ order.order_number }}
+                                        </h5>
+                                        <small class="text-muted">
+                                            Realizado el {{ order.created_at|date:"d/m/Y H:i" }}
+                                        </small>
                                     </div>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <img src="https://via.placeholder.com/80x80/A0522D/ffffff?text=🥜" 
-                                             alt="Galletas Nuez" class="rounded me-3">
-                                        <div>
-                                            <h6 class="mb-1">Galletas de Nuez y Canela</h6>
-                                            <small class="text-muted">Cantidad: 1 caja</small>
-                                        </div>
-                                    </div>
+                                    <span class="badge 
+                                        {% if order.status == 'pending' %}bg-warning text-dark
+                                        {% elif order.status == 'processing' %}bg-info
+                                        {% elif order.status == 'shipped' %}bg-primary
+                                        {% elif order.status == 'delivered' %}bg-success
+                                        {% elif order.status == 'cancelled' %}bg-danger
+                                        {% else %}bg-secondary
+                                        {% endif %} fs-6">
+                                        {% if order.status == 'pending' %}
+                                            <i class="fas fa-clock me-1"></i>Pendiente
+                                        {% elif order.status == 'processing' %}
+                                            <i class="fas fa-cog me-1"></i>En Preparación
+                                        {% elif order.status == 'shipped' %}
+                                            <i class="fas fa-truck me-1"></i>Enviado
+                                        {% elif order.status == 'delivered' %}
+                                            <i class="fas fa-check-circle me-1"></i>Entregado
+                                        {% elif order.status == 'cancelled' %}
+                                            <i class="fas fa-times me-1"></i>Cancelado
+                                        {% else %}
+                                            {{ order.get_status_display }}
+                                        {% endif %}
+                                    </span>
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="mb-2">
-                                        <strong class="h5 text-primary">$24.990</strong>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">3 productos</small>
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <a href="#" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Ver Detalles
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-download me-1"></i>
-                                            Factura
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            {% for item in order.items.all|slice:":3" %}
+                                                <div class="d-flex align-items-center mb-3">
+                                                    {% if item.product.image %}
+                                                        <img src="{{ item.product.image.url }}" 
+                                                             alt="{{ item.product.name }}" 
+                                                             class="rounded me-3" 
+                                                             style="width: 80px; height: 80px; object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                                             style="width: 80px; height: 80px; color: #6c757d;">
+                                                            <i class="fas fa-cookie fa-2x"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-1">{{ item.product.name }}</h6>
+                                                        <small class="text-muted">
+                                                            Cantidad: {{ item.quantity }} 
+                                                            • Precio: ${{ item.price|floatformat:0 }}
+                                                        </small>
+                                                        {% if item.product.has_discount %}
+                                                            <br>
+                                                            <small class="text-success">
+                                                                <i class="fas fa-tag me-1"></i>
+                                                                Con descuento aplicado
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                            
+                                            {% if order.items.count > 3 %}
+                                                <div class="text-muted">
+                                                    <i class="fas fa-plus me-1"></i>
+                                                    Y {{ order.items.count|add:"-3" }} producto{{ order.items.count|add:"-3"|pluralize }} más
+                                                </div>
+                                            {% endif %}
 
-                    <!-- Pedido 2 -->
-                    <div class="card mb-4 order-card" data-status="shipped">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1">
-                                    <i class="fas fa-hashtag me-2"></i>
-                                    Pedido #DB-20250730-0002
-                                </h5>
-                                <small class="text-muted">Realizado el 30 de julio, 2025</small>
-                            </div>
-                            <span class="badge bg-primary fs-6">
-                                <i class="fas fa-truck me-1"></i>
-                                En Camino
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <img src="https://via.placeholder.com/80x80/D2691E/ffffff?text=🍪" 
-                                             alt="Mix Galletas" class="rounded me-3">
-                                        <div>
-                                            <h6 class="mb-1">Mix de Galletas Artesanales</h6>
-                                            <small class="text-muted">Cantidad: 1 caja grande</small>
+                                            <!-- Información adicional según el estado -->
+                                            {% if order.status == 'shipped' and order.tracking_number %}
+                                                <div class="alert alert-info py-2 mt-3">
+                                                    <i class="fas fa-truck me-2"></i>
+                                                    <strong>Número de seguimiento:</strong> {{ order.tracking_number }}
+                                                </div>
+                                            {% elif order.status == 'pending' %}
+                                                <div class="alert alert-warning py-2 mt-3">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                                    <strong>Pendiente:</strong> Tu pedido está siendo procesado
+                                                </div>
+                                            {% elif order.status == 'cancelled' %}
+                                                <div class="alert alert-danger py-2 mt-3">
+                                                    <i class="fas fa-times me-2"></i>
+                                                    <strong>Cancelado:</strong> 
+                                                    {% if order.cancelled_at %}
+                                                        el {{ order.cancelled_at|date:"d/m/Y H:i" }}
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="mb-2">
+                                                <strong class="h5 text-primary">${{ order.total_price|floatformat:0 }}</strong>
+                                            </div>
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    {{ order.items.count }} producto{{ order.items.count|pluralize }}
+                                                </small>
+                                            </div>
+                                            <div class="d-grid gap-2">
+                                                <a href="{% url 'orders:order_detail' order.order_number %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    Ver Detalles
+                                                </a>
+                                                {% if order.status == 'pending' or order.status == 'processing' %}
+                                                    <form method="post" action="{% url 'orders:cancel_order' order.order_number %}">>
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                                                onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido?')">
+                                                            <i class="fas fa-times me-1"></i>
+                                                            Cancelar
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                {% if order.status == 'delivered' %}
+                                                    <button class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-download me-1"></i>
+                                                        Factura
+                                                    </button>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="alert alert-info py-2">
-                                        <i class="fas fa-truck me-2"></i>
-                                        <strong>Número de seguimiento:</strong> DB-TRACK-789123
-                                        <a href="#" class="ms-2 text-decoration-none">Rastrear pedido</a>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="mb-2">
-                                        <strong class="h5 text-primary">$18.990</strong>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">1 producto</small>
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <a href="#" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Ver Detalles
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-warning">
-                                            <i class="fas fa-times me-1"></i>
-                                            Cancelar
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No tienes pedidos aún</h4>
+                            <p class="text-muted mb-4">
+                                ¡Explora nuestros productos y realiza tu primera compra!
+                            </p>
+                            <a href="{% url 'shop:home' %}" class="btn btn-primary">
+                                <i class="fas fa-shopping-bag me-2"></i>
+                                Empezar a Comprar
+                            </a>
                         </div>
-                    </div>
-
-                    <!-- Pedido 3 -->
-                    <div class="card mb-4 order-card" data-status="pending">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1">
-                                    <i class="fas fa-hashtag me-2"></i>
-                                    Pedido #DB-20250730-0003
-                                </h5>
-                                <small class="text-muted">Realizado el 30 de julio, 2025</small>
-                            </div>
-                            <span class="badge bg-warning text-dark fs-6">
-                                <i class="fas fa-clock me-1"></i>
-                                Pendiente de Pago
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <img src="https://via.placeholder.com/80x80/CD853F/ffffff?text=🍯" 
-                                             alt="Galletas Miel" class="rounded me-3">
-                                        <div>
-                                            <h6 class="mb-1">Galletas de Miel y Avena</h6>
-                                            <small class="text-muted">Cantidad: 3 cajas</small>
-                                        </div>
-                                    </div>
-                                    <div class="alert alert-warning py-2">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        <strong>Pendiente de pago:</strong> Complete el pago para procesar su pedido
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="mb-2">
-                                        <strong class="h5 text-primary">$35.970</strong>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">3 productos</small>
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-sm btn-warning">
-                                            <i class="fas fa-credit-card me-1"></i>
-                                            Pagar Ahora
-                                        </button>
-                                        <a href="#" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Ver Detalles
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {% endif %}
 
                     <!-- Mensaje cuando no hay pedidos con el filtro activo -->
                     <div class="no-orders-message text-center py-5" style="display: none;">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
                         <h4 class="text-muted">No hay pedidos con este estado</h4>
-                        <p class="text-muted">Prueba con otro filtro o realiza una nueva compra</p>
+                        <p class="text-muted">Prueba con otro filtro</p>
                     </div>
                 </div>
 

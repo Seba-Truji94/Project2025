@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cart_extras %}
+
+{% block title %}🛒 Mi Carrito - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'shop:product_list' %}">Productos</a></li>
+            <li class="breadcrumb-item active">Mi Carrito</li>
+        </ol>
+    </nav>
+
+    <!-- Header del Carrito -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="cart-title">
+                    <i class="fas fa-shopping-cart text-primary"></i>
+                    Mi Carrito de Compras
+                </h1>
+                {% if is_authenticated_cart and cart.total_items > 0 or not is_authenticated_cart and cart_totals.total_items > 0 %}
+                    <a href="{% url 'cart:clear_cart' %}" class="btn btn-outline-danger btn-sm" 
+                       onclick="return confirm('¿Estás seguro de vaciar tu carrito?')">
+                        <i class="fas fa-trash"></i>
+                        Vaciar Carrito
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if is_authenticated_cart and cart.total_items > 0 or not is_authenticated_cart and cart_totals.total_items > 0 %}
+        <!-- Carrito con productos -->
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Items del carrito -->
+                <div class="cart-items">
+                    {% if is_authenticated_cart %}
+                        <!-- Carrito de usuario autenticado -->
+                        {% for item in cart_items %}
+                        <div class="cart-item" data-product-id="{{ item.product.id }}">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div class="product-image">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" 
+                                                 alt="{{ item.product.name }}" 
+                                                 class="img-fluid rounded">
+                                        {% else %}
+                                            <div class="no-image">
+                                                <i class="fas fa-cookie-bite"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="product-info">
+                                        <h5 class="product-name">{{ item.product.name }}</h5>
+                                        <p class="product-category text-muted">{{ item.product.category.name }}</p>
+                                        <div class="product-price">
+                                            <span class="price">${{ item.product.price|floatformat:0 }}</span>
+                                            <small class="text-muted">c/u</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="quantity-controls">
+                                        <label class="form-label">Cantidad:</label>
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary quantity-btn" 
+                                                    type="button" data-action="decrease">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" 
+                                                   class="form-control text-center quantity-input" 
+                                                   value="{{ item.quantity }}" 
+                                                   min="1" 
+                                                   max="99"
+                                                   data-product-id="{{ item.product.id }}">
+                                            <button class="btn btn-outline-secondary quantity-btn" 
+                                                    type="button" data-action="increase">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="item-total">
+                                        <strong class="total-price">{{ item.formatted_total_price }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-outline-danger btn-sm remove-item" 
+                                            data-product-id="{{ item.product.id }}"
+                                            title="Eliminar producto">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Carrito de sesión (usuario no autenticado) -->
+                        {% for item in cart_items %}
+                        <div class="cart-item" data-product-id="{{ item.product.id }}">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div class="product-image">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" 
+                                                 alt="{{ item.product.name }}" 
+                                                 class="img-fluid rounded">
+                                        {% else %}
+                                            <div class="no-image">
+                                                <i class="fas fa-cookie-bite"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="product-info">
+                                        <h5 class="product-name">{{ item.product.name }}</h5>
+                                        <p class="product-category text-muted">{{ item.product.category.name }}</p>
+                                        <div class="product-price">
+                                            <span class="price">${{ item.price|floatformat:0 }}</span>
+                                            <small class="text-muted">c/u</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="quantity-controls">
+                                        <label class="form-label">Cantidad:</label>
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary quantity-btn" 
+                                                    type="button" data-action="decrease">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" 
+                                                   class="form-control text-center quantity-input" 
+                                                   value="{{ item.quantity }}" 
+                                                   min="1" 
+                                                   max="99"
+                                                   data-product-id="{{ item.product.id }}">
+                                            <button class="btn btn-outline-secondary quantity-btn" 
+                                                    type="button" data-action="increase">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="item-total">
+                                        <strong class="total-price">${{ item.total_price|floatformat:0 }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-outline-danger btn-sm remove-item" 
+                                            data-product-id="{{ item.product.id }}"
+                                            title="Eliminar producto">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Resumen del pedido -->
+                <div class="cart-summary sticky-top">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-receipt"></i>
+                                Resumen del Pedido
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="summary-row">
+                                <span>Productos:</span>
+                                <span id="items-count">
+                                    {% if is_authenticated_cart %}
+                                        {{ cart.total_items }} items
+                                    {% else %}
+                                        {{ cart_totals.total_items }} items
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">
+                                    {% if is_authenticated_cart %}
+                                        {{ cart.formatted_total_price }}
+                                    {% else %}
+                                        ${{ cart_totals.total_price|floatformat:0 }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Envío:</span>
+                                <span id="shipping" class="{% if is_authenticated_cart and cart.shipping_cost == 0 or not is_authenticated_cart and cart_totals.shipping_cost == 0 %}text-success{% endif %}">
+                                    {% if is_authenticated_cart %}
+                                        {{ cart.formatted_shipping_cost }}
+                                    {% else %}
+                                        {% if cart_totals.shipping_cost == 0 %}GRATIS{% else %}${{ cart_totals.shipping_cost|floatformat:0 }}{% endif %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            {% if is_authenticated_cart and cart.total_price < 15000 or not is_authenticated_cart and cart_totals.total_price < 15000 %}
+                            <div class="shipping-notice">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    Agrega 
+                                    {% if is_authenticated_cart %}
+                                        ${{ 15000|subtract:cart.total_price|floatformat:0 }}
+                                    {% else %}
+                                        ${{ 15000|subtract:cart_totals.total_price|floatformat:0 }}
+                                    {% endif %}
+                                    más para envío gratis
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <hr>
+                            <div class="summary-row total-row">
+                                <strong>Total:</strong>
+                                <strong id="final-total">
+                                    {% if is_authenticated_cart %}
+                                        {{ cart.formatted_final_total }}
+                                    {% else %}
+                                        ${{ cart_totals.final_total|floatformat:0 }}
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'cart:checkout' %}" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-credit-card"></i>
+                                    Proceder al Pago
+                                </a>
+                            {% else %}
+                                <div class="text-center mb-3">
+                                    <p class="mb-2">
+                                        <small class="text-muted">Inicia sesión para completar tu compra</small>
+                                    </p>
+                                    <a href="{% url 'accounts:login' %}?next={% url 'cart:cart_detail' %}" 
+                                       class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        Iniciar Sesión
+                                    </a>
+                                </div>
+                                <div class="text-center">
+                                    <small>
+                                        ¿No tienes cuenta? 
+                                        <a href="{% url 'accounts:register' %}">Regístrate aquí</a>
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Beneficios -->
+                    <div class="benefits-card mt-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-shield-alt text-success"></i>
+                                    Compra Segura
+                                </h6>
+                                <ul class="benefits-list">
+                                    <li><i class="fas fa-check text-success"></i> Pago 100% seguro</li>
+                                    <li><i class="fas fa-truck text-primary"></i> Envío gratis desde $15.000</li>
+                                    <li><i class="fas fa-undo text-info"></i> Garantía de satisfacción</li>
+                                    <li><i class="fas fa-headset text-warning"></i> Soporte 24/7</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Carrito vacío -->
+        <div class="empty-cart">
+            <div class="text-center py-5">
+                <div class="empty-cart-icon mb-4">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="mb-3">Tu carrito está vacío</h3>
+                <p class="text-muted mb-4">
+                    ¡Agrega algunas galletas deliciosas para empezar tu experiencia Dulce Bias!
+                </p>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-cookie-bite"></i>
+                    Explorar Productos
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Productos Recomendados -->
+    {% if is_authenticated_cart and cart.total_items > 0 or not is_authenticated_cart and cart_totals.total_items > 0 %}
+    <div class="recommended-products mt-5">
+        <h4 class="mb-4">
+            <i class="fas fa-heart text-danger"></i>
+            Te podría interesar
+        </h4>
+        <!-- Aquí puedes agregar productos recomendados -->
+        <div class="text-center">
+            <a href="{% url 'shop:product_list' %}" class="btn btn-outline-primary">
+                Ver más productos
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.cart-title {
+    color: #2c5282;
+    font-weight: 600;
+}
+
+.cart-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    transition: box-shadow 0.2s;
+}
+
+.cart-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.product-image img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.no-image {
+    width: 80px;
+    height: 80px;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 1.5rem;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #2c5282;
+    margin-bottom: 0.5rem;
+}
+
+.product-category {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e53e3e;
+}
+
+.quantity-controls {
+    max-width: 150px;
+}
+
+.quantity-input {
+    max-width: 60px;
+}
+
+.item-total {
+    text-align: center;
+}
+
+.total-price {
+    font-size: 1.2rem;
+    color: #2c5282;
+}
+
+.cart-summary {
+    top: 2rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.total-row {
+    font-size: 1.2rem;
+    border-top: 2px solid #e9ecef;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.shipping-notice {
+    background: #e3f2fd;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin: 0.75rem 0;
+}
+
+.benefits-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.benefits-list li {
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.empty-cart-icon {
+    font-size: 4rem;
+    color: #cbd5e0;
+}
+
+.remove-item:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .cart-item .row > div {
+        margin-bottom: 1rem;
+    }
+    
+    .cart-summary {
+        position: static !important;
+        margin-top: 2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar cantidad
+    document.querySelectorAll('.quantity-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const cartItem = this.closest('.cart-item');
+            const productId = cartItem.dataset.productId;
+            const quantityInput = cartItem.querySelector('.quantity-input');
+            let currentQuantity = parseInt(quantityInput.value);
+            
+            if (action === 'increase') {
+                currentQuantity++;
+            } else if (action === 'decrease' && currentQuantity > 1) {
+                currentQuantity--;
+            }
+            
+            quantityInput.value = currentQuantity;
+            updateCartItem(productId, currentQuantity);
+        });
+    });
+    
+    // Actualizar cuando se cambia directamente el input
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const productId = this.dataset.productId;
+            const quantity = parseInt(this.value);
+            if (quantity > 0) {
+                updateCartItem(productId, quantity);
+            }
+        });
+    });
+    
+    // Eliminar item
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            removeCartItem(productId);
+        });
+    });
+    
+    function updateCartItem(productId, quantity) {
+        fetch(`{% url 'cart:update_cart' 0 %}`.replace('0', productId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `quantity=${quantity}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Recargar para actualizar totales
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    function removeCartItem(productId) {
+        if (confirm('¿Eliminar este producto del carrito?')) {
+            fetch(`{% url 'cart:remove_from_cart' 0 %}`.replace('0', productId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+});
+</script>
+{% endblock %}

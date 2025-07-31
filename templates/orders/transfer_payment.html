@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}Pago por Transferencia - Pedido #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-6">
+                    <i class="fas fa-university me-3"></i>
+                    Pago por Transferencia Bancaria
+                </h1>
+                <p class="lead text-muted">Pedido #{{ order.order_number }}</p>
+            </div>
+
+            <!-- Información del pedido -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-bag me-2"></i>
+                        Resumen del Pedido
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Total a pagar:</strong> <span class="h4 text-primary">${{ order.total|floatformat:0 }}</span></p>
+                            <p><strong>Fecha del pedido:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Estado:</strong> 
+                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                            </p>
+                            <p><strong>Método de pago:</strong> Transferencia Bancaria</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado del pago -->
+            {% if transfer_payment %}
+                <div class="alert 
+                    {% if transfer_payment.status == 'pending' %}alert-warning
+                    {% elif transfer_payment.status == 'verified' %}alert-success
+                    {% elif transfer_payment.status == 'rejected' %}alert-danger
+                    {% else %}alert-info
+                    {% endif %} mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas 
+                            {% if transfer_payment.status == 'pending' %}fa-clock
+                            {% elif transfer_payment.status == 'verified' %}fa-check-circle
+                            {% elif transfer_payment.status == 'rejected' %}fa-times-circle
+                            {% else %}fa-info-circle
+                            {% endif %} fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-1">
+                                {% if transfer_payment.status == 'pending' %}
+                                    Comprobante en Revisión
+                                {% elif transfer_payment.status == 'verified' %}
+                                    ¡Pago Verificado!
+                                {% elif transfer_payment.status == 'rejected' %}
+                                    Comprobante Rechazado
+                                {% else %}
+                                    Estado: {{ transfer_payment.get_status_display }}
+                                {% endif %}
+                            </h5>
+                            <p class="mb-0">
+                                {% if transfer_payment.status == 'pending' %}
+                                    Tu comprobante ha sido recibido y está siendo verificado. Te notificaremos el resultado en un plazo máximo de 24 horas.
+                                {% elif transfer_payment.status == 'verified' %}
+                                    Tu pago ha sido verificado exitosamente. Tu pedido está siendo procesado.
+                                {% elif transfer_payment.status == 'rejected' %}
+                                    El comprobante fue rechazado. Por favor, revisa los datos y sube un nuevo comprobante.
+                                    {% if transfer_payment.verification_notes %}
+                                        <br><strong>Motivo:</strong> {{ transfer_payment.verification_notes }}
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Instrucciones de transferencia -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Instrucciones de Transferencia
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-light">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Importante:</h6>
+                                <ul class="mb-0">
+                                    <li>El monto debe ser exactamente <strong>${{ order.total|floatformat:0 }}</strong></li>
+                                    <li>Incluye en el concepto: <strong>Pedido #{{ order.order_number }}</strong></li>
+                                    <li>Sube el comprobante inmediatamente después de realizar la transferencia</li>
+                                    <li>El pedido será procesado una vez verificado el pago</li>
+                                </ul>
+                            </div>
+
+                            <h6 class="mt-4 mb-3">
+                                <i class="fas fa-university me-2"></i>
+                                Cuentas Disponibles:
+                            </h6>
+                            
+                            {% for account in bank_accounts %}
+                                <div class="card border-secondary mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary">{{ account.bank_name }}</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Tipo:</small><br>
+                                                <strong>{{ account.get_account_type_display }}</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Número:</small><br>
+                                                <strong>{{ account.account_number }}</strong>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Titular:</small><br>
+                                                <strong>{{ account.account_holder }}</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">RUT:</small><br>
+                                                <strong>{{ account.rut }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de comprobante -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-upload me-2"></i>
+                                {% if transfer_payment and transfer_payment.status == 'rejected' %}
+                                    Subir Nuevo Comprobante
+                                {% else %}
+                                    Subir Comprobante de Transferencia
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if not transfer_payment or transfer_payment.status == 'rejected' %}
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    
+                                    <div class="mb-3">
+                                        <label for="bank_account" class="form-label">Cuenta de destino *</label>
+                                        <select class="form-select" id="bank_account" name="bank_account" required>
+                                            <option value="">Selecciona la cuenta a la que transferiste</option>
+                                            {% for account in bank_accounts %}
+                                                <option value="{{ account.id }}">
+                                                    {{ account.bank_name }} - {{ account.account_number }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="transfer_amount" class="form-label">Monto transferido *</label>
+                                                <input type="number" class="form-control" id="transfer_amount" 
+                                                       name="transfer_amount" value="{{ order.total|floatformat:0 }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="transfer_date" class="form-label">Fecha de transferencia *</label>
+                                                <input type="datetime-local" class="form-control" id="transfer_date" 
+                                                       name="transfer_date" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="reference_number" class="form-label">Número de comprobante/referencia *</label>
+                                        <input type="text" class="form-control" id="reference_number" 
+                                               name="reference_number" placeholder="Ej: 123456789" required>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="sender_name" class="form-label">Nombre del emisor *</label>
+                                                <input type="text" class="form-control" id="sender_name" 
+                                                       name="sender_name" value="{{ order.first_name }} {{ order.last_name }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="sender_rut" class="form-label">RUT del emisor *</label>
+                                                <input type="text" class="form-control" id="sender_rut" 
+                                                       name="sender_rut" placeholder="12.345.678-9" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="sender_bank" class="form-label">Banco emisor *</label>
+                                        <input type="text" class="form-control" id="sender_bank" 
+                                               name="sender_bank" placeholder="Ej: Banco de Chile" required>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label for="receipt_image" class="form-label">Comprobante de transferencia *</label>
+                                        <input type="file" class="form-control" id="receipt_image" 
+                                               name="receipt_image" accept="image/*" required>
+                                        <div class="form-text">
+                                            Sube una foto clara del comprobante (JPG, PNG, máx. 5MB)
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-upload me-2"></i>
+                                            Enviar Comprobante
+                                        </button>
+                                        <a href="{% url 'orders:order_detail' order.order_number %}" 
+                                           class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-2"></i>
+                                            Volver al Pedido
+                                        </a>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <h5>Comprobante ya enviado</h5>
+                                    <p class="text-muted">
+                                        Ya has subido el comprobante para este pedido. 
+                                        Será verificado en un plazo máximo de 24 horas.
+                                    </p>
+                                    <a href="{% url 'orders:order_detail' order.order_number %}" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        Volver al Pedido
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ayuda y contacto -->
+            <div class="alert alert-info mt-4">
+                <h6><i class="fas fa-question-circle me-2"></i>¿Necesitas ayuda?</h6>
+                <p class="mb-0">
+                    Si tienes problemas con la transferencia o el envío del comprobante, 
+                    contáctanos por WhatsApp al <strong>+56 9 1234 5678</strong> o por email a 
+                    <strong>pagos@dulcebias.cl</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-completar fecha de transferencia con fecha actual
+    const transferDateInput = document.getElementById('transfer_date');
+    if (transferDateInput && !transferDateInput.value) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        transferDateInput.value = now.toISOString().slice(0, 16);
+    }
+
+    // Validación del archivo
+    const fileInput = document.getElementById('receipt_image');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Verificar tamaño (5MB máximo)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('El archivo es demasiado grande. Máximo 5MB.');
+                    this.value = '';
+                    return;
+                }
+                
+                // Verificar tipo
+                if (!file.type.startsWith('image/')) {
+                    alert('Por favor selecciona un archivo de imagen.');
+                    this.value = '';
+                    return;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

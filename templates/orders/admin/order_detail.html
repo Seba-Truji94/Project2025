@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pedido #{{ order.order_number }} - Admin Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-receipt text-primary"></i>
+                Pedido #{{ order.order_number }}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'orders:admin_management' %}">Gestión de Pedidos</a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ order.order_number }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <span class="badge status-badge status-{{ order.status }} fs-6">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información Principal del Pedido -->
+        <div class="col-lg-8">
+            <!-- Detalles del Pedido -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Información del Pedido
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Número de Pedido:</strong></td>
+                                    <td>#{{ order.order_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Estado:</strong></td>
+                                    <td>
+                                        <span class="badge status-badge status-{{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Estado de Pago:</strong></td>
+                                    <td>
+                                        <span class="badge {% if order.payment_status == 'paid' %}bg-success{% else %}bg-warning{% endif %}">
+                                            {{ order.get_payment_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha de Pedido:</strong></td>
+                                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Cliente:</strong></td>
+                                    <td>
+                                        <a href="#" class="text-decoration-none">
+                                            {{ order.user.get_full_name|default:order.user.username }}
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">{{ order.user.email }}</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Teléfono:</strong></td>
+                                    <td>{{ order.phone }}</td>
+                                </tr>
+                                {% if order.shipped_at %}
+                                <tr>
+                                    <td><strong>Fecha de Envío:</strong></td>
+                                    <td>{{ order.shipped_at|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if order.delivered_at %}
+                                <tr>
+                                    <td><strong>Fecha de Entrega:</strong></td>
+                                    <td>{{ order.delivered_at|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dirección de Entrega -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Dirección de Entrega
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <address>
+                        <strong>{{ order.full_name }}</strong><br>
+                        {{ order.address }}<br>
+                        {{ order.city }}, {{ order.get_region_display }}<br>
+                        {% if order.postal_code %}{{ order.postal_code }}<br>{% endif %}
+                        <i class="fas fa-phone"></i> {{ order.phone }}
+                    </address>
+                </div>
+            </div>
+
+            <!-- Productos del Pedido -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-cart"></i>
+                        Productos Pedidos ({{ order.get_total_items }} items)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th width="100px">Precio Unit.</th>
+                                    <th width="80px">Cantidad</th>
+                                    <th width="120px">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" 
+                                                     alt="{{ item.product.name }}" 
+                                                     class="me-3 rounded"
+                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light me-3 rounded d-flex align-items-center justify-content-center"
+                                                     style="width: 50px; height: 50px;">
+                                                    <i class="fas fa-cookie-bite text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ item.product.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ item.product.category.name }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ item.formatted_price }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ item.quantity }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ item.formatted_total_price }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3"><strong>Subtotal:</strong></td>
+                                    <td><strong>{{ order.formatted_subtotal }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><strong>Envío:</strong></td>
+                                    <td><strong>{{ order.formatted_shipping_cost }}</strong></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td colspan="3"><strong>TOTAL:</strong></td>
+                                    <td><strong class="fs-5">{{ order.formatted_total }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial de Estados -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i>
+                        Historial de Estados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if status_history %}
+                        <div class="timeline">
+                            {% for history in status_history %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker status-{{ history.status }}">
+                                    <i class="fas fa-circle"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <strong>{{ history.get_status_display }}</strong>
+                                        <small class="text-muted ms-2">{{ history.changed_at|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                    {% if history.notes %}
+                                        <p class="mb-1">{{ history.notes }}</p>
+                                    {% endif %}
+                                    {% if history.changed_by %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i>
+                                            Cambiado por: {{ history.changed_by.get_full_name|default:history.changed_by.username }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hay historial de cambios de estado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Acciones -->
+        <div class="col-lg-4">
+            <!-- Cambio de Estado -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit"></i>
+                        Cambiar Estado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'orders:admin_update_status' order.order_number %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ status_form.status.label_tag }}
+                            {{ status_form.status }}
+                        </div>
+                        <div class="mb-3">
+                            {{ status_form.status_notes.label_tag }}
+                            {{ status_form.status_notes }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save"></i>
+                            Actualizar Estado
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Notas y Seguimiento -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sticky-note"></i>
+                        Notas y Seguimiento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'orders:admin_update_notes' order.order_number %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ notes_form.tracking_number.label_tag }}
+                            {{ notes_form.tracking_number }}
+                        </div>
+                        <div class="mb-3">
+                            {{ notes_form.notes.label_tag }}
+                            {{ notes_form.notes }}
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-save"></i>
+                            Guardar Notas
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Acciones Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i>
+                        Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if order.status == 'pending' %}
+                            <button class="btn btn-success quick-status-btn" 
+                                    data-status="confirmed" 
+                                    data-notes="Pedido confirmado automáticamente">
+                                <i class="fas fa-check"></i>
+                                Confirmar Pedido
+                            </button>
+                        {% endif %}
+                        
+                        {% if order.status == 'confirmed' %}
+                            <button class="btn btn-info quick-status-btn" 
+                                    data-status="processing" 
+                                    data-notes="Pedido en preparación">
+                                <i class="fas fa-cogs"></i>
+                                Iniciar Preparación
+                            </button>
+                        {% endif %}
+                        
+                        {% if order.status == 'processing' %}
+                            <button class="btn btn-warning quick-status-btn" 
+                                    data-status="shipped" 
+                                    data-notes="Pedido enviado">
+                                <i class="fas fa-shipping-fast"></i>
+                                Marcar como Enviado
+                            </button>
+                        {% endif %}
+                        
+                        {% if order.status == 'shipped' %}
+                            <button class="btn btn-success quick-status-btn" 
+                                    data-status="delivered" 
+                                    data-notes="Pedido entregado">
+                                <i class="fas fa-check-circle"></i>
+                                Marcar como Entregado
+                            </button>
+                        {% endif %}
+                        
+                        {% if order.can_be_cancelled %}
+                            <button class="btn btn-danger quick-status-btn" 
+                                    data-status="cancelled" 
+                                    data-notes="Pedido cancelado"
+                                    onclick="return confirm('¿Estás seguro de cancelar este pedido?')">
+                                <i class="fas fa-times"></i>
+                                Cancelar Pedido
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Información Adicional
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Última actualización:</strong><br>
+                            <small>{{ order.updated_at|date:"d/m/Y H:i" }}</small>
+                        </li>
+                        {% if order.tracking_number %}
+                        <li class="mt-2"><strong>Número de seguimiento:</strong><br>
+                            <code>{{ order.tracking_number }}</code>
+                        </li>
+                        {% endif %}
+                        {% if order.notes %}
+                        <li class="mt-2"><strong>Notas:</strong><br>
+                            <small>{{ order.notes }}</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.status-badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.status-pending { background-color: #ffc107; color: #212529; }
+.status-confirmed { background-color: #17a2b8; color: white; }
+.status-processing { background-color: #6f42c1; color: white; }
+.status-shipped { background-color: #fd7e14; color: white; }
+.status-delivered { background-color: #28a745; color: white; }
+.status-cancelled { background-color: #dc3545; color: white; }
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #28a745;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-marker.status-pending { border-color: #ffc107; }
+.timeline-marker.status-confirmed { border-color: #17a2b8; }
+.timeline-marker.status-processing { border-color: #6f42c1; }
+.timeline-marker.status-shipped { border-color: #fd7e14; }
+.timeline-marker.status-delivered { border-color: #28a745; }
+.timeline-marker.status-cancelled { border-color: #dc3545; }
+
+.timeline-marker i {
+    font-size: 6px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.timeline-header {
+    margin-bottom: 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Acciones rápidas
+    document.querySelectorAll('.quick-status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const status = this.dataset.status;
+            const notes = this.dataset.notes;
+            
+            // Crear formulario dinámico
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'orders:admin_update_status' order.order_number %}";
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            form.innerHTML = `
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                <input type="hidden" name="status" value="${status}">
+                <input type="hidden" name="status_notes" value="${notes}">
+            `;
+            
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

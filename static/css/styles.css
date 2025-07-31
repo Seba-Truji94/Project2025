@@ -338,7 +338,7 @@ body.navbar-scrolled {
 }
 
 .cart-btn {
-    background: var(--primary-color);
+    background: var(--primary-blue);
     color: var(--white);
     border: none;
     padding: 0.75rem 1.25rem;
@@ -352,6 +352,88 @@ body.navbar-scrolled {
     position: relative;
     overflow: hidden;
     text-decoration: none;
+}
+
+/* Botón Flotante de Carrito */
+.floating-cart-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.floating-cart-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.floating-cart-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--primary-blue);
+    color: white;
+    border-radius: 50%;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.floating-cart-link:hover {
+    background: var(--primary-blue-dark);
+    color: white;
+    box-shadow: 0 6px 25px rgba(74, 144, 226, 0.6);
+    transform: translateY(-2px);
+}
+
+.floating-cart-link i {
+    font-size: 1.5rem;
+}
+
+.floating-cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-pink);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+/* Ocultar botón flotante en pantallas grandes donde el botón normal es visible */
+@media (min-width: 992px) {
+    .floating-cart-btn {
+        display: none;
+    }
+}
+
+/* Estilo especial para el enlace de carrito en el menú móvil */
+.mobile-cart-link {
+    background: var(--primary-blue) !important;
+    color: white !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 8px !important;
+    margin: 0.5rem 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    font-weight: 600 !important;
+}
+
+.mobile-cart-link:hover {
+    background: var(--primary-blue-dark) !important;
+    color: white !important;
 }
 
 /* Icono del carrito más bonito */
@@ -1592,12 +1674,15 @@ body.navbar-scrolled {
     gap: 0.25rem;
     transition: var(--transition-medium);
     font-size: 1.1rem;
+    text-decoration: none;
 }
 
 .checkout-btn:hover {
     background: linear-gradient(135deg, #059669, var(--success));
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+    color: var(--white);
+    text-decoration: none;
 }
 
 .checkout-btn small {

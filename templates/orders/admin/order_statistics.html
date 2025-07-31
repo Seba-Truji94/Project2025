@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas de Pedidos - Admin Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-chart-bar text-primary"></i>
+                Estadísticas de Pedidos
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'orders:admin_management' %}">Gestión de Pedidos</a>
+                    </li>
+                    <li class="breadcrumb-item active">Estadísticas</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                Imprimir Reporte
+            </button>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card border-primary">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-primary">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h3 class="stats-number">{{ total_orders }}</h3>
+                    <p class="stats-label">Total Pedidos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-success">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-success">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h3 class="stats-number">{{ total_revenue }}</h3>
+                    <p class="stats-label">Ingresos Totales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-info">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-info">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3 class="stats-number">{{ avg_order_value }}</h3>
+                    <p class="stats-label">Valor Promedio</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-warning">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-warning">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <h3 class="stats-number">{{ recent_orders }}</h3>
+                    <p class="stats-label">Últimos 30 días</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas por Estado -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie"></i>
+                        Distribución por Estado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for status, data in status_stats.items %}
+                        <div class="col-lg-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator status-{{ status }} me-3"></div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">{{ data.display }}</span>
+                                        <span class="text-muted">{{ data.count }} pedidos</span>
+                                    </div>
+                                    <div class="progress mt-1" style="height: 8px;">
+                                        <div class="progress-bar status-{{ status }}" 
+                                             style="width: {{ data.percentage|floatformat:1 }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ data.percentage|floatformat:1 }}%</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Resumen Rápido
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>Estado más común:</strong><br>
+                            <span class="badge status-badge status-delivered">Entregados</span>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Pedidos pendientes:</strong><br>
+                            {{ status_stats.pending.count }} pedidos
+                        </li>
+                        <li class="mb-2">
+                            <strong>En proceso:</strong><br>
+                            {{ status_stats.processing.count }} pedidos
+                        </li>
+                        <li class="mb-2">
+                            <strong>Listos para envío:</strong><br>
+                            {{ status_stats.shipped.count }} pedidos
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-card {
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stats-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-pending { background-color: #ffc107; }
+.status-confirmed { background-color: #17a2b8; }
+.status-processing { background-color: #6f42c1; }
+.status-shipped { background-color: #fd7e14; }
+.status-delivered { background-color: #28a745; }
+.status-cancelled { background-color: #dc3545; }
+
+.progress-bar.status-pending { background-color: #ffc107; }
+.progress-bar.status-confirmed { background-color: #17a2b8; }
+.progress-bar.status-processing { background-color: #6f42c1; }
+.progress-bar.status-shipped { background-color: #fd7e14; }
+.progress-bar.status-delivered { background-color: #28a745; }
+.progress-bar.status-cancelled { background-color: #dc3545; }
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+}
+
+@media print {
+    .btn {
+        display: none !important;
+    }
+    
+    .breadcrumb {
+        display: none;
+    }
+    
+    .stats-card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
+</style>
+{% endblock %}

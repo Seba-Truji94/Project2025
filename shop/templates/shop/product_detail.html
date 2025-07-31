@@ -87,20 +87,46 @@
                     
                     <!-- Price -->
                     <div class="price-section mb-4">
-                        <span class="h3 text-primary fw-bold">{{ product.formatted_price }}</span>
+                        {% if product.has_discount %}
+                            <!-- Precio con descuento -->
+                            <div class="price-with-discount">
+                                <span class="h3 text-primary fw-bold">{{ product.formatted_current_price }}</span>
+                                <span class="text-muted text-decoration-line-through ms-2">{{ product.formatted_price }}</span>
+                                <span class="badge bg-danger ms-2">
+                                    {% if product.discount_percentage > 0 %}
+                                        -{{ product.discount_percentage|floatformat:0 }}%
+                                    {% else %}
+                                        Oferta
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <small class="text-success">
+                                <i class="fas fa-tag"></i>
+                                Ahorras {{ product.formatted_discount_amount }}
+                            </small>
+                        {% else %}
+                            <!-- Precio normal -->
+                            <span class="h3 text-primary fw-bold">{{ product.formatted_current_price }}</span>
+                        {% endif %}
                         <span class="text-muted ms-2">({{ product.weight }}g)</span>
                     </div>
                     
                     <!-- Stock Status -->
                     <div class="stock-status mb-4">
                         {% if product.is_in_stock %}
-                        <span class="badge bg-success">
-                            <i class="fas fa-check-circle"></i> {{ product.stock }} disponibles
-                        </span>
+                            {% if product.is_low_stock %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-exclamation-triangle"></i> {{ product.stock_status }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> {{ product.stock_status }}
+                                </span>
+                            {% endif %}
                         {% else %}
-                        <span class="badge bg-danger">
-                            <i class="fas fa-times-circle"></i> Agotado
-                        </span>
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle"></i> {{ product.stock_status }}
+                            </span>
                         {% endif %}
                     </div>
                     
@@ -128,7 +154,8 @@
                     
                     <!-- Add to Cart Form -->
                     {% if product.is_in_stock %}
-                    <form class="add-to-cart-form mb-4">
+                    <form class="add-to-cart-form mb-4" method="post">
+                        {% csrf_token %}
                         <div class="row align-items-end">
                             <div class="col-md-4">
                                 <label for="quantity" class="form-label">Cantidad:</label>
@@ -282,6 +309,22 @@
 
 {% block extra_js %}
 <script>
+// Función para obtener cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Image Gallery
     const thumbnails = document.querySelectorAll('.thumbnail-image');
@@ -316,20 +359,101 @@ document.addEventListener('DOMContentLoaded', function() {
             button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Agregando...';
             button.disabled = true;
             
-            // Simulate AJAX request (replace with actual implementation)
-            setTimeout(() => {
-                button.innerHTML = '<i class="fas fa-check me-2"></i>¡Agregado!';
+            // Obtener el token CSRF del formulario
+            const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Construir la URL correctamente
+            const addToCartUrl = `/cart/add/${productId}/`;
+            
+            // Enviar request AJAX al carrito
+            fetch(addToCartUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `quantity=${quantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar éxito
+                    button.innerHTML = '<i class="fas fa-check me-2"></i>¡Agregado!';
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-success');
+                    
+                    // Actualizar contador del carrito en la navbar
+                    const cartCount = document.querySelector('.cart-count');
+                    if (cartCount) {
+                        cartCount.textContent = data.cart_total_items;
+                    }
+                    
+                    const cartTotal = document.querySelector('.cart-total-preview');
+                    if (cartTotal) {
+                        cartTotal.textContent = data.cart_final_total;
+                    }
+                    
+                    // Mostrar mensaje de éxito
+                    showCartMessage(data.message, 'success');
+                    
+                    // Restaurar botón después de 2 segundos
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Agregar al Carrito';
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-primary');
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    // Mostrar error
+                    button.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error';
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-danger');
+                    
+                    showCartMessage('Error al agregar producto', 'error');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Agregar al Carrito';
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-primary');
+                        button.disabled = false;
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error';
                 button.classList.remove('btn-primary');
-                button.classList.add('btn-success');
+                button.classList.add('btn-danger');
                 
                 setTimeout(() => {
                     button.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Agregar al Carrito';
-                    button.classList.remove('btn-success');
+                    button.classList.remove('btn-danger');
                     button.classList.add('btn-primary');
                     button.disabled = false;
                 }, 2000);
-            }, 1000);
+            });
         });
+    }
+    
+    // Función para mostrar mensajes
+    function showCartMessage(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 4000);
     }
     
     // Wishlist

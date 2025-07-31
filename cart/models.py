@@ -61,7 +61,7 @@ class CartItem(models.Model):
         return f"{self.quantity} x {self.product.name}"
     
     def get_total_price(self):
-        return self.product.price * self.quantity
+        return self.product.current_price * self.quantity
     
     @property
     def formatted_total_price(self):
@@ -81,12 +81,15 @@ class SessionCart:
     def add(self, product, quantity=1, override_quantity=False):
         product_id = str(product.id)
         if product_id not in self.cart:
-            self.cart[product_id] = {'quantity': 0, 'price': str(product.price)}
+            self.cart[product_id] = {'quantity': 0, 'price': str(product.current_price)}
         
         if override_quantity:
             self.cart[product_id]['quantity'] = quantity
         else:
             self.cart[product_id]['quantity'] += quantity
+        
+        # Actualizar precio en caso de que haya cambiado
+        self.cart[product_id]['price'] = str(product.current_price)
         
         self.save()
     

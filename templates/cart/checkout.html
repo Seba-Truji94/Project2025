@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cart_extras %}
+
+{% block title %}Finalizar Compra - Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'cart:cart_detail' %}">Carrito</a></li>
+            <li class="breadcrumb-item active">Checkout</li>
+        </ol>
+    </nav>
+
+    <!-- Checkout Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user"></i>
+                        Información de Entrega
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="checkout-form">
+                        {% csrf_token %}
+                        
+                        <!-- Datos Personales -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Apellido *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Teléfono *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       placeholder="+56 9 1234 5678" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Dirección de Entrega -->
+                        <hr>
+                        <h5 class="mb-3">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Dirección de Entrega
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Dirección *</label>
+                            <input type="text" class="form-control" id="address" name="address" 
+                                   placeholder="Calle, número, departamento" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">Ciudad *</label>
+                                <input type="text" class="form-control" id="city" name="city" 
+                                       placeholder="Santiago, Valparaíso, etc." required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="region" class="form-label">Región *</label>
+                                <select class="form-select" id="region" name="region" required>
+                                    <option value="">Selecciona una región</option>
+                                    <option value="RM">Región Metropolitana</option>
+                                    <option value="V">Valparaíso</option>
+                                    <option value="VIII">Biobío</option>
+                                    <option value="IV">Coquimbo</option>
+                                    <option value="VI">O'Higgins</option>
+                                    <option value="VII">Maule</option>
+                                    <option value="IX">Araucanía</option>
+                                    <option value="X">Los Lagos</option>
+                                    <option value="XI">Aysén</option>
+                                    <option value="XII">Magallanes</option>
+                                    <option value="I">Tarapacá</option>
+                                    <option value="II">Antofagasta</option>
+                                    <option value="III">Atacama</option>
+                                    <option value="XIV">Los Ríos</option>
+                                    <option value="XV">Arica y Parinacota</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="postal_code" class="form-label">Código Postal</label>
+                                <input type="text" class="form-control" id="postal_code" name="postal_code" 
+                                       placeholder="1234567">
+                            </div>
+                        </div>
+                        
+                        <!-- Notas de entrega -->
+                        <div class="mb-3">
+                            <label for="delivery_notes" class="form-label">Notas de Entrega (Opcional)</label>
+                            <textarea class="form-control" id="delivery_notes" name="delivery_notes" rows="3"
+                                      placeholder="Instrucciones especiales para la entrega..."></textarea>
+                        </div>
+                        
+                        <!-- Métodos de Pago -->
+                        <hr>
+                        <h5 class="mb-3">
+                            <i class="fas fa-credit-card"></i>
+                            Método de Pago
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check payment-option">
+                                    <input class="form-check-input" type="radio" name="payment_method" 
+                                           id="payment_webpay" value="webpay" checked>
+                                    <label class="form-check-label" for="payment_webpay">
+                                        <i class="fas fa-credit-card text-primary"></i>
+                                        Webpay Plus (Tarjetas)
+                                        <small class="d-block text-muted">Pago inmediato con tarjeta</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check payment-option">
+                                    <input class="form-check-input" type="radio" name="payment_method" 
+                                           id="payment_transfer" value="transfer">
+                                    <label class="form-check-label" for="payment_transfer">
+                                        <i class="fas fa-university text-success"></i>
+                                        Transferencia Bancaria
+                                        <small class="d-block text-muted">Verificación en 24 horas</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información adicional sobre transferencia -->
+                        <div id="transfer-info" class="alert alert-info mt-3" style="display: none;">
+                            <h6><i class="fas fa-info-circle me-2"></i>Información sobre Transferencia Bancaria:</h6>
+                            <ul class="mb-0">
+                                <li>Recibirás las instrucciones de transferencia después de confirmar tu pedido</li>
+                                <li>Deberás subir el comprobante de transferencia</li>
+                                <li>Tu pedido será procesado una vez verificado el pago (máximo 24 horas)</li>
+                                <li>Disponible para cuentas de Banco de Chile, Banco Estado y Santander</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Términos y condiciones -->
+                        <hr>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="accept_terms" required>
+                            <label class="form-check-label" for="accept_terms">
+                                Acepto los <a href="#" target="_blank">términos y condiciones</a> 
+                                y la <a href="#" target="_blank">política de privacidad</a> *
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="submit-order">
+                            <i class="fas fa-lock me-2"></i>
+                            Finalizar Compra
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Resumen del Pedido -->
+            <div class="card sticky-top" style="top: 2rem;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt"></i>
+                        Resumen del Pedido
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Items del carrito -->
+                    <div class="order-items mb-3">
+                        {% for item in cart_items %}
+                        <div class="order-item d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" 
+                                         alt="{{ item.product.name }}" 
+                                         class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                {% endif %}
+                                <div>
+                                    <small class="fw-bold">{{ item.product.name }}</small>
+                                    <br>
+                                    <small class="text-muted">Cantidad: {{ item.quantity }}</small>
+                                </div>
+                            </div>
+                            <small class="fw-bold">{{ item.formatted_total_price }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Totales -->
+                    <div class="summary-row d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>{{ cart.formatted_total_price }}</span>
+                    </div>
+                    <div class="summary-row d-flex justify-content-between mb-2">
+                        <span>Envío:</span>
+                        <span class="{% if cart.shipping_cost == 0 %}text-success{% endif %}">
+                            {{ cart.formatted_shipping_cost }}
+                        </span>
+                    </div>
+                    <hr>
+                    <div class="summary-row d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong class="text-primary fs-5">{{ cart.formatted_final_total }}</strong>
+                    </div>
+                    
+                    <!-- Beneficios -->
+                    <div class="benefits-summary">
+                        <h6 class="text-success">
+                            <i class="fas fa-shield-alt"></i>
+                            Tu compra incluye:
+                        </h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success"></i> Pago 100% seguro</li>
+                            <li><i class="fas fa-truck text-primary"></i> Envío {{ cart.formatted_shipping_cost }}</li>
+                            <li><i class="fas fa-undo text-info"></i> Garantía de satisfacción</li>
+                            <li><i class="fas fa-cookie-bite text-warning"></i> Galletas frescas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-option {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.payment-option:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.payment-option input[type="radio"]:checked ~ label {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.order-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.benefits-summary ul li {
+    padding: 0.2rem 0;
+}
+
+.summary-row {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .sticky-top {
+        position: static !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkout-form');
+    const submitBtn = document.getElementById('submit-order');
+    const transferInfo = document.getElementById('transfer-info');
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    
+    // Manejar cambio de método de pago
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            if (this.value === 'transfer') {
+                transferInfo.style.display = 'block';
+            } else {
+                transferInfo.style.display = 'none';
+            }
+        });
+    });
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar formulario
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        // Mostrar loading
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+        submitBtn.disabled = true;
+        
+        // Enviar formulario
+        fetch('{% url "cart:checkout" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams(new FormData(form))
+        })
+        .then(response => {
+            // Verificar si la respuesta es JSON o HTML
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // Si no es JSON, probablemente es una página de error HTML
+                throw new Error('El servidor devolvió una respuesta no válida');
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Redirigir a página de confirmación
+                window.location.href = data.redirect_url;
+            } else {
+                // Mostrar errores
+                alert('Error: ' + data.message);
+                submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Finalizar Compra';
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al procesar tu pedido. Por favor intenta nuevamente.');
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Finalizar Compra';
+            submitBtn.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

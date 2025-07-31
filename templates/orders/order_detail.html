@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Detalle del Pedido #DB-20250730-0001 - Dulce Bias{% endblock %}
+{% block title %}Detalle del Pedido #{{ order.order_number }} - Dulce Bias{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -20,7 +20,7 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        Pedido #DB-20250730-0001
+                        Pedido #{{ order.order_number }}
                     </li>
                 </ol>
             </nav>
@@ -32,31 +32,100 @@
                         <div class="col-md-8">
                             <h2 class="mb-1">
                                 <i class="fas fa-receipt me-2"></i>
-                                Pedido #DB-20250730-0001
+                                Pedido #{{ order.order_number }}
                             </h2>
                             <p class="text-muted mb-0">
-                                Realizado el 28 de julio, 2025 a las 14:30
+                                Realizado el {{ order.created_at|date:"d/m/Y \a \l\a\s H:i" }}
                             </p>
                         </div>
                         <div class="col-md-4 text-end">
-                            <span class="badge bg-success fs-6 mb-2">
-                                <i class="fas fa-check-circle me-1"></i>
-                                Entregado
+                            <span class="badge 
+                                {% if order.status == 'pending' %}bg-warning text-dark
+                                {% elif order.status == 'confirmed' %}bg-info
+                                {% elif order.status == 'processing' %}bg-primary
+                                {% elif order.status == 'shipped' %}bg-success
+                                {% elif order.status == 'delivered' %}bg-success
+                                {% elif order.status == 'cancelled' %}bg-danger
+                                {% else %}bg-secondary
+                                {% endif %} fs-6 mb-2">
+                                {% if order.status == 'pending' %}
+                                    <i class="fas fa-clock me-1"></i>{{ order.get_status_display }}
+                                {% elif order.status == 'confirmed' %}
+                                    <i class="fas fa-check me-1"></i>{{ order.get_status_display }}
+                                {% elif order.status == 'processing' %}
+                                    <i class="fas fa-cog me-1"></i>{{ order.get_status_display }}
+                                {% elif order.status == 'shipped' %}
+                                    <i class="fas fa-truck me-1"></i>{{ order.get_status_display }}
+                                {% elif order.status == 'delivered' %}
+                                    <i class="fas fa-check-circle me-1"></i>{{ order.get_status_display }}
+                                {% elif order.status == 'cancelled' %}
+                                    <i class="fas fa-times me-1"></i>{{ order.get_status_display }}
+                                {% else %}
+                                    {{ order.get_status_display }}
+                                {% endif %}
                             </span>
+                            
+                            <!-- Estado de pago -->
+                            <div class="mb-2">
+                                <span class="badge 
+                                    {% if order.payment_status == 'pending' %}bg-warning text-dark
+                                    {% elif order.payment_status == 'paid' %}bg-success
+                                    {% elif order.payment_status == 'failed' %}bg-danger
+                                    {% else %}bg-secondary
+                                    {% endif %}">
+                                    Pago: {{ order.get_payment_status_display }}
+                                </span>
+                            </div>
+                            
                             <div class="btn-group">
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-download me-1"></i>
-                                    Factura
-                                </button>
-                                <button class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-print me-1"></i>
-                                    Imprimir
-                                </button>
+                                {% if order.payment_method == 'transfer' and order.payment_status == 'pending' %}
+                                    <a href="{% url 'orders:transfer_payment' order.order_number %}" 
+                                       class="btn btn-warning btn-sm">
+                                        <i class="fas fa-university me-1"></i>
+                                        Completar Pago
+                                    </a>
+                                {% endif %}
+                                
+                                {% if order.status == 'pending' or order.status == 'confirmed' %}
+                                    <form method="post" action="{% url 'orders:cancel_order' order.order_number %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido?')">
+                                            <i class="fas fa-times me-1"></i>
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                
+                                {% if order.status == 'delivered' %}
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-download me-1"></i>
+                                        Factura
+                                    </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Alerta de transferencia pendiente -->
+            {% if order.payment_method == 'transfer' and order.payment_status == 'pending' %}
+                <div class="alert alert-warning mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-1">Pago por Transferencia Pendiente</h5>
+                            <p class="mb-0">
+                                Tu pedido está esperando el pago por transferencia bancaria. 
+                                <a href="{% url 'orders:transfer_payment' order.order_number %}" class="alert-link">
+                                    Haz clic aquí para completar el proceso de pago
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
 
             <div class="row">
                 <!-- Información del pedido -->
@@ -81,24 +150,37 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {% for item in order_items %}
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img src="https://via.placeholder.com/60x60/8B4513/ffffff?text=🍪" 
-                                                         alt="Galletas Chocolate" class="rounded me-3">
+                                                    {% if item.product.image %}
+                                                        <img src="{{ item.product.image.url }}" 
+                                                             alt="{{ item.product.name }}" 
+                                                             class="rounded me-3" 
+                                                             style="width: 60px; height: 60px; object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                                             style="width: 60px; height: 60px; color: #6c757d;">
+                                                            <i class="fas fa-cookie fa-lg"></i>
+                                                        </div>
+                                                    {% endif %}
                                                     <div>
-                                                        <h6 class="mb-1">Galletas de Chocolate Premium</h6>
-                                                        <small class="text-muted">Caja de 12 unidades</small>
+                                                        <h6 class="mb-1">{{ item.product.name }}</h6>
+                                                        <small class="text-muted">{{ item.product.weight }}g</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="align-middle">$8.990</td>
-                                            <td class="align-middle">2</td>
-                                            <td class="align-middle text-end fw-bold">$17.980</td>
+                                            <td class="align-middle">${{ item.price|floatformat:0 }}</td>
+                                            <td class="align-middle">{{ item.quantity }}</td>
+                                            <td class="align-middle text-end fw-bold">${{ item.get_total_price|floatformat:0 }}</td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                                                     <img src="https://via.placeholder.com/60x60/A0522D/ffffff?text=🥜" 
                                                          alt="Galletas Nuez" class="rounded me-3">
                                                     <div>
