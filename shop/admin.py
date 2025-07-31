@@ -51,7 +51,7 @@ class ProductImageInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         'image_thumbnail', 'name', 'category', 'product_type', 
-        'price', 'stock_display', 'featured', 'available', 'updated_at'
+        'price', 'stock', 'stock_display', 'featured', 'available', 'updated_at'
     )
     list_filter = (
         'category', 'product_type', 'available', 'featured', 
@@ -89,7 +89,7 @@ class ProductAdmin(admin.ModelAdmin):
     
     actions = [
         'make_featured', 'remove_featured', 'make_available', 'make_unavailable',
-        'increase_stock', 'decrease_stock', 'export_stock_report'
+        'increase_stock', 'decrease_stock', 'export_stock_report', 'export_low_stock_report'
     ]
     
     def image_thumbnail(self, obj):
@@ -199,90 +199,6 @@ class ProductAdmin(admin.ModelAdmin):
         
         return response
     export_stock_report.short_description = "📊 Exportar reporte de stock"
-
-# Admin específico para gestión de stock
-@admin.register(Product)
-class StockManagementAdmin(admin.ModelAdmin):
-    """Panel dedicado exclusivamente a la gestión de stock"""
-    verbose_name = "Gestión de Stock"
-    verbose_name_plural = "Gestión de Stock"
-    
-    list_display = (
-        'image_thumbnail', 'name', 'category', 'current_stock', 
-        'stock_status_badge', 'price', 'last_updated', 'quick_actions'
-    )
-    list_filter = (LowStockFilter, 'category', 'available')
-    search_fields = ('name', 'category__name')
-    list_editable = ('stock',)
-    ordering = ('stock', 'name')
-    
-    # Solo mostrar campos relevantes para stock
-    fields = ('name', 'category', 'stock', 'price', 'available')
-    readonly_fields = ('name', 'category', 'price')
-    
-    actions = [
-        'bulk_stock_update', 'mark_as_restocked', 'generate_restock_alert',
-        'export_low_stock_report'
-    ]
-    
-    def image_thumbnail(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;" />',
-                obj.image.url
-            )
-        return "📦"
-    image_thumbnail.short_description = ''
-    
-    def current_stock(self, obj):
-        return obj.stock
-    current_stock.short_description = 'Stock Actual'
-    current_stock.admin_order_field = 'stock'
-    
-    def stock_status_badge(self, obj):
-        if obj.stock == 0:
-            return format_html('<span style="background: #dc3545; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">🔴 AGOTADO</span>')
-        elif obj.stock <= 5:
-            return format_html('<span style="background: #dc3545; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">⚠️ CRÍTICO</span>')
-        elif obj.stock <= 10:
-            return format_html('<span style="background: #ffc107; color: black; padding: 3px 8px; border-radius: 10px; font-size: 11px;">⚡ BAJO</span>')
-        else:
-            return format_html('<span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px;">✅ OK</span>')
-    stock_status_badge.short_description = 'Estado'
-    
-    def last_updated(self, obj):
-        return obj.updated_at.strftime('%d/%m/%Y %H:%M')
-    last_updated.short_description = 'Última Actualización'
-    
-    def quick_actions(self, obj):
-        return format_html(
-            '<div style="display: flex; gap: 5px;">'
-            '<button onclick="updateStock({}, 5)" style="background: #28a745; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer;">+5</button>'
-            '<button onclick="updateStock({}, 10)" style="background: #007bff; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer;">+10</button>'
-            '<button onclick="updateStock({}, -5)" style="background: #ffc107; color: black; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer;">-5</button>'
-            '</div>',
-            obj.id, obj.id, obj.id
-        )
-    quick_actions.short_description = 'Acciones Rápidas'
-    
-    def bulk_stock_update(self, request, queryset):
-        """Actualización masiva de stock"""
-        if 'apply' in request.POST:
-            stock_change = int(request.POST.get('stock_change', 0))
-            updated = 0
-            for product in queryset:
-                new_stock = max(0, product.stock + stock_change)
-                product.stock = new_stock
-                product.save()
-                updated += 1
-            self.message_user(request, f'✅ Stock actualizado para {updated} productos.')
-            return
-            
-        return render(request, 'admin/stock_bulk_update.html', {
-            'products': queryset,
-            'action_name': 'bulk_stock_update'
-        })
-    bulk_stock_update.short_description = "📦 Actualización masiva de stock"
     
     def export_low_stock_report(self, request, queryset):
         """Exportar productos con stock bajo"""
@@ -316,8 +232,11 @@ class StockManagementAdmin(admin.ModelAdmin):
         
         return response
     export_low_stock_report.short_description = "📋 Exportar productos stock bajo"
-    
+
     class Media:
+        css = {
+            'all': ('admin/css/stock_management.css',)
+        }
         js = ('admin/js/stock_management.js',)
 
 @admin.register(ProductImage)
