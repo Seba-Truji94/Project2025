@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load placeholder_tags %}
 
 {% block title %}Finalizar Compra - Dulce Bias{% endblock %}
 
@@ -229,7 +230,7 @@
                             <!-- Productos -->
                             <div class="order-items mb-4">
                                 <div class="order-item d-flex mb-3">
-                                    <img src="https://via.placeholder.com/60x60/8B4513/ffffff?text=🍪" 
+                                    <img src="{% placeholder_url 60 60 '8B4513' 'ffffff' '🍪' %}" 
                                          alt="Galletas Chocolate" class="rounded me-3">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1">Galletas de Chocolate Premium</h6>
@@ -241,7 +242,7 @@
                                     </div>
                                 </div>
                                 <div class="order-item d-flex mb-3">
-                                    <img src="https://via.placeholder.com/60x60/A0522D/ffffff?text=🥜" 
+                                    <img src="{% placeholder_url 60 60 'A0522D' 'ffffff' '🥜' %}" 
                                          alt="Galletas Nuez" class="rounded me-3">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1">Galletas de Nuez y Canela</h6>

@@ -267,6 +267,8 @@ def order_statistics(request):
 # Vistas AJAX adicionales
 @require_POST
 @csrf_exempt
+@require_POST
+@user_passes_test(is_superuser)
 def ajax_change_status(request):
     """Cambio de estado vía AJAX"""
     if not request.user.is_superuser:
@@ -274,11 +276,19 @@ def ajax_change_status(request):
     
     try:
         data = json.loads(request.body)
+        order_id = data.get('order_id')
         order_number = data.get('order_number')
         new_status = data.get('status')
         notes = data.get('notes', '')
         
-        order = get_object_or_404(Order, order_number=order_number)
+        # Buscar por ID o por número de orden
+        if order_id:
+            order = get_object_or_404(Order, id=order_id)
+        elif order_number:
+            order = get_object_or_404(Order, order_number=order_number)
+        else:
+            return JsonResponse({'success': False, 'error': 'ID de orden requerido'})
+        
         old_status = order.status
         
         order.status = new_status
@@ -295,9 +305,10 @@ def ajax_change_status(request):
         
         return JsonResponse({
             'success': True,
-            'message': f'Estado actualizado a {order.get_status_display()}',
+            'message': f'Estado del pedido #{order.order_number} actualizado a {order.get_status_display()}',
             'new_status': new_status,
-            'status_display': order.get_status_display()
+            'status_display': order.get_status_display(),
+            'order_number': order.order_number
         })
         
     except Exception as e:

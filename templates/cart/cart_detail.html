@@ -194,12 +194,22 @@
                         </div>
                         <div class="card-body">
                             <div class="summary-row">
-                                <span>Productos:</span>
+                                <span>Tipos de productos:</span>
+                                <span id="product-types-count">
+                                    {% if is_authenticated_cart %}
+                                        {{ cart_items|length }} tipos
+                                    {% else %}
+                                        {{ cart_items|length }} tipos
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Cantidad total:</span>
                                 <span id="items-count">
                                     {% if is_authenticated_cart %}
-                                        {{ cart.total_items }} items
+                                        {{ cart.total_items }} unidades
                                     {% else %}
-                                        {{ cart_totals.total_items }} items
+                                        {{ cart_totals.total_items }} unidades
                                     {% endif %}
                                 </span>
                             </div>

@@ -115,6 +115,11 @@ main {
     z-index: 1;
 }
 
+/* Espaciado adicional para el main cuando hay barra financiera */
+body[data-user-authenticated="true"] main {
+    padding-top: 40px; /* Espacio adicional para la barra financiera */
+}
+
 /* Typography System */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
@@ -193,6 +198,82 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 1;
 }
 
+/* Financial Info Bar */
+.financial-info-bar {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid rgba(74, 144, 226, 0.1);
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--gray-dark);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.financial-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-weight: 500;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.stat-item i {
+    font-size: 0.875rem;
+}
+
+.stat-label {
+    color: var(--gray-medium);
+    font-size: 0.8rem;
+}
+
+.stat-value {
+    color: var(--gray-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.stat-divider {
+    color: var(--gray-light);
+    font-weight: 300;
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .financial-info-bar {
+        padding: 0.375rem 0;
+        font-size: 0.8rem;
+    }
+    
+    .financial-stats {
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item {
+        gap: 0.25rem;
+    }
+    
+    .stat-value {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .financial-stats {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .stat-divider {
+        display: none;
+    }
+}
+
 /* Enhanced Navigation */
 .navbar {
     background: rgba(255, 255, 255, 0.95);
@@ -203,6 +284,11 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 1000;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: var(--transition-medium);
+}
+
+/* Ajustar posición del navbar cuando hay barra financiera */
+.financial-info-bar + header .navbar {
+    top: 80px; /* 44px (announcement) + 36px (financial) */
 }
 
 .navbar.fixed {

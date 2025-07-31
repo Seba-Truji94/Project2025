@@ -509,13 +509,29 @@ class CookieShopApp {
         
         if (cartBtn) {
             cartBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (cartModal) {
-                    cartModal.style.display = 'block';
-                    this.renderCartItems();
-                    document.body.style.overflow = 'hidden';
+                // Solo prevenir comportamiento por defecto si el modal existe y está funcionando
+                if (cartModal && this.renderCartItems) {
+                    e.preventDefault();
+                    
+                    // Verificar si hay items en el carrito antes de mostrar modal
+                    const cartCount = document.querySelector('.cart-count');
+                    const itemCount = cartCount ? parseInt(cartCount.textContent) || 0 : 0;
+                    
+                    if (itemCount > 0) {
+                        // Mostrar modal solo si hay items
+                        cartModal.style.display = 'block';
+                        this.renderCartItems();
+                        document.body.style.overflow = 'hidden';
+                        console.log('✅ Modal del carrito abierto');
+                    } else {
+                        // Si no hay items, ir a la página del carrito
+                        console.log('🛒 Carrito vacío, redirigiendo a página del carrito');
+                        window.location.href = cartBtn.href;
+                    }
                 } else {
-                    console.warn('Modal del carrito no encontrado');
+                    // Si el modal no existe, permitir que el enlace funcione normalmente
+                    console.log('🔗 Modal no disponible, usando enlace normal');
+                    // No prevenir el comportamiento por defecto
                 }
             });
         }

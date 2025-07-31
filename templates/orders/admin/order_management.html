@@ -16,6 +16,16 @@
                 <p class="text-muted mb-0">Panel de administración para gestionar todos los pedidos</p>
             </div>
             <div class="col-auto">
+                <button type="button" class="btn btn-outline-warning btn-sm" onclick="clearModalBackdrop()" title="Limpiar vista si está difuminada">
+                    <i class="fas fa-broom"></i> Limpiar Vista
+                </button>
+            </div>
+        </div>
+            <div class="col-auto">
+                <button onclick="clearModalBackdrop()" class="btn btn-outline-warning btn-sm me-2" title="Limpiar página difuminada">
+                    <i class="fas fa-broom"></i>
+                    Limpiar Vista
+                </button>
                 <a href="{% url 'orders:admin_statistics' %}" class="btn btn-outline-primary">
                     <i class="fas fa-chart-bar"></i>
                     Estadísticas
@@ -306,15 +316,16 @@
     </div>
 </div>
 
-<!-- Modal de Cambio Rápido de Estado -->
-<div class="modal fade" id="quickStatusModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cambiar Estado del Pedido</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal de Cambio Rápido de Estado - Versión Sin Backdrop -->
+<div class="custom-modal" id="quickStatusModal" style="display: none;">
+    <div class="custom-modal-overlay"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Cambiar Estado del Pedido</h5>
+                <button type="button" class="custom-close-btn" onclick="closeQuickModal()">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="custom-modal-body">
                 <form id="quick-status-form">
                     {% csrf_token %}
                     <input type="hidden" id="modal-order-id">
@@ -333,8 +344,8 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <div class="custom-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeQuickModal()">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="save-status-btn">Guardar Cambios</button>
             </div>
         </div>
@@ -342,6 +353,106 @@
 </div>
 
 <style>
+/* Modal personalizado sin dependencia de Bootstrap */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.custom-modal-dialog {
+    position: relative;
+    z-index: 10000;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+.custom-modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    flex-grow: 1;
+}
+
+.custom-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-close-btn:hover {
+    color: #000;
+}
+
+.custom-modal-body {
+    padding: 1.5rem;
+}
+
+.custom-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(-50px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
 .admin-header {
     background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
     color: white;
@@ -447,30 +558,71 @@ document.addEventListener('DOMContentLoaded', function() {
         cb.addEventListener('change', updateBulkActions);
     });
     
-    // Cambio rápido de estado
+    // Cambio rápido de estado - Modal personalizado sin Bootstrap
     const quickStatusBtns = document.querySelectorAll('.quick-status-btn');
-    const quickStatusModal = new bootstrap.Modal(document.getElementById('quickStatusModal'));
+    const quickStatusModalElement = document.getElementById('quickStatusModal');
     
+    // Funciones para el modal personalizado
+    function openQuickModal(orderId, currentStatus) {
+        document.getElementById('modal-order-id').value = orderId;
+        document.getElementById('modal-status').value = currentStatus;
+        document.getElementById('modal-notes').value = '';
+        
+        quickStatusModalElement.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeQuickModal() {
+        quickStatusModalElement.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Resetear formulario
+        document.getElementById('modal-notes').value = '';
+        const saveBtn = document.getElementById('save-status-btn');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Guardar Cambios';
+    }
+    
+    // Event listeners para abrir modal
     quickStatusBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
             const currentStatus = this.dataset.currentStatus;
-            
-            document.getElementById('modal-order-id').value = orderId;
-            document.getElementById('modal-status').value = currentStatus;
-            
-            quickStatusModal.show();
+            openQuickModal(orderId, currentStatus);
         });
     });
     
-    // Guardar cambio de estado
+    // Cerrar modal clickeando en overlay
+    quickStatusModalElement.addEventListener('click', function(e) {
+        if (e.target === this || e.target.classList.contains('custom-modal-overlay')) {
+            closeQuickModal();
+        }
+    });
+    
+    // Cerrar modal con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && quickStatusModalElement.style.display === 'flex') {
+            closeQuickModal();
+        }
+    });
+    
+    // Hacer funciones globales para acceso desde HTML
+    window.openQuickModal = openQuickModal;
+    window.closeQuickModal = closeQuickModal;
+    
+    // Guardar cambio de estado con modal personalizado
     document.getElementById('save-status-btn')?.addEventListener('click', function() {
         const orderId = document.getElementById('modal-order-id').value;
         const newStatus = document.getElementById('modal-status').value;
         const notes = document.getElementById('modal-notes').value;
         
-        // Aquí harías la petición AJAX para actualizar el estado
-        fetch(`/orders/admin/update-status/${orderId}/`, {
+        // Deshabilitar botón para evitar múltiples clicks
+        const saveBtn = this;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        
+        // Hacer petición AJAX para actualizar el estado
+        fetch('/orders/admin/ajax/change-status/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -478,21 +630,111 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
+                order_id: orderId,
                 status: newStatus,
-                status_notes: notes
+                notes: notes
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                location.reload(); // Recargar la página para ver los cambios
+                // Cerrar modal inmediatamente
+                closeQuickModal();
+                
+                // Mostrar mensaje de éxito
+                showAlert('success', `<i class="fas fa-check-circle me-2"></i>${data.message || 'Estado actualizado correctamente'}`);
+                
+                // Actualizar el estado en la tabla sin recargar
+                updateOrderRowStatus(orderId, newStatus, data.status_display);
+                
             } else {
-                alert('Error al actualizar el estado');
+                throw new Error(data.error || 'Error al actualizar el estado');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Cerrar modal inmediatamente
+            closeQuickModal();
+            
+            // Mostrar mensaje de error
+            showAlert('danger', `<i class="fas fa-exclamation-triangle me-2"></i>Error al actualizar el estado: ${error.message}`);
+        })
+        .finally(() => {
+            // Rehabilitar botón
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Guardar Cambios';
         });
-        
-        quickStatusModal.hide();
     });
+    
+    // Funciones auxiliares
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-dismiss alert después de 4 segundos
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 4000);
+    }
+    
+    function updateOrderRowStatus(orderId, newStatus, statusDisplay) {
+        const orderRow = document.querySelector(`[data-order-id="${orderId}"]`)?.closest('tr');
+        if (orderRow) {
+            const statusCell = orderRow.querySelector('.badge');
+            if (statusCell) {
+                statusCell.textContent = statusDisplay || newStatus;
+                statusCell.className = `badge bg-${getStatusClass(newStatus)}`;
+            }
+        }
+    }
+    
+    function getStatusClass(status) {
+        const statusClasses = {
+            'pending': 'warning',
+            'confirmed': 'info', 
+            'processing': 'primary',
+            'shipped': 'secondary',
+            'delivered': 'success',
+            'cancelled': 'danger'
+        };
+        return statusClasses[status] || 'secondary';
+    }
+    
+    // Función de emergencia simplificada
+    window.clearModalBackdrop = function() {
+        // Cerrar modal personalizado si está abierto
+        if (quickStatusModalElement.style.display === 'flex') {
+            closeQuickModal();
+        }
+        
+        // Limpiar cualquier resto de Bootstrap modals
+        const bootstrapBackdrops = document.querySelectorAll('.modal-backdrop');
+        bootstrapBackdrops.forEach(backdrop => backdrop.remove());
+        
+        // Restaurar estado del body
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        document.body.style.marginRight = '';
+        
+        showAlert('info', '<i class="fas fa-broom me-2"></i>Vista limpiada correctamente');
+        console.log('Vista limpiada completamente');
+    };
 });
 </script>
 {% endblock %}

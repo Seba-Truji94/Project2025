@@ -85,7 +85,24 @@ class Order(models.Model):
         if not self.order_number:
             # Generar número de pedido único
             self.order_number = self.generate_order_number()
+        
+        # Validar cálculos antes de guardar
+        self.validate_calculations()
+        
         super().save(*args, **kwargs)
+    
+    def validate_calculations(self):
+        """Valida que los cálculos del pedido sean correctos"""
+        if self.pk:  # Solo validar si ya tiene items (pedido existente)
+            calculated_subtotal = sum(item.get_total_price() for item in self.items.all())
+            if calculated_subtotal != self.subtotal:
+                # Auto-corregir el subtotal si es diferente
+                self.subtotal = calculated_subtotal
+            
+            calculated_total = self.subtotal + self.shipping_cost
+            if calculated_total != self.total:
+                # Auto-corregir el total si es diferente
+                self.total = calculated_total
     
     def generate_order_number(self):
         """Genera un número de pedido único"""

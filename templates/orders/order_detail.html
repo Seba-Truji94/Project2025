@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load placeholder_tags %}
 
 {% block title %}Detalle del Pedido #{{ order.order_number }} - Dulce Bias{% endblock %}
 
@@ -153,7 +154,7 @@
                         <div class="card-header">
                             <h5 class="mb-0">
                                 <i class="fas fa-box me-2"></i>
-                                Productos del Pedido
+                                Productos del Pedido ({{ order.get_total_items }} {% if order.get_total_items == 1 %}producto{% else %}productos{% endif %})
                             </h5>
                         </div>
                         <div class="card-body p-0">
@@ -168,7 +169,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for item in order_items %}
+                                        {% for item in order.items.all %}
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
@@ -185,32 +186,18 @@
                                                     {% endif %}
                                                     <div>
                                                         <h6 class="mb-1">{{ item.product.name }}</h6>
-                                                        <small class="text-muted">{{ item.product.weight }}g</small>
+                                                        <small class="text-muted">
+                                                            {% if item.product.weight %}{{ item.product.weight }}g{% endif %}
+                                                            {% if item.product.category %} • {{ item.product.category.name }}{% endif %}
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="align-middle">${{ item.price|floatformat:0 }}</td>
+                                            <td class="align-middle">{{ item.formatted_price }}</td>
                                             <td class="align-middle">{{ item.quantity }}</td>
-                                            <td class="align-middle text-end fw-bold">${{ item.get_total_price|floatformat:0 }}</td>
+                                            <td class="align-middle text-end fw-bold">{{ item.formatted_total_price }}</td>
                                         </tr>
                                         {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                                                    <img src="https://via.placeholder.com/60x60/A0522D/ffffff?text=🥜" 
-                                                         alt="Galletas Nuez" class="rounded me-3">
-                                                    <div>
-                                                        <h6 class="mb-1">Galletas de Nuez y Canela</h6>
-                                                        <small class="text-muted">Caja de 8 unidades</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="align-middle">$7.990</td>
-                                            <td class="align-middle">1</td>
-                                            <td class="align-middle text-end fw-bold">$7.990</td>
-                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -222,48 +209,95 @@
                         <div class="card-header">
                             <h5 class="mb-0">
                                 <i class="fas fa-route me-2"></i>
-                                Estado del Pedido
+                                Seguimiento del Pedido
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="progress-container">
-                                <div class="progress-step completed">
+                                <div class="progress-step {% if order.status != 'pending' %}completed{% endif %}">
                                     <div class="step-icon">
                                         <i class="fas fa-check"></i>
                                     </div>
                                     <div class="step-content">
-                                        <h6>Pedido Confirmado</h6>
-                                        <small>28 jul 2025, 14:30</small>
+                                        <h6>Pedido Recibido</h6>
+                                        <small>{{ order.created_at|date:"d M Y, H:i" }}</small>
                                     </div>
                                 </div>
-                                <div class="progress-step completed">
+                                
+                                <div class="progress-step {% if order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                                    <div class="step-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <h6>Pedido Confirmado</h6>
+                                        <small>
+                                            {% if order.status != 'pending' %}
+                                                {{ order.updated_at|date:"d M Y, H:i" }}
+                                            {% else %}
+                                                Pendiente de confirmación
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="progress-step {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
                                     <div class="step-icon">
                                         <i class="fas fa-cog"></i>
                                     </div>
                                     <div class="step-content">
                                         <h6>En Preparación</h6>
-                                        <small>28 jul 2025, 16:45</small>
+                                        <small>
+                                            {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}
+                                                Preparando tu pedido
+                                            {% else %}
+                                                En espera
+                                            {% endif %}
+                                        </small>
                                     </div>
                                 </div>
-                                <div class="progress-step completed">
+                                
+                                <div class="progress-step {% if order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
                                     <div class="step-icon">
                                         <i class="fas fa-truck"></i>
                                     </div>
                                     <div class="step-content">
-                                        <h6>Enviado</h6>
-                                        <small>29 jul 2025, 09:15</small>
+                                        <h6>En Camino</h6>
+                                        <small>
+                                            {% if order.status == 'shipped' %}
+                                                {% if order.shipped_at %}{{ order.shipped_at|date:"d M Y, H:i" }}{% else %}En tránsito{% endif %}
+                                            {% elif order.status == 'delivered' %}
+                                                {% if order.shipped_at %}{{ order.shipped_at|date:"d M Y, H:i" }}{% else %}Enviado{% endif %}
+                                            {% else %}
+                                                Esperando envío
+                                            {% endif %}
+                                        </small>
                                     </div>
                                 </div>
-                                <div class="progress-step completed">
+                                
+                                <div class="progress-step {% if order.status == 'delivered' %}completed{% endif %}">
                                     <div class="step-icon">
                                         <i class="fas fa-home"></i>
                                     </div>
                                     <div class="step-content">
                                         <h6>Entregado</h6>
-                                        <small>30 jul 2025, 11:30</small>
+                                        <small>
+                                            {% if order.status == 'delivered' %}
+                                                {% if order.delivered_at %}{{ order.delivered_at|date:"d M Y, H:i" }}{% else %}Entrega completada{% endif %}
+                                            {% else %}
+                                                Esperando entrega
+                                            {% endif %}
+                                        </small>
                                     </div>
                                 </div>
                             </div>
+                            
+                            {% if order.status == 'cancelled' %}
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    <strong>Pedido Cancelado</strong>
+                                    <br>Este pedido fue cancelado el {{ order.updated_at|date:"d M Y, H:i" }}
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -279,29 +313,58 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h6 class="text-muted mb-2">Dirección de Entrega</h6>
-                                    <p class="mb-1"><strong>Juan Pérez</strong></p>
-                                    <p class="mb-1">Av. Providencia 1234, Depto 505</p>
-                                    <p class="mb-1">Providencia, Región Metropolitana</p>
-                                    <p class="mb-1">Código Postal: 7500000</p>
-                                    <p class="mb-0">
+                                    <p class="mb-1"><strong>{{ order.full_name }}</strong></p>
+                                    <p class="mb-1">{{ order.address }}</p>
+                                    <p class="mb-1">{{ order.city }}, {{ order.get_region_display }}</p>
+                                    {% if order.postal_code %}
+                                        <p class="mb-1">Código Postal: {{ order.postal_code }}</p>
+                                    {% endif %}
+                                    <p class="mb-1">
                                         <i class="fas fa-phone me-1"></i>
-                                        +56 9 8765 4321
+                                        {{ order.phone }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        {{ order.email }}
                                     </p>
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="text-muted mb-2">Método de Envío</h6>
-                                    <p class="mb-1">Envío Express</p>
-                                    <p class="mb-1">Tiempo estimado: 1-2 días hábiles</p>
                                     <p class="mb-1">
-                                        <strong>Número de seguimiento:</strong>
-                                        <span class="text-primary">DB-TRACK-456789</span>
+                                        <i class="fas fa-truck me-1"></i>
+                                        {% if order.region == 'rm' %}
+                                            Envío Región Metropolitana
+                                        {% elif order.region == 'v' %}
+                                            Envío V Región
+                                        {% else %}
+                                            Envío Nacional
+                                        {% endif %}
                                     </p>
-                                    <p class="mb-0">
-                                        <a href="#" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-external-link-alt me-1"></i>
-                                            Rastrear Envío
-                                        </a>
+                                    <p class="mb-1">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Tiempo estimado: 2-4 días hábiles
                                     </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        Costo de envío: {{ order.formatted_shipping_cost }}
+                                    </p>
+                                    
+                                    {% if order.tracking_number %}
+                                        <p class="mb-2">
+                                            <strong>Número de seguimiento:</strong>
+                                            <span class="text-primary">{{ order.tracking_number }}</span>
+                                        </p>
+                                    {% endif %}
+                                    
+                                    {% if order.notes %}
+                                        <div class="mt-3">
+                                            <h6 class="text-muted mb-2">Notas Especiales</h6>
+                                            <div class="alert alert-info py-2">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                {{ order.notes }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -319,47 +382,84 @@
                         </div>
                         <div class="card-body">
                             <div class="summary-item d-flex justify-content-between mb-2">
-                                <span>Subtotal (3 productos)</span>
-                                <span>$25.970</span>
+                                <span>Subtotal ({{ order.get_total_items }} {% if order.get_total_items == 1 %}producto{% else %}productos{% endif %})</span>
+                                <span>{{ order.formatted_subtotal }}</span>
                             </div>
                             <div class="summary-item d-flex justify-content-between mb-2">
-                                <span>Envío Express</span>
-                                <span class="text-success">GRATIS</span>
-                            </div>
-                            <div class="summary-item d-flex justify-content-between mb-2">
-                                <span>Descuento</span>
-                                <span class="text-success">-$980</span>
+                                <span>Envío</span>
+                                <span class="{% if order.shipping_cost == 0 %}text-success{% endif %}">{{ order.formatted_shipping_cost }}</span>
                             </div>
                             <hr>
                             <div class="summary-total d-flex justify-content-between mb-3">
                                 <strong>Total</strong>
-                                <strong class="text-primary fs-5">$24.990</strong>
+                                <strong class="text-primary fs-5">{{ order.formatted_total }}</strong>
                             </div>
 
                             <div class="payment-info mb-3">
                                 <h6 class="text-muted mb-2">Método de Pago</h6>
                                 <div class="d-flex align-items-center">
-                                    <i class="fab fa-cc-visa fa-2x me-2 text-primary"></i>
-                                    <div>
-                                        <p class="mb-0">**** **** **** 1234</p>
-                                        <small class="text-muted">Pagado el 28 jul 2025</small>
-                                    </div>
+                                    {% if order.payment_method == 'webpay' %}
+                                        <i class="fab fa-cc-visa fa-2x me-2 text-primary"></i>
+                                        <div>
+                                            <p class="mb-0">Webpay Plus</p>
+                                            <small class="text-muted">
+                                                {% if order.payment_status == 'paid' %}
+                                                    Pagado el {{ order.updated_at|date:"d M Y" }}
+                                                {% else %}
+                                                    {{ order.get_payment_status_display }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% elif order.payment_method == 'transfer' %}
+                                        <i class="fas fa-university fa-2x me-2 text-info"></i>
+                                        <div>
+                                            <p class="mb-0">Transferencia Bancaria</p>
+                                            <small class="text-muted">
+                                                {% if order.payment_status == 'paid' %}
+                                                    Verificado el {{ order.updated_at|date:"d M Y" }}
+                                                {% else %}
+                                                    {{ order.get_payment_status_display }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% elif order.payment_method == 'cash' %}
+                                        <i class="fas fa-money-bill-wave fa-2x me-2 text-success"></i>
+                                        <div>
+                                            <p class="mb-0">Pago contra entrega</p>
+                                            <small class="text-muted">{{ order.get_payment_status_display }}</small>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
 
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-redo me-2"></i>
-                                    Comprar de Nuevo
-                                </button>
-                                <button class="btn btn-outline-secondary">
-                                    <i class="fas fa-star me-2"></i>
-                                    Calificar Productos
-                                </button>
-                                <button class="btn btn-outline-info">
+                                {% if order.status == 'delivered' %}
+                                    <a href="{% url 'shop:product_list' %}" class="btn btn-primary">
+                                        <i class="fas fa-redo me-2"></i>
+                                        Comprar de Nuevo
+                                    </a>
+                                    <button class="btn btn-outline-warning" onclick="alert('Próximamente podrás calificar productos')">
+                                        <i class="fas fa-star me-2"></i>
+                                        Calificar Productos
+                                    </button>
+                                {% else %}
+                                    <a href="{% url 'shop:product_list' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-shopping-cart me-2"></i>
+                                        Seguir Comprando
+                                    </a>
+                                {% endif %}
+                                
+                                <a href="mailto:info@dulcesbias.com?subject=Consulta sobre pedido {{ order.order_number }}" class="btn btn-outline-info">
                                     <i class="fas fa-headset me-2"></i>
                                     Contactar Soporte
-                                </button>
+                                </a>
+                                
+                                {% if order.status == 'delivered' %}
+                                    <button class="btn btn-outline-secondary" onclick="alert('La factura estará disponible próximamente')">
+                                        <i class="fas fa-file-pdf me-2"></i>
+                                        Descargar Factura
+                                    </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -375,31 +475,55 @@
                         <div class="card-body">
                             <div class="related-product mb-3">
                                 <div class="d-flex">
-                                    <img src="https://via.placeholder.com/60x60/D2691E/ffffff?text=🍪" 
+                                    <img src="{% placeholder_url 60 60 'D2691E' 'ffffff' '🍪' %}" 
                                          alt="Mix Galletas" class="rounded me-3">
                                     <div class="flex-grow-1">
-                                        <h6 class="mb-1">Mix Artesanal</h6>
+                                        <h6 class="mb-1">Mix Artesanal Dulce Bias</h6>
                                         <p class="text-primary mb-1">$12.990</p>
-                                        <button class="btn btn-sm btn-outline-primary">
+                                        <small class="text-muted d-block mb-2">Variedad de 12 galletas premium</small>
+                                        <a href="{% url 'shop:product_list' %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-cart-plus me-1"></i>
-                                            Agregar
-                                        </button>
+                                            Ver Producto
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="related-product mb-3">
+                                <div class="d-flex">
+                                    <img src="{% placeholder_url 60 60 'CD853F' 'ffffff' '🍯' %}" 
+                                         alt="Galletas Miel" class="rounded me-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Galletas Miel y Avena</h6>
+                                        <p class="text-primary mb-1">$8.990</p>
+                                        <small class="text-muted d-block mb-2">Naturales con ingredientes orgánicos</small>
+                                        <a href="{% url 'shop:product_list' %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Ver Producto
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                             <div class="related-product">
                                 <div class="d-flex">
-                                    <img src="https://via.placeholder.com/60x60/CD853F/ffffff?text=🍯" 
-                                         alt="Galletas Miel" class="rounded me-3">
+                                    <img src="{% placeholder_url 60 60 '8B4513' 'ffffff' '🍫' %}" 
+                                         alt="Galletas Chocolate" class="rounded me-3">
                                     <div class="flex-grow-1">
-                                        <h6 class="mb-1">Miel y Avena</h6>
-                                        <p class="text-primary mb-1">$11.990</p>
-                                        <button class="btn btn-sm btn-outline-primary">
+                                        <h6 class="mb-1">Doble Chocolate</h6>
+                                        <p class="text-primary mb-1">$9.990</p>
+                                        <small class="text-muted d-block mb-2">Con chips de chocolate belga</small>
+                                        <a href="{% url 'shop:product_list' %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-cart-plus me-1"></i>
-                                            Agregar
-                                        </button>
+                                            Ver Producto
+                                        </a>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Ver Todos los Productos
+                                </a>
                             </div>
                         </div>
                     </div>

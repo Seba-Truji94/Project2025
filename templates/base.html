@@ -34,6 +34,31 @@
         </div>
     </div>
 
+    <!-- Financial Info Bar (solo para usuarios autenticados) -->
+    {% if user.is_authenticated %}
+    <div class="financial-info-bar">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    <div class="financial-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-chart-line text-success"></i>
+                            <span class="stat-label">Total gastado:</span>
+                            <span class="stat-value">{{ user_total_spent }}</span>
+                        </div>
+                        <div class="stat-divider">|</div>
+                        <div class="stat-item">
+                            <i class="fas fa-shopping-cart text-primary"></i>
+                            <span class="stat-label">Carrito actual:</span>
+                            <span class="stat-value">{{ cart_total }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <header>
         <nav class="navbar">
             <div class="nav-container">
@@ -510,6 +535,18 @@
             });
         });
     });
+    </script>
+    
+    <!-- Script de diagnóstico del carrito -->
+    <script src="{% static 'js/cart-diagnostics.js' %}"></script>
+    <script src="{% static 'js/cart-monitor.js' %}"></script>
+    
+    <!-- Script de reparación del botón del carrito -->
+    <script src="{% static 'js/cart-button-fix.js' %}"></script>
+    
+    <!-- Datos del usuario para JavaScript -->
+    <script>
+        document.body.dataset.userAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}';
     </script>
     
     {% block extra_js %}{% endblock %}

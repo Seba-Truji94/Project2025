@@ -21,6 +21,10 @@ class CartDetailView(TemplateView):
         if self.request.user.is_authenticated:
             # Carrito de usuario autenticado
             cart, created = Cart.objects.get_or_create(user=self.request.user)
+            
+            # Limpiar items con productos no disponibles o eliminados
+            self.clean_invalid_cart_items(cart)
+            
             context['cart'] = cart
             context['cart_items'] = cart.items.all()
             context['is_authenticated_cart'] = True
@@ -52,6 +56,27 @@ class CartDetailView(TemplateView):
         # Siempre incluir productos recomendados
         context['recommended_products'] = recommended_products
         return context
+    
+    def clean_invalid_cart_items(self, cart):
+        """Limpiar items del carrito que tienen productos no disponibles o eliminados"""
+        invalid_items = []
+        
+        for item in cart.items.all():
+            try:
+                product = item.product
+                # Verificar si el producto existe y está disponible
+                if not Product.objects.filter(id=product.id, available=True).exists():
+                    invalid_items.append(item)
+            except Product.DoesNotExist:
+                invalid_items.append(item)
+        
+        # Eliminar items inválidos silenciosamente
+        if invalid_items:
+            for item in invalid_items:
+                item.delete()
+            
+            # Log para debugging sin mostrar mensaje al usuario
+            # Se eliminaron items no disponibles silenciosamente para evitar recargas
 
 
 @require_POST
