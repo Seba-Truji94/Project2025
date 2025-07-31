@@ -225,16 +225,30 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = true;
             this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             
-            // Realizar petición AJAX
-            fetch(`/cart/add/${productId}/`, {
+            // Realizar petición AJAX con verificación de conectividad
+            safeAjaxRequest(`/cart/add/${productId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: `quantity=1`
             })
-            .then(response => response.json())
+            .then(response => {
+                // Verificar si la respuesta es exitosa
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Verificar si la respuesta es JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('La respuesta del servidor no es JSON válido');
+                }
+                
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Éxito
@@ -248,18 +262,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         cartCount.textContent = data.cart_count;
                     }
                     
-                    // Mostrar mensaje de éxito
-                    if (data.message) {
-                        showToast('success', data.message);
-                    }
+                    // Mostrar modal de acceso rápido
+                    showQuickAccessModal(productId, data);
                     
-                    // Restaurar botón después de 2 segundos
+                    // Restaurar botón después de 3 segundos
                     setTimeout(() => {
                         this.innerHTML = originalIcon;
                         this.classList.remove('btn-success');
                         this.classList.add('btn-primary');
                         this.disabled = false;
-                    }, 2000);
+                    }, 3000);
                 } else {
                     // Error
                     this.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
@@ -281,11 +293,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error detallado:', error);
+                console.log('URL solicitada:', `/cart/add/${productId}/`);
+                console.log('Headers enviados:', {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                });
+                
+                // Determinar el tipo de error y mostrar mensaje apropiado
+                let errorMessage = 'Error al agregar el producto al carrito';
+                if (error.message.includes('HTTP error')) {
+                    errorMessage = 'Error del servidor. Por favor, intenta nuevamente.';
+                    console.error('Error HTTP detectado:', error.message);
+                } else if (error.message.includes('JSON')) {
+                    errorMessage = 'Error de comunicación: El servidor no devolvió datos válidos.';
+                    console.error('Error de JSON detectado:', error.message);
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Error de conexión. Verifica tu internet y que el servidor esté ejecutándose.';
+                    console.error('Error de conexión detectado:', error.message);
+                } else if (error.name === 'TypeError') {
+                    errorMessage = 'Error de red. Verifica que el servidor Django esté en funcionamiento.';
+                    console.error('TypeError detectado:', error.message);
+                }
+                
                 this.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
                 this.classList.remove('btn-primary');
                 this.classList.add('btn-danger');
-                showToast('error', 'Error al agregar el producto al carrito');
+                showToast('error', errorMessage);
                 
                 setTimeout(() => {
                     this.innerHTML = originalIcon;
@@ -296,6 +331,63 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+    
+    // Función para mostrar el modal de acceso rápido
+    function showQuickAccessModal(productId, data) {
+        // Usar datos reales del servidor en lugar de extraer del DOM
+        if (data && data.product) {
+            // Actualizar modal con información real del producto desde el servidor
+            const modalImage = document.getElementById('modalProductImage');
+            const modalName = document.getElementById('modalProductName');
+            const modalPrice = document.getElementById('modalProductPrice');
+            const modalQuantity = document.getElementById('modalProductQuantity');
+            const modalCartItems = document.getElementById('modalCartTotalItems');
+            const modalCartTotal = document.getElementById('modalCartTotal');
+            
+            if (modalImage) {
+                modalImage.src = data.product.image_url || '';
+                modalImage.alt = data.product.name || '';
+            }
+            
+            if (modalName) {
+                modalName.textContent = data.product.name || 'Producto';
+            }
+            
+            if (modalPrice) {
+                modalPrice.textContent = data.product.price || '';
+            }
+            
+            if (modalQuantity) {
+                modalQuantity.textContent = `Cantidad agregada: ${data.product.quantity_added} | Total en carrito: ${data.product.total_quantity_in_cart}`;
+            }
+            
+            if (modalCartItems) {
+                modalCartItems.textContent = data.cart_total_items || '0';
+            }
+            
+            if (modalCartTotal) {
+                modalCartTotal.textContent = data.cart_final_total || '$0';
+            }
+        } else {
+            // Fallback: usar datos del DOM si no hay datos del servidor
+            const productCard = document.querySelector(`[data-product-id="${productId}"]`).closest('.product-card');
+            if (productCard) {
+                const productImage = productCard.querySelector('.product-img img');
+                const productName = productCard.querySelector('.product-title');
+                const productPrice = productCard.querySelector('.product-price');
+                
+                // Actualizar modal con información del producto
+                document.getElementById('modalProductImage').src = productImage ? productImage.src : '';
+                document.getElementById('modalProductImage').alt = productName ? productName.textContent : '';
+                document.getElementById('modalProductName').textContent = productName ? productName.textContent : 'Producto';
+                document.getElementById('modalProductPrice').textContent = productPrice ? productPrice.textContent : '';
+            }
+        }
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('quickAccessModal'));
+        modal.show();
+    }
     
     // Función para mostrar mensajes toast (si existe)
     function showToast(type, message) {

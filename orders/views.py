@@ -49,14 +49,33 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
 
 @login_required
 def cancel_order(request, order_number):
-    """Cancelar un pedido (solo si está en estado pendiente)"""
+    """Cancelar un pedido (solo si está en estado pendiente o si es superusuario)"""
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     
-    if order.status == 'pending':
+    # Verificar si el pedido puede ser cancelado
+    can_cancel = False
+    error_message = None
+    
+    if order.status == 'cancelled':
+        error_message = f'❌ El pedido #{order.order_number} ya está cancelado'
+    elif order.status == 'delivered':
+        error_message = f'❌ No se puede cancelar un pedido ya entregado'
+    elif order.payment_status == 'paid' and not request.user.is_superuser:
+        error_message = f'❌ No se puede cancelar el pedido #{order.order_number} porque ya está pagado. Contacta al administrador si necesitas cancelarlo.'
+    elif order.status == 'pending' or request.user.is_superuser:
+        can_cancel = True
+    else:
+        error_message = f'❌ No se puede cancelar el pedido #{order.order_number} en estado {order.get_status_display()}'
+    
+    if can_cancel:
         order.status = 'cancelled'
         order.save()
-        messages.success(request, f'✅ Pedido #{order.order_number} cancelado exitosamente')
+        
+        if request.user.is_superuser and order.payment_status == 'paid':
+            messages.warning(request, f'⚠️ Pedido pagado #{order.order_number} cancelado por administrador')
+        else:
+            messages.success(request, f'✅ Pedido #{order.order_number} cancelado exitosamente')
     else:
-        messages.error(request, f'❌ No se puede cancelar el pedido #{order.order_number} en estado {order.get_status_display()}')
+        messages.error(request, error_message)
     
     return redirect('orders:order_detail', order_number=order.order_number)

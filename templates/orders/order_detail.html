@@ -86,15 +86,33 @@
                                     </a>
                                 {% endif %}
                                 
-                                {% if order.status == 'pending' or order.status == 'confirmed' %}
-                                    <form method="post" action="{% url 'orders:cancel_order' order.order_number %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-outline-danger btn-sm"
-                                                onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido?')">
-                                            <i class="fas fa-times me-1"></i>
-                                            Cancelar
-                                        </button>
-                                    </form>
+                                {% comment %}
+                                    Usar el método del modelo para verificar si puede ser cancelado
+                                {% endcomment %}
+                                {% if order.can_be_cancelled_simple %}
+                                    {% if order.payment_status != 'paid' or user.is_superuser %}
+                                        <form method="post" action="{% url 'orders:cancel_order' order.order_number %}" class="d-inline">
+                                            {% csrf_token %}
+                                            {% if order.payment_status == 'paid' and user.is_superuser %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                        onclick="return confirm('ATENCIÓN: Este pedido está PAGADO. ¿Estás seguro de cancelarlo? Esta acción puede requerir reembolso.')">
+                                                    <i class="fas fa-times me-1"></i>
+                                                    Cancelar (Admin)
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                        onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido?')">
+                                                    <i class="fas fa-times me-1"></i>
+                                                    Cancelar
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                    {% elif order.payment_status == 'paid' and not user.is_superuser %}
+                                        <span class="text-muted small">
+                                            <i class="fas fa-lock me-1"></i>
+                                            No se puede cancelar (pagado)
+                                        </span>
+                                    {% endif %}
                                 {% endif %}
                                 
                                 {% if order.status == 'delivered' %}

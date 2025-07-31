@@ -70,10 +70,12 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="quantity-controls">
-                                        <label class="form-label">Cantidad:</label>
+                                        <label class="form-label fw-semibold">Cantidad:</label>
                                         <div class="input-group">
                                             <button class="btn btn-outline-secondary quantity-btn" 
-                                                    type="button" data-action="decrease">
+                                                    type="button" 
+                                                    data-action="decrease"
+                                                    aria-label="Disminuir cantidad">
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" 
@@ -81,9 +83,12 @@
                                                    value="{{ item.quantity }}" 
                                                    min="1" 
                                                    max="99"
-                                                   data-product-id="{{ item.product.id }}">
+                                                   data-product-id="{{ item.product.id }}"
+                                                   aria-label="Cantidad">
                                             <button class="btn btn-outline-secondary quantity-btn" 
-                                                    type="button" data-action="increase">
+                                                    type="button" 
+                                                    data-action="increase"
+                                                    aria-label="Aumentar cantidad">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
@@ -134,10 +139,12 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="quantity-controls">
-                                        <label class="form-label">Cantidad:</label>
+                                        <label class="form-label fw-semibold">Cantidad:</label>
                                         <div class="input-group">
                                             <button class="btn btn-outline-secondary quantity-btn" 
-                                                    type="button" data-action="decrease">
+                                                    type="button" 
+                                                    data-action="decrease"
+                                                    aria-label="Disminuir cantidad">
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" 
@@ -145,9 +152,12 @@
                                                    value="{{ item.quantity }}" 
                                                    min="1" 
                                                    max="99"
-                                                   data-product-id="{{ item.product.id }}">
+                                                   data-product-id="{{ item.product.id }}"
+                                                   aria-label="Cantidad">
                                             <button class="btn btn-outline-secondary quantity-btn" 
-                                                    type="button" data-action="increase">
+                                                    type="button" 
+                                                    data-action="increase"
+                                                    aria-label="Aumentar cantidad">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
@@ -304,6 +314,48 @@
                     Explorar Productos
                 </a>
             </div>
+            
+            <!-- Productos destacados para carrito vacío -->
+            {% if recommended_products %}
+            <div class="featured-products mt-5">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-star text-warning"></i>
+                    Productos Destacados
+                </h4>
+                <div class="row">
+                    {% for product in recommended_products %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card h-100 product-card">
+                            <div class="product-image-container">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                                {% else %}
+                                    <div class="no-image-placeholder">
+                                        <i class="fas fa-cookie-bite fa-3x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">{{ product.name }}</h6>
+                                <p class="card-text text-muted small">{{ product.category.name }}</p>
+                                <div class="price-section mt-auto">
+                                    <div class="price mb-2">
+                                        <strong class="text-primary">${{ product.price|floatformat:0 }}</strong>
+                                    </div>
+                                    <button class="btn btn-sm w-100 add-to-cart-btn" 
+                                            data-product-id="{{ product.id }}"
+                                            style="background-color: #343a40; color: white; border: none;">
+                                        <i class="fas fa-shopping-cart me-1"></i>
+                                        Agregar al Carrito
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     {% endif %}
 
@@ -314,9 +366,45 @@
             <i class="fas fa-heart text-danger"></i>
             Te podría interesar
         </h4>
-        <!-- Aquí puedes agregar productos recomendados -->
-        <div class="text-center">
+        
+        {% if recommended_products %}
+        <div class="row">
+            {% for product in recommended_products %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 product-card">
+                    <div class="product-image-container">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-cookie-bite fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ product.name }}</h6>
+                        <p class="card-text text-muted small">{{ product.category.name }}</p>
+                        <div class="price-section mt-auto">
+                            <div class="price mb-2">
+                                <strong class="text-primary">${{ product.price|floatformat:0 }}</strong>
+                            </div>
+                            <button class="btn btn-sm w-100 add-to-cart-btn" 
+                                    data-product-id="{{ product.id }}"
+                                    style="background-color: #343a40; color: white; border: none;">
+                                <i class="fas fa-shopping-cart me-1"></i>
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="text-center mt-4">
             <a href="{% url 'shop:product_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-store me-1"></i>
                 Ver más productos
             </a>
         </div>
@@ -379,15 +467,141 @@
 }
 
 .quantity-controls {
-    max-width: 150px;
+    max-width: 140px;
+}
+
+.quantity-controls .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.quantity-btn {
+    width: 35px;
+    height: 38px;
+    border: none !important;
+    background: #f8f9fa;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.quantity-btn:active {
+    background: #dee2e6;
 }
 
 .quantity-input {
-    max-width: 60px;
+    border: none !important;
+    text-align: center;
+    font-weight: 600;
+    background: white;
+    padding: 0.375rem 0.25rem;
+    min-width: 50px;
+    max-width: 70px;
+}
+
+.quantity-input:focus {
+    box-shadow: none;
+    border-color: #80bdff;
+    background: white;
+}
+
+/* Remover spinners de número en Chrome, Safari, Edge */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Remover spinners de número en Firefox */
+.quantity-input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .item-total {
     text-align: center;
+}
+
+/* Productos recomendados */
+.recommended-products {
+    border-top: 2px solid #e9ecef;
+    padding-top: 2rem;
+}
+
+.product-card {
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.product-image-container {
+    height: 150px;
+    overflow: hidden;
+    position: relative;
+}
+
+.product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-img {
+    transform: scale(1.05);
+}
+
+.no-image-placeholder {
+    height: 150px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-to-cart-btn {
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #23272b !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(52, 58, 64, 0.3);
+}
+
+.add-to-cart-btn:active {
+    transform: translateY(0);
+}
+
+.price-section .price {
+    font-size: 1.1rem;
+}
+
+/* Animación para cuando se agrega un producto */
+.cart-bounce {
+    animation: bounceIn 0.6s ease-in-out;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 .total-price {
@@ -492,6 +706,111 @@ document.addEventListener('DOMContentLoaded', function() {
             removeCartItem(productId);
         });
     });
+    
+    // Agregar productos recomendados al carrito
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const button = this;
+            
+            // Animación de loading
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
+            button.disabled = true;
+            
+            addToCartFromRecommended(productId, button, originalText);
+        });
+    });
+    
+    function addToCartFromRecommended(productId, button, originalText) {
+        fetch(`{% url 'cart:add_to_cart' 0 %}`.replace('0', productId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'quantity=1'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Animación de éxito
+                button.innerHTML = '<i class="fas fa-check me-1"></i>¡Agregado!';
+                button.classList.add('cart-bounce');
+                
+                // Actualizar contador del carrito flotante si existe
+                const cartCount = document.querySelector('.floating-cart-count');
+                if (cartCount && data.cart_count) {
+                    cartCount.textContent = data.cart_count;
+                    cartCount.classList.add('cart-bounce');
+                }
+                
+                // Mostrar mensaje de éxito
+                showToast('Producto agregado al carrito', 'success');
+                
+                // Restaurar botón después de 2 segundos
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    button.classList.remove('cart-bounce');
+                    if (cartCount) cartCount.classList.remove('cart-bounce');
+                }, 2000);
+            } else {
+                // Error
+                button.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+                showToast(data.message || 'Error al agregar producto', 'error');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+            showToast('Error de conexión', 'error');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        });
+    }
+    
+    function showToast(message, type) {
+        // Crear toast si no existe
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const bgColor = type === 'success' ? 'bg-success' : 'bg-danger';
+        
+        const toastHTML = `
+            <div id="${toastId}" class="toast ${bgColor} text-white" role="alert">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        
+        const toast = new bootstrap.Toast(document.getElementById(toastId));
+        toast.show();
+        
+        // Eliminar toast después de que se oculte
+        document.getElementById(toastId).addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    }
     
     function updateCartItem(productId, quantity) {
         fetch(`{% url 'cart:update_cart' 0 %}`.replace('0', productId), {

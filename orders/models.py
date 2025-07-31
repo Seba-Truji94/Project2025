@@ -125,8 +125,27 @@ class Order(models.Model):
     def formatted_total(self):
         return f"${int(self.total):,}".replace(',', '.')
     
+    def can_be_cancelled(self, user=None):
+        """
+        Verifica si el pedido puede ser cancelado por el usuario dado.
+        
+        Reglas:
+        - Pedidos ya cancelados o entregados no se pueden cancelar
+        - Pedidos no pagados en estado pendiente pueden ser cancelados por el usuario
+        - Pedidos pagados solo pueden ser cancelados por superusuarios
+        """
+        if self.status in ['cancelled', 'delivered']:
+            return False
+            
+        if user and user.is_superuser:
+            return True
+            
+        # Usuario normal solo puede cancelar si no está pagado y está pendiente
+        return self.payment_status != 'paid' and self.status == 'pending'
+    
     @property
-    def can_be_cancelled(self):
+    def can_be_cancelled_simple(self):
+        """Versión simple para templates sin usuario"""
         return self.status in ['pending', 'confirmed']
     
     @property

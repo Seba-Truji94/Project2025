@@ -24,6 +24,10 @@ class CartDetailView(TemplateView):
             context['cart'] = cart
             context['cart_items'] = cart.items.all()
             context['is_authenticated_cart'] = True
+            
+            # Productos recomendados (excluir los que ya están en el carrito)
+            cart_product_ids = cart.items.values_list('product_id', flat=True)
+            recommended_products = Product.objects.filter(available=True).exclude(id__in=cart_product_ids)[:4]
         else:
             # Carrito de sesión para usuarios no autenticados
             session_cart = SessionCart(self.request)
@@ -40,94 +44,131 @@ class CartDetailView(TemplateView):
                 'final_total': total_price + shipping_cost,
                 'total_items': len(session_cart)
             }
+            
+            # Productos recomendados (excluir los que ya están en el carrito de sesión)
+            cart_product_ids = [item['product'].id for item in session_cart]
+            recommended_products = Product.objects.filter(available=True).exclude(id__in=cart_product_ids)[:4]
         
+        # Siempre incluir productos recomendados
+        context['recommended_products'] = recommended_products
         return context
 
 
 @require_POST
 def add_to_cart(request, product_id):
     """Agregar producto al carrito"""
-    product = get_object_or_404(Product, id=product_id)
-    quantity = int(request.POST.get('quantity', 1))
-    
-    # Validar que el producto esté disponible
-    if not product.available:
-        messages.error(request, f'❌ {product.name} no está disponible')
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': False,
-                'message': f'{product.name} no está disponible'
-            })
-        return redirect('shop:product_detail', slug=product.slug)
-    
-    # Validar stock disponible
-    if product.stock < quantity:
-        if product.stock == 0:
-            message = f'❌ {product.name} está agotado'
-        else:
-            message = f'❌ Solo quedan {product.stock} unidades de {product.name}'
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        quantity = int(request.POST.get('quantity', 1))
         
-        messages.error(request, message)
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': False,
-                'message': message
-            })
-        return redirect('shop:product_detail', slug=product.slug)
-    
-    if request.user.is_authenticated:
-        # Usuario autenticado - usar carrito en BD
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        cart_item, item_created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            defaults={'quantity': quantity}
-        )
+        # Validar que el producto esté disponible
+        if not product.available:
+            messages.error(request, f'❌ {product.name} no está disponible')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': f'{product.name} no está disponible'
+                })
+            return redirect('shop:product_detail', slug=product.slug)
         
-        if not item_created:
-            # Validar que la nueva cantidad no exceda el stock
-            new_quantity = cart_item.quantity + quantity
-            if new_quantity > product.stock:
-                available_to_add = product.stock - cart_item.quantity
-                if available_to_add <= 0:
-                    message = f'❌ Ya tienes el máximo disponible de {product.name} en tu carrito'
-                else:
-                    message = f'❌ Solo puedes agregar {available_to_add} unidades más de {product.name}'
-                
-                messages.error(request, message)
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': False,
-                        'message': message
-                    })
-                return redirect('cart:cart_detail')
+        # Validar stock disponible
+        if product.stock < quantity:
+            if product.stock == 0:
+                message = f'❌ {product.name} está agotado'
+            else:
+                message = f'❌ Solo quedan {product.stock} unidades de {product.name}'
             
-            cart_item.quantity = new_quantity
-            cart_item.save()
-        
-        messages.success(
-            request, 
-            f'✅ {product.name} agregado al carrito (Cantidad: {cart_item.quantity})'
-        )
-        
-        # Respuesta AJAX
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': True,
-                'message': f'{product.name} agregado al carrito',
-                'cart_total_items': cart.total_items,
-                'cart_total_price': cart.formatted_total_price,
-                'cart_final_total': cart.formatted_final_total
-            })
-    else:
-        # Usuario no autenticado - usar carrito de sesión
-        session_cart = SessionCart(request)
-        session_cart.add(product=product, quantity=quantity)
-        
-        messages.success(
-            request, 
-            f'✅ {product.name} agregado al carrito'
-        )
+            messages.error(request, message)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': message
+                })
+            return redirect('shop:product_detail', slug=product.slug)
+    
+        if request.user.is_authenticated:
+            # Usuario autenticado - usar carrito en BD
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            cart_item, item_created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={'quantity': quantity}
+            )
+            
+            if not item_created:
+                # Validar que la nueva cantidad no exceda el stock
+                new_quantity = cart_item.quantity + quantity
+                if new_quantity > product.stock:
+                    available_to_add = product.stock - cart_item.quantity
+                    if available_to_add <= 0:
+                        message = f'❌ Ya tienes el máximo disponible de {product.name} en tu carrito'
+                    else:
+                        message = f'❌ Solo puedes agregar {available_to_add} unidades más de {product.name}'
+                    
+                    messages.error(request, message)
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({
+                            'success': False,
+                            'message': message
+                        })
+                    return redirect('cart:cart_detail')
+                
+                cart_item.quantity = new_quantity
+                cart_item.save()
+            
+            messages.success(
+                request, 
+                f'✅ {product.name} agregado al carrito (Cantidad: {cart_item.quantity})'
+            )
+            
+            # Respuesta AJAX
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{product.name} agregado al carrito',
+                    'cart_count': cart.total_items,
+                    'cart_total_items': cart.total_items,
+                    'cart_total_price': cart.formatted_total_price,
+                    'cart_final_total': cart.formatted_final_total,
+                    # Información del producto para el modal
+                    'product': {
+                        'id': product.id,
+                        'name': product.name,
+                        'price': product.formatted_current_price,
+                        'image_url': product.image.url if product.image else '',
+                        'slug': product.slug,
+                        'quantity_added': quantity,
+                        'total_quantity_in_cart': cart_item.quantity
+                    }
+                })
+        else:
+            # Usuario no autenticado - usar carrito de sesión
+            session_cart = SessionCart(request)
+            session_cart.add(product=product, quantity=quantity)
+            
+            messages.success(
+                request, 
+                f'✅ {product.name} agregado al carrito'
+            )
+            
+            # Respuesta AJAX
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{product.name} agregado al carrito',
+                    'cart_count': len(session_cart),
+                    'cart_total_items': len(session_cart),
+                    'cart_total_price': session_cart.get_total_price(),
+                    # Información del producto para el modal
+                    'product': {
+                        'id': product.id,
+                        'name': product.name,
+                        'price': product.formatted_current_price,
+                        'image_url': product.image.url if product.image else '',
+                        'slug': product.slug,
+                        'quantity_added': quantity
+                    }
+                })
         
         # Respuesta AJAX para carrito de sesión
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -140,10 +181,32 @@ def add_to_cart(request, product_id):
                 'message': f'{product.name} agregado al carrito',
                 'cart_total_items': len(session_cart),
                 'cart_total_price': f"${int(total_price):,}".replace(',', '.'),
-                'cart_final_total': f"${int(final_total):,}".replace(',', '.')
+                'cart_final_total': f"${int(final_total):,}".replace(',', '.'),
+                # Información del producto para el modal
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'price': product.formatted_current_price,
+                    'image_url': product.image.url if product.image else '',
+                    'slug': product.slug,
+                    'quantity_added': quantity,
+                    'total_quantity_in_cart': session_cart.cart.get(str(product.id), {}).get('quantity', 0)
+                }
             })
     
-    return redirect('cart:cart_detail')
+        return redirect('cart:cart_detail')
+
+    except Exception as e:
+        # Manejo de errores generales
+        error_message = f'Error al agregar producto al carrito: {str(e)}'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'Error interno del servidor. Por favor, intenta nuevamente.'
+            }, status=500)
+        else:
+            messages.error(request, error_message)
+            return redirect('shop:product_list')
 
 
 @require_POST
