@@ -100,7 +100,7 @@ body {
     color: var(--black);
     background-color: var(--white);
     overflow-x: hidden;
-    padding-top: 140px; /* Espacio para announcement bar + navbar */
+    padding-top: 120px; /* Espacio para announcement bar (44px) + navbar (76px) */
 }
 
 .container {
@@ -117,7 +117,12 @@ main {
 
 /* Espaciado adicional para el main cuando hay barra financiera */
 body[data-user-authenticated="true"] main {
-    padding-top: 40px; /* Espacio adicional para la barra financiera */
+    padding-top: 10px; /* Espacio adicional para la barra financiera (reducido) */
+}
+
+/* Ajustar padding del body para usuarios autenticados con barra financiera */
+body[data-user-authenticated="true"] {
+    padding-top: 160px; /* Espacio para announcement (44px) + financial (36px) + navbar (80px) */
 }
 
 /* Typography System */
@@ -166,15 +171,19 @@ h1, h2, h3, h4, h5, h6 {
     background-clip: text;
 }
 
-/* Announcement Bar */
+/* Announcement Bar - FIXED */
 .announcement-bar {
     background: var(--gradient-primary);
     color: var(--white);
     padding: 0.75rem 0;
     text-align: center;
-    position: relative;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 1001;
     box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease;
 }
 
 .announcement-content {
@@ -198,7 +207,7 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 1;
 }
 
-/* Financial Info Bar */
+/* Financial Info Bar - FIXED */
 .financial-info-bar {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-bottom: 1px solid rgba(74, 144, 226, 0.1);
@@ -206,6 +215,12 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.875rem;
     color: var(--gray-dark);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    position: fixed !important;
+    top: 44px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transition: transform 0.3s ease;
 }
 
 .financial-stats {
@@ -274,35 +289,65 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-/* Enhanced Navigation */
+/* Enhanced Navigation - SIEMPRE STICKY */
 .navbar {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(20px);
     padding: 1rem 0;
     width: 100%;
+    position: fixed !important;
     top: 44px;
+    left: 0;
+    right: 0;
     z-index: 1000;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    transition: var(--transition-medium);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Ajustar posición del navbar cuando hay barra financiera */
 .financial-info-bar + header .navbar {
-    top: 80px; /* 44px (announcement) + 36px (financial) */
+    top: 80px !important; /* 44px (announcement) + 36px (financial) */
 }
 
-.navbar.fixed {
-    position: fixed;
-}
-
+/* Mantener el navbar siempre visible al hacer scroll */
 .navbar.scrolled {
-    top: 0;
-    box-shadow: var(--shadow-md);
+    top: 0 !important;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(25px);
+}
+
+/* Cuando hay barra financiera */
+.financial-info-bar + header .navbar {
+    top: 80px !important;
 }
 
 /* Ajuste del body cuando el navbar está scrolled */
 body.navbar-scrolled {
     padding-top: 100px; /* Solo espacio para navbar sin announcement bar */
+}
+
+/* Garantizar que el header y navbar siempre sean fijos */
+header {
+    position: relative;
+    z-index: 1000;
+}
+
+.sticky-header {
+    position: relative;
+}
+
+/* El navbar se maneja directamente con position fixed */
+.navbar {
+    position: fixed !important;
+    top: 44px !important;
+    z-index: 1000 !important;
+}
+
+/* Para usuarios autenticados con barra financiera */
+.financial-info-bar + header .navbar {
+    top: 80px !important;
 }
 
 .nav-container {

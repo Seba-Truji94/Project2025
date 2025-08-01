@@ -7,6 +7,31 @@
     <div class="hero-background">
         <div class="hero-overlay"></div>
     </div>
+    
+    <!-- Animación de migas cayendo -->
+    <div class="cookie-crumbs-animation">
+        <div class="crumb crumb-1">⚪</div>
+        <div class="crumb crumb-2">⚫</div>
+        <div class="crumb crumb-3">🟤</div>
+        <div class="crumb crumb-4">⚪</div>
+        <div class="crumb crumb-5">🟫</div>
+        <div class="crumb crumb-6">⚫</div>
+        <div class="crumb crumb-7">🟤</div>
+        <div class="crumb crumb-8">⚪</div>
+        <div class="crumb crumb-9">🟫</div>
+        <div class="crumb crumb-10">⚫</div>
+        <div class="crumb crumb-11">🟤</div>
+        <div class="crumb crumb-12">⚪</div>
+        <div class="crumb crumb-13">🟫</div>
+        <div class="crumb crumb-14">⚫</div>
+        <div class="crumb crumb-15">🟤</div>
+        <div class="crumb crumb-16">⭐</div>
+        <div class="crumb crumb-17">✨</div>
+        <div class="crumb crumb-18">💫</div>
+        <div class="crumb crumb-19">🌟</div>
+        <div class="crumb crumb-20">⭐</div>
+    </div>
+    
     <div class="hero-content">
         <div class="hero-badges">
             <span class="badge">⭐ #1 Más Vendidas</span>
@@ -89,73 +114,95 @@
     </div>
 </section>
 
-<section id="productos" class="products">
+<!-- Discover Our Products Section -->
+<section id="productos" class="discover-products">
     <div class="container">
         <div class="section-header">
-            <span class="section-subtitle">Nuestras Especialidades</span>
-            <h2 class="section-title">Galletas <span class="highlight">Premium</span></h2>
-            <p class="section-description">Cada galleta es una obra maestra horneada con pasión</p>
+            <span class="section-subtitle">Descubre Nuestras Especialidades</span>
+            <h2 class="section-title">Galletas <span class="highlight">Artesanales</span></h2>
+            <p class="section-description">Más de 12 variedades únicas horneadas con pasión y ingredientes premium</p>
         </div>
         
-        <!-- Filter Tabs -->
-        <div class="product-filters">
-            <a href="{% url 'shop:product_list' %}" class="filter-btn active">Todas</a>
-            <a href="{% url 'shop:product_list' %}?category=bestseller" class="filter-btn">🔥 Más Vendidas</a>
-            <a href="{% url 'shop:product_list' %}?category=premium" class="filter-btn">⭐ Premium</a>
-            <a href="{% url 'shop:product_list' %}?category=healthy" class="filter-btn">🌱 Saludables</a>
+        <!-- Product Categories Preview -->
+        <div class="categories-preview">
+            <div class="category-card">
+                <div class="category-icon">🔥</div>
+                <h3>Más Vendidas</h3>
+                <p>Nuestras galletas favoritas de los clientes</p>
+                <ul class="category-features">
+                    <li>✅ Mix de Galletas Navideñas</li>
+                    <li>✅ Galletas de Chocolate Premium</li>
+                    <li>✅ Galletas de Mantequilla Clásicas</li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">⭐</div>
+                <h3>Premium</h3>
+                <p>Ingredientes selectos y recetas exclusivas</p>
+                <ul class="category-features">
+                    <li>✅ Caja Regalo Dulce Bias</li>
+                    <li>✅ Galletas con Frutos Secos</li>
+                    <li>✅ Ediciones Limitadas</li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <div class="category-icon">🌱</div>
+                <h3>Saludables</h3>
+                <p>Opciones nutritivas sin comprometer el sabor</p>
+                <ul class="category-features">
+                    <li>✅ Galletas Integrales</li>
+                    <li>✅ Sin Azúcar Agregado</li>
+                    <li>✅ Con Superalimentos</li>
+                </ul>
+            </div>
         </div>
         
-        <div class="product-grid" id="product-grid">
-            {% for product in featured_products %}
-            <div class="product-card">
-                <div class="product-image">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                    {% else %}
-                        <div class="placeholder-image">🍪</div>
-                    {% endif %}
-                    <div class="product-badges">
-                        {% if product.product_type == 'bestseller' %}
-                            <span class="badge badge-bestseller">🔥 Más Vendida</span>
-                        {% elif product.product_type == 'premium' %}
-                            <span class="badge badge-premium">⭐ Premium</span>
-                        {% elif product.product_type == 'healthy' %}
-                            <span class="badge badge-healthy">🌱 Saludable</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">{{ product.name }}</h3>
-                    <p class="product-description">{{ product.description|truncatechars:80 }}</p>
-                    <div class="product-price">
-                        <span class="price">{{ product.formatted_price }}</span>
-                        <small>{{ product.weight }}g</small>
-                    </div>
-                    <div class="product-actions">
-                        <a href="{% url 'shop:product_detail' product.slug %}" class="btn-view">Ver Detalles</a>
-                        <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="add-to-cart-form">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-add-cart">
-                                <i class="fas fa-shopping-cart"></i>
-                                Agregar
-                            </button>
-                        </form>
-                    </div>
+        <!-- Call to Action -->
+        <div class="products-cta">
+            <div class="cta-content">
+                <h3>¿Listo para probar nuestras galletas?</h3>
+                <p>Explora toda nuestra variedad de productos artesanales</p>
+                <div class="cta-buttons">
+                    <a href="{% url 'shop:product_list' %}" class="btn-primary">
+                        <i class="fas fa-cookie-bite"></i>
+                        Ver Nuestros Productos
+                    </a>
+                    <a href="{% url 'shop:product_list' %}?category=bestseller" class="btn-secondary">
+                        <i class="fas fa-fire"></i>
+                        Más Vendidas
+                    </a>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12 text-center">
-                <p>No hay productos destacados disponibles.</p>
+            <div class="cta-visual">
+                <div class="floating-elements">
+                    <div class="floating-cookie">🍪</div>
+                    <div class="floating-cookie">🧈</div>
+                    <div class="floating-cookie">🍫</div>
+                    <div class="floating-cookie">🥜</div>
+                </div>
             </div>
-            {% endfor %}
         </div>
         
-        <!-- Load More Button -->
-        <div class="load-more-container">
-            <a href="{% url 'shop:product_list' %}" class="load-more-btn">
-                <span>Ver Todos los Productos</span>
-                <i class="fas fa-chevron-right"></i>
-            </a>
+        <!-- Product Quality Highlights -->
+        <div class="quality-highlights">
+            <div class="highlight-item">
+                <i class="fas fa-leaf text-success"></i>
+                <span>100% Ingredientes Naturales</span>
+            </div>
+            <div class="highlight-item">
+                <i class="fas fa-clock text-primary"></i>
+                <span>Horneadas Diariamente</span>
+            </div>
+            <div class="highlight-item">
+                <i class="fas fa-heart text-danger"></i>
+                <span>Recetas Familiares</span>
+            </div>
+            <div class="highlight-item">
+                <i class="fas fa-award text-warning"></i>
+                <span>Premio Calidad 2024</span>
+            </div>
         </div>
     </div>
 </section>
@@ -336,4 +383,710 @@
         </div>
     </div>
 </section>
+
+<style>
+/* Discover Products Section Styles */
+.discover-products {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.categories-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.category-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.category-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.category-card h3 {
+    color: #2c5282;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.category-card p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.category-features {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+
+.category-features li {
+    padding: 0.5rem 0;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.products-cta {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin: 4rem 0;
+    background: linear-gradient(135deg, #2c5282 0%, #3d72a4 100%);
+    padding: 3rem;
+    border-radius: 20px;
+    color: white;
+}
+
+.cta-content h3 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.cta-content p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #ff6b6b;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #ff5252;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.btn-secondary:hover {
+    background: white;
+    color: #2c5282;
+    text-decoration: none;
+}
+
+.cta-visual {
+    position: relative;
+    height: 200px;
+}
+
+.floating-elements {
+    position: relative;
+    height: 100%;
+}
+
+.floating-elements .floating-cookie {
+    position: absolute;
+    font-size: 2rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+.floating-elements .floating-cookie:nth-child(1) {
+    top: 20%;
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.floating-elements .floating-cookie:nth-child(2) {
+    top: 60%;
+    right: 20%;
+    animation-delay: 0.5s;
+}
+
+.floating-elements .floating-cookie:nth-child(3) {
+    bottom: 20%;
+    left: 40%;
+    animation-delay: 1s;
+}
+
+.floating-elements .floating-cookie:nth-child(4) {
+    top: 10%;
+    right: 40%;
+    animation-delay: 1.5s;
+}
+
+.quality-highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+}
+
+.highlight-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.highlight-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.highlight-item i {
+    font-size: 1.5rem;
+}
+
+.highlight-item span {
+    font-weight: 600;
+    color: #2c5282;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .categories-preview {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .products-cta {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .cta-buttons {
+        justify-content: center;
+    }
+    
+    .quality-highlights {
+        grid-template-columns: 1fr;
+    }
+    
+    .highlight-item {
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .discover-products {
+        padding: 60px 0;
+    }
+    
+    .category-card {
+        padding: 1.5rem;
+    }
+    
+    .products-cta {
+        padding: 1.5rem;
+    }
+    
+    .cta-content h3 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-primary, .btn-secondary {
+        padding: 0.8rem 1.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<!-- Cookie Crumbs Animation Styles -->
+<style>
+/* Animación de migas de galletas cayendo */
+.cookie-crumbs-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.crumb {
+    position: absolute;
+    font-size: 8px;
+    opacity: 0.7;
+    animation: fallDown linear infinite;
+    user-select: none;
+}
+
+/* Diferentes tamaños para las migas */
+.crumb-1, .crumb-4, .crumb-8, .crumb-12 {
+    font-size: 6px;
+    opacity: 0.6;
+}
+
+.crumb-2, .crumb-6, .crumb-10, .crumb-14 {
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+.crumb-3, .crumb-7, .crumb-11, .crumb-15 {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.crumb-5, .crumb-9, .crumb-13 {
+    font-size: 7px;
+    opacity: 0.65;
+}
+
+/* Posiciones y duraciones específicas para cada miga */
+.crumb-1 {
+    left: 5%;
+    animation-duration: 12s;
+    animation-delay: 0s;
+}
+
+.crumb-2 {
+    left: 15%;
+    animation-duration: 15s;
+    animation-delay: 2s;
+}
+
+.crumb-3 {
+    left: 25%;
+    animation-duration: 18s;
+    animation-delay: 4s;
+}
+
+.crumb-4 {
+    left: 35%;
+    animation-duration: 14s;
+    animation-delay: 1s;
+}
+
+.crumb-5 {
+    left: 45%;
+    animation-duration: 16s;
+    animation-delay: 6s;
+}
+
+.crumb-6 {
+    left: 55%;
+    animation-duration: 13s;
+    animation-delay: 3s;
+}
+
+.crumb-7 {
+    left: 65%;
+    animation-duration: 17s;
+    animation-delay: 8s;
+}
+
+.crumb-8 {
+    left: 75%;
+    animation-duration: 11s;
+    animation-delay: 5s;
+}
+
+.crumb-9 {
+    left: 85%;
+    animation-duration: 19s;
+    animation-delay: 7s;
+}
+
+.crumb-10 {
+    left: 95%;
+    animation-duration: 14s;
+    animation-delay: 9s;
+}
+
+.crumb-11 {
+    left: 8%;
+    animation-duration: 16s;
+    animation-delay: 11s;
+}
+
+.crumb-12 {
+    left: 22%;
+    animation-duration: 13s;
+    animation-delay: 12s;
+}
+
+.crumb-13 {
+    left: 42%;
+    animation-duration: 15s;
+    animation-delay: 10s;
+}
+
+.crumb-14 {
+    left: 68%;
+    animation-duration: 18s;
+    animation-delay: 14s;
+}
+
+.crumb-15 {
+    left: 88%;
+    animation-duration: 12s;
+    animation-delay: 13s;
+}
+
+/* Elementos brillantes (estrellas) */
+.crumb-16 {
+    left: 12%;
+    animation-duration: 20s;
+    animation-delay: 16s;
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.crumb-17 {
+    left: 33%;
+    animation-duration: 22s;
+    animation-delay: 18s;
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.crumb-18 {
+    left: 54%;
+    animation-duration: 24s;
+    animation-delay: 20s;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.crumb-19 {
+    left: 76%;
+    animation-duration: 21s;
+    animation-delay: 17s;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.crumb-20 {
+    left: 91%;
+    animation-duration: 23s;
+    animation-delay: 19s;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* Animación de caída */
+@keyframes fallDown {
+    0% {
+        top: -50px;
+        transform: rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        top: 100vh;
+        transform: rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Variaciones de la animación para más naturalidad */
+.crumb:nth-child(odd) {
+    animation-timing-function: ease-in-out;
+}
+
+.crumb:nth-child(even) {
+    animation-timing-function: ease-in;
+}
+
+/* Animación adicional de rotación */
+.crumb-1, .crumb-5, .crumb-9, .crumb-13 {
+    animation-name: fallDownRotateLeft;
+}
+
+.crumb-3, .crumb-7, .crumb-11, .crumb-15 {
+    animation-name: fallDownRotateRight;
+}
+
+/* Animación especial para elementos brillantes */
+.crumb-16, .crumb-17, .crumb-18, .crumb-19, .crumb-20 {
+    animation-name: sparklefall;
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6));
+}
+
+@keyframes fallDownRotateLeft {
+    0% {
+        top: -50px;
+        transform: rotate(0deg) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    50% {
+        transform: rotate(180deg) translateX(-20px);
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        top: 100vh;
+        transform: rotate(360deg) translateX(0);
+        opacity: 0;
+    }
+}
+
+@keyframes fallDownRotateRight {
+    0% {
+        top: -50px;
+        transform: rotate(0deg) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    50% {
+        transform: rotate(-180deg) translateX(20px);
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        top: 100vh;
+        transform: rotate(-360deg) translateX(0);
+        opacity: 0;
+    }
+}
+
+/* Efectos responsive para móviles */
+@media (max-width: 768px) {
+    .crumb {
+        font-size: 6px;
+    }
+    
+    .crumb-1, .crumb-4, .crumb-8, .crumb-12 {
+        font-size: 4px;
+    }
+    
+    .crumb-2, .crumb-6, .crumb-10, .crumb-14 {
+        font-size: 6px;
+    }
+    
+    .crumb-3, .crumb-7, .crumb-11, .crumb-15 {
+        font-size: 8px;
+    }
+    
+    .crumb-5, .crumb-9, .crumb-13 {
+        font-size: 5px;
+    }
+    
+    /* Reducir migas dinámicas en móvil */
+    .dynamic-crumb {
+        display: none;
+    }
+}
+
+/* Estilos para migas dinámicas */
+.dynamic-crumb {
+    animation-fill-mode: forwards;
+    animation-timing-function: linear;
+    animation-iteration-count: 1;
+    z-index: 3;
+}
+
+/* Pausa la animación cuando el usuario prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+    .crumb {
+        animation: none;
+        display: none;
+    }
+}
+
+/* Animación especial para elementos brillantes */
+@keyframes sparklefall {
+    0% {
+        top: -50px;
+        transform: rotate(0deg) scale(0.5);
+        opacity: 0;
+        filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8)) brightness(1.5);
+    }
+    10% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    25% {
+        transform: rotate(90deg) scale(1.2);
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1)) brightness(2);
+    }
+    50% {
+        transform: rotate(180deg) scale(1);
+        filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9)) brightness(1.8);
+    }
+    75% {
+        transform: rotate(270deg) scale(1.1);
+        filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.7)) brightness(1.3);
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        top: 100vh;
+        transform: rotate(360deg) scale(0.5);
+        opacity: 0;
+        filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5)) brightness(1);
+    }
+}
+
+/* Efecto de pulso para algunas migas */
+.crumb-2, .crumb-6, .crumb-10, .crumb-14 {
+    animation-name: fallDownPulse;
+}
+
+@keyframes fallDownPulse {
+    0% {
+        top: -50px;
+        transform: rotate(0deg) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    20%, 40%, 60%, 80% {
+        transform: scale(1.1);
+    }
+    30%, 50%, 70%, 90% {
+        transform: scale(0.9);
+    }
+    100% {
+        top: 100vh;
+        transform: rotate(360deg) scale(1);
+        opacity: 0;
+    }
+}
+</style>
+
+<!-- JavaScript para animación dinámica de migas -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const crumbsContainer = document.querySelector('.cookie-crumbs-animation');
+    
+    if (crumbsContainer) {
+        // Tipos de migas disponibles
+        const crumbTypes = ['⚪', '⚫', '🟤', '🟫', '⭐', '✨', '💫', '🌟'];
+        const maxCrumbs = 30; // Máximo de migas en pantalla
+        let crumbCount = 0;
+        
+        function createRandomCrumb() {
+            if (crumbCount >= maxCrumbs) return;
+            
+            const crumb = document.createElement('div');
+            crumb.className = 'crumb dynamic-crumb';
+            crumb.textContent = crumbTypes[Math.floor(Math.random() * crumbTypes.length)];
+            
+            // Posición horizontal aleatoria
+            crumb.style.left = Math.random() * 100 + '%';
+            
+            // Tamaño aleatorio
+            const size = Math.random() * 8 + 6; // Entre 6px y 14px
+            crumb.style.fontSize = size + 'px';
+            
+            // Duración aleatoria
+            const duration = Math.random() * 10 + 15; // Entre 15s y 25s
+            crumb.style.animationDuration = duration + 's';
+            
+            // Delay aleatorio
+            const delay = Math.random() * 5;
+            crumb.style.animationDelay = delay + 's';
+            
+            // Seleccionar animación aleatoria
+            const animations = ['fallDown', 'fallDownRotateLeft', 'fallDownRotateRight', 'sparklefall', 'fallDownPulse'];
+            const selectedAnimation = animations[Math.floor(Math.random() * animations.length)];
+            crumb.style.animationName = selectedAnimation;
+            
+            // Si es una estrella, aplicar efectos especiales
+            if (['⭐', '✨', '💫', '🌟'].includes(crumb.textContent)) {
+                crumb.style.filter = 'drop-shadow(0 0 3px rgba(255, 215, 0, 0.6))';
+                crumb.style.animationName = 'sparklefall';
+            }
+            
+            crumbsContainer.appendChild(crumb);
+            crumbCount++;
+            
+            // Remover la miga cuando termine la animación
+            setTimeout(() => {
+                if (crumb.parentNode) {
+                    crumb.parentNode.removeChild(crumb);
+                    crumbCount--;
+                }
+            }, (duration + delay) * 1000);
+        }
+        
+        // Crear migas cada cierto intervalo
+        function startCrumbRain() {
+            createRandomCrumb();
+            
+            // Intervalo aleatorio entre 800ms y 2000ms
+            const nextInterval = Math.random() * 1200 + 800;
+            setTimeout(startCrumbRain, nextInterval);
+        }
+        
+        // Iniciar la lluvia de migas después de 2 segundos
+        setTimeout(startCrumbRain, 2000);
+        
+        // Pausar animaciones si el usuario prefiere menos movimiento
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return; // No ejecutar animaciones
+        }
+    }
+});
+</script>
 {% endblock %}

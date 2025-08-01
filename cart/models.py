@@ -88,7 +88,7 @@ class SessionCart:
         else:
             self.cart[product_id]['quantity'] += quantity
         
-        # Actualizar precio en caso de que haya cambiado
+        # Actualizar precio en caso de que haya cambiado (usar current_price)
         self.cart[product_id]['price'] = str(product.current_price)
         
         self.save()

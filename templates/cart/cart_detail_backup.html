@@ -1,7 +1,11 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
+{% load cart_extra                                        <div class="product-price">
+                                            <span class="price">{{ item.price|floatformat:0 }}</span>
+                                            <small class="text-muted">c/u</small>
+                                        </div>
 
-{% block title %}🛒 Mi Carrito - Dulce Bias{% endblock %}
+{% block title %}ðŸ›’ Mi Carrito - Dulce Bias{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -24,7 +28,7 @@
                 </h1>
                 {% if is_authenticated_cart and cart.total_items > 0 or not is_authenticated_cart and cart_totals.total_items > 0 %}
                     <a href="{% url 'cart:clear_cart' %}" class="btn btn-outline-danger btn-sm" 
-                       onclick="return confirm('¿Estás seguro de vaciar tu carrito?')">
+                       onclick="return confirm('Â¿EstÃ¡s seguro de vaciar tu carrito?')">
                         <i class="fas fa-trash"></i>
                         Vaciar Carrito
                     </a>
@@ -62,7 +66,7 @@
                                         <h5 class="product-name">{{ item.product.name }}</h5>
                                         <p class="product-category text-muted">{{ item.product.category.name }}</p>
                                         <div class="product-price">
-                                            <span class="price">${{ item.product.price|floatformat:0 }}</span>
+                                            <span class="price">{{ item.product.price|floatformat:0 }}</span>
                                             <small class="text-muted">c/u</small>
                                         </div>
                                     </div>
@@ -109,7 +113,7 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <!-- Carrito de sesión (usuario no autenticado) -->
+                        <!-- Carrito de sesiÃ³n (usuario no autenticado) -->
                         {% for item in cart_items %}
                         <div class="cart-item" data-product-id="{{ item.product.id }}">
                             <div class="row align-items-center">
@@ -131,7 +135,7 @@
                                         <h5 class="product-name">{{ item.product.name }}</h5>
                                         <p class="product-category text-muted">{{ item.product.category.name }}</p>
                                         <div class="product-price">
-                                            <span class="price">${{ item.price|floatformat:0 }}</span>
+                                            <span class="price">{{ item.product.price|floatformat:0 }}</span>
                                             <small class="text-muted">c/u</small>
                                         </div>
                                     </div>
@@ -164,7 +168,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="item-total">
-                                        <strong class="total-price">${{ item.total_price|floatformat:0 }}</strong>
+                                        <strong class="total-price">{{ item.total_price|floatformat:0 }}</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-1">
@@ -218,17 +222,17 @@
                                     {% if is_authenticated_cart %}
                                         {{ cart.formatted_total_price }}
                                     {% else %}
-                                        ${{ cart_totals.total_price|floatformat:0 }}
+                                        {{ cart_totals.total_price|floatformat:0 }}
                                     {% endif %}
                                 </span>
                             </div>
                             <div class="summary-row">
-                                <span>Envío:</span>
+                                <span>EnvÃ­o:</span>
                                 <span id="shipping" class="{% if is_authenticated_cart and cart.shipping_cost == 0 or not is_authenticated_cart and cart_totals.shipping_cost == 0 %}text-success{% endif %}">
                                     {% if is_authenticated_cart %}
                                         {{ cart.formatted_shipping_cost }}
                                     {% else %}
-                                        {% if cart_totals.shipping_cost == 0 %}GRATIS{% else %} ${{ cart_totals.shipping_cost|floatformat:0 }}{% endif %}
+                                        {% if cart_totals.shipping_cost == 0 %}GRATIS{% else %}{{ cart_totals.shipping_cost|floatformat:0 }}{% endif %}
                                     {% endif %}
                                 </span>
                             </div>
@@ -237,7 +241,13 @@
                             <div class="shipping-notice">
                                 <small class="text-muted">
                                     <i class="fas fa-info-circle"></i>
-                                    Agrega más para envío gratis
+                                    Agrega 
+                                    {% if is_authenticated_cart %}
+                                        {{ 15000|subtract:cart.total_price|floatformat:0 }}
+                                    {% else %}
+                                        {{ 15000|subtract:cart_totals.total_price|floatformat:0 }}
+                                    {% endif %}
+                                    mÃ¡s para envÃ­o gratis
                                 </small>
                             </div>
                             {% endif %}
@@ -249,7 +259,7 @@
                                     {% if is_authenticated_cart %}
                                         {{ cart.formatted_final_total }}
                                     {% else %}
-                                        ${{ cart_totals.final_total|floatformat:0 }}
+                                        {{ cart_totals.final_total|floatformat:0 }}
                                     {% endif %}
                                 </strong>
                             </div>
@@ -263,18 +273,18 @@
                             {% else %}
                                 <div class="text-center mb-3">
                                     <p class="mb-2">
-                                        <small class="text-muted">Inicia sesión para completar tu compra</small>
+                                        <small class="text-muted">Inicia sesiÃ³n para completar tu compra</small>
                                     </p>
                                     <a href="{% url 'accounts:login' %}?next={% url 'cart:cart_detail' %}" 
                                        class="btn btn-primary btn-lg w-100">
                                         <i class="fas fa-sign-in-alt"></i>
-                                        Iniciar Sesión
+                                        Iniciar SesiÃ³n
                                     </a>
                                 </div>
                                 <div class="text-center">
                                     <small>
-                                        ¿No tienes cuenta? 
-                                        <a href="{% url 'accounts:register' %}">Regístrate aquí</a>
+                                        Â¿No tienes cuenta? 
+                                        <a href="{% url 'accounts:register' %}">RegÃ­strate aquÃ­</a>
                                     </small>
                                 </div>
                             {% endif %}
@@ -291,8 +301,8 @@
                                 </h6>
                                 <ul class="benefits-list">
                                     <li><i class="fas fa-check text-success"></i> Pago 100% seguro</li>
-                                    <li><i class="fas fa-truck text-primary"></i> Envío gratis desde $15.000</li>
-                                    <li><i class="fas fa-undo text-info"></i> Garantía de satisfacción</li>
+                                    <li><i class="fas fa-truck text-primary"></i> EnvÃ­o gratis desde $15.000</li>
+                                    <li><i class="fas fa-undo text-info"></i> GarantÃ­a de satisfacciÃ³n</li>
                                     <li><i class="fas fa-headset text-warning"></i> Soporte 24/7</li>
                                 </ul>
                             </div>
@@ -302,22 +312,116 @@
             </div>
         </div>
     {% else %}
-        <!-- Carrito vacío -->
+        <!-- Carrito vacÃ­o -->
         <div class="empty-cart">
             <div class="text-center py-5">
                 <div class="empty-cart-icon mb-4">
                     <i class="fas fa-shopping-cart"></i>
                 </div>
-                <h3 class="mb-3">Tu carrito está vacío</h3>
+                <h3 class="mb-3">Tu carrito estÃ¡ vacÃ­o</h3>
                 <p class="text-muted mb-4">
-                    ¡Agrega algunas galletas deliciosas para empezar tu experiencia Dulce Bias!
+                    Â¡Agrega algunas galletas deliciosas para empezar tu experiencia Dulce Bias!
                 </p>
                 <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg">
                     <i class="fas fa-cookie-bite"></i>
                     Explorar Productos
                 </a>
             </div>
+            
+            <!-- Productos destacados para carrito vacÃ­o -->
+            {% if recommended_products %}
+            <div class="featured-products mt-5">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-star text-warning"></i>
+                    Productos Destacados
+                </h4>
+                <div class="row">
+                    {% for product in recommended_products %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card h-100 product-card">
+                            <div class="product-image-container">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                                {% else %}
+                                    <div class="no-image-placeholder">
+                                        <i class="fas fa-cookie-bite fa-3x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">{{ product.name }}</h6>
+                                <p class="card-text text-muted small">{{ product.category.name }}</p>
+                                <div class="price-section mt-auto">
+                                    <div class="price mb-2">
+                                        <strong class="text-primary">{{ product.price|floatformat:0 }}</strong>
+                                    </div>
+                                    <button class="btn btn-sm w-100 add-to-cart-btn" 
+                                            data-product-id="{{ product.id }}"
+                                            style="background-color: #343a40; color: white; border: none;">
+                                        <i class="fas fa-shopping-cart me-1"></i>
+                                        Agregar al Carrito
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
+    {% endif %}
+
+    <!-- Productos Recomendados -->
+    {% if is_authenticated_cart and cart.total_items > 0 or not is_authenticated_cart and cart_totals.total_items > 0 %}
+    <div class="recommended-products mt-5">
+        <h4 class="mb-4">
+            <i class="fas fa-heart text-danger"></i>
+            Te podrÃ­a interesar
+        </h4>
+        
+        {% if recommended_products %}
+        <div class="row">
+            {% for product in recommended_products %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 product-card">
+                    <div class="product-image-container">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-cookie-bite fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ product.name }}</h6>
+                        <p class="card-text text-muted small">{{ product.category.name }}</p>
+                        <div class="price-section mt-auto">
+                            <div class="price mb-2">
+                                <strong class="text-primary">{{ product.price|floatformat:0 }}</strong>
+                            </div>
+                            <button class="btn btn-sm w-100 add-to-cart-btn" 
+                                    data-product-id="{{ product.id }}"
+                                    style="background-color: #343a40; color: white; border: none;">
+                                <i class="fas fa-shopping-cart me-1"></i>
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'shop:product_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-store me-1"></i>
+                Ver mÃ¡s productos
+            </a>
+        </div>
+    </div>
     {% endif %}
 </div>
 
@@ -422,12 +526,14 @@
     background: white;
 }
 
+/* Remover spinners de nÃºmero en Chrome, Safari, Edge */
 .quantity-input::-webkit-outer-spin-button,
 .quantity-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
+/* Remover spinners de nÃºmero en Firefox */
 .quantity-input[type=number] {
     -moz-appearance: textfield;
     appearance: textfield;
@@ -435,6 +541,80 @@
 
 .item-total {
     text-align: center;
+}
+
+/* Productos recomendados */
+.recommended-products {
+    border-top: 2px solid #e9ecef;
+    padding-top: 2rem;
+}
+
+.product-card {
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.product-image-container {
+    height: 150px;
+    overflow: hidden;
+    position: relative;
+}
+
+.product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-img {
+    transform: scale(1.05);
+}
+
+.no-image-placeholder {
+    height: 150px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-to-cart-btn {
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #23272b !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(52, 58, 64, 0.3);
+}
+
+.add-to-cart-btn:active {
+    transform: translateY(0);
+}
+
+.price-section .price {
+    font-size: 1.1rem;
+}
+
+/* AnimaciÃ³n para cuando se agrega un producto */
+.cart-bounce {
+    animation: bounceIn 0.6s ease-in-out;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 .total-price {
@@ -501,8 +681,188 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Funcionalidad del carrito aquí...
-    console.log('Cart page loaded');
+    // Actualizar cantidad
+    document.querySelectorAll('.quantity-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const cartItem = this.closest('.cart-item');
+            const productId = cartItem.dataset.productId;
+            const quantityInput = cartItem.querySelector('.quantity-input');
+            let currentQuantity = parseInt(quantityInput.value);
+            
+            if (action === 'increase') {
+                currentQuantity++;
+            } else if (action === 'decrease' && currentQuantity > 1) {
+                currentQuantity--;
+            }
+            
+            quantityInput.value = currentQuantity;
+            updateCartItem(productId, currentQuantity);
+        });
+    });
+    
+    // Actualizar cuando se cambia directamente el input
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const productId = this.dataset.productId;
+            const quantity = parseInt(this.value);
+            if (quantity > 0) {
+                updateCartItem(productId, quantity);
+            }
+        });
+    });
+    
+    // Eliminar item
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            removeCartItem(productId);
+        });
+    });
+    
+    // Agregar productos recomendados al carrito
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const button = this;
+            
+            // AnimaciÃ³n de loading
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
+            button.disabled = true;
+            
+            addToCartFromRecommended(productId, button, originalText);
+        });
+    });
+    
+    function addToCartFromRecommended(productId, button, originalText) {
+        fetch(`{% url 'cart:add_to_cart' 0 %}`.replace('0', productId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'quantity=1'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // AnimaciÃ³n de Ã©xito
+                button.innerHTML = '<i class="fas fa-check me-1"></i>Â¡Agregado!';
+                button.classList.add('cart-bounce');
+                
+                // Actualizar contador del carrito flotante si existe
+                const cartCount = document.querySelector('.floating-cart-count');
+                if (cartCount && data.cart_count) {
+                    cartCount.textContent = data.cart_count;
+                    cartCount.classList.add('cart-bounce');
+                }
+                
+                // Mostrar mensaje de Ã©xito
+                showToast('Producto agregado al carrito', 'success');
+                
+                // Restaurar botÃ³n despuÃ©s de 2 segundos
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    button.classList.remove('cart-bounce');
+                    if (cartCount) cartCount.classList.remove('cart-bounce');
+                }, 2000);
+            } else {
+                // Error
+                button.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+                showToast(data.message || 'Error al agregar producto', 'error');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+            showToast('Error de conexiÃ³n', 'error');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        });
+    }
+    
+    function showToast(message, type) {
+        // Crear toast si no existe
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const bgColor = type === 'success' ? 'bg-success' : 'bg-danger';
+        
+        const toastHTML = `
+            <div id="${toastId}" class="toast ${bgColor} text-white" role="alert">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        
+        const toast = new bootstrap.Toast(document.getElementById(toastId));
+        toast.show();
+        
+        // Eliminar toast despuÃ©s de que se oculte
+        document.getElementById(toastId).addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    }
+    
+    function updateCartItem(productId, quantity) {
+        fetch(`{% url 'cart:update_cart' 0 %}`.replace('0', productId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `quantity=${quantity}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Recargar para actualizar totales
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    function removeCartItem(productId) {
+        if (confirm('Â¿Eliminar este producto del carrito?')) {
+            fetch(`{% url 'cart:remove_from_cart' 0 %}`.replace('0', productId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
 });
 </script>
 {% endblock %}

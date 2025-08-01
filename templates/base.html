@@ -94,6 +94,16 @@
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Mi Perfil</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'cart:my_cart' %}">
+                                        <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
+                                        {% if user.is_authenticated %}
+                                            {% with user.cart as user_cart %}
+                                                {% if user_cart.total_items > 0 %}
+                                                    <span class="badge bg-primary ms-2">{{ user_cart.total_items }}</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endif %}
+                                    </a></li>
                                     <li><a class="dropdown-item" href="{% url 'orders:order_list' %}">Mis Pedidos</a></li>
                                     <li><a class="dropdown-item" href="{% url 'accounts:wishlist' %}">Lista de Deseos</a></li>
                                     {% if user.is_superuser %}
@@ -458,16 +468,85 @@
     <!-- Custom JS -->
     <script src="{% static 'js/script.js' %}"></script>
     
-    <!-- Enhanced Navigation Script -->
+    <!-- Enhanced Navigation Script - FIXED PERMANENTE -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const navbar = document.querySelector('.navbar');
         const searchBtn = document.querySelector('.search-btn');
         const searchForm = document.getElementById('searchForm');
+        const body = document.body;
+        const announcementBar = document.querySelector('.announcement-bar');
+        const financialBar = document.querySelector('.financial-info-bar');
         
-        // Hacer navbar fixed al cargar
+        // Asegurar que el navbar siempre esté fijo
         if (navbar) {
-            navbar.classList.add('fixed');
+            // Forzar posición fija permanente
+            navbar.style.position = 'fixed';
+            navbar.style.zIndex = '1000';
+            
+            // Configurar posición inicial
+            if (financialBar) {
+                navbar.style.top = '80px'; // announcement (44px) + financial (36px)
+            } else {
+                navbar.style.top = '44px'; // solo announcement
+            }
+            
+            // Manejar el scroll para efectos visuales (sin mover navbar)
+            let lastScrollTop = 0;
+            let ticking = false;
+            
+            function updateNavbar() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                
+                if (scrollTop > 100) {
+                    // Al hacer scroll, solo agregar efectos visuales
+                    navbar.classList.add('scrolled');
+                    
+                    // Ocultar announcement bar pero mantener navbar fijo
+                    if (announcementBar) {
+                        announcementBar.style.transform = 'translateY(-100%)';
+                        // Mover navbar hacia arriba cuando se oculta announcement
+                        if (financialBar) {
+                            navbar.style.top = '36px'; // solo financial bar
+                        } else {
+                            navbar.style.top = '0px'; // sin barras
+                        }
+                    }
+                } else {
+                    // Al volver arriba, mostrar announcement bar
+                    navbar.classList.remove('scrolled');
+                    
+                    if (announcementBar) {
+                        announcementBar.style.transform = 'translateY(0)';
+                        // Restaurar posición original del navbar
+                        if (financialBar) {
+                            navbar.style.top = '80px';
+                        } else {
+                            navbar.style.top = '44px';
+                        }
+                    }
+                }
+                
+                lastScrollTop = scrollTop;
+                ticking = false;
+            }
+            
+            function requestTick() {
+                if (!ticking) {
+                    requestAnimationFrame(updateNavbar);
+                    ticking = true;
+                }
+            }
+            
+            window.addEventListener('scroll', requestTick);
+            
+            // Revisar posición cada segundo para asegurar que esté fijo
+            setInterval(function() {
+                if (navbar.style.position !== 'fixed') {
+                    navbar.style.position = 'fixed';
+                    navbar.style.zIndex = '1000';
+                }
+            }, 1000);
         }
         
         // Mejorar comportamiento del formulario de búsqueda
@@ -521,15 +600,25 @@
             });
         }
         
-        // Smooth scroll behavior
+        // Smooth scroll behavior - ajustado para navbar fijo
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+                    // Calcular offset dinámico basado en la altura del navbar y barras
+                    let offset = 120;
+                    if (financialBar && window.getComputedStyle(financialBar).display !== 'none') {
+                        offset += 40;
+                    }
+                    if (announcementBar && announcementBar.style.transform !== 'translateY(-100%)') {
+                        offset += 44;
+                    }
+                    
+                    const offsetTop = target.offsetTop - offset;
+                    window.scrollTo({
+                        top: offsetTop,
+                        behavior: 'smooth'
                     });
                 }
             });

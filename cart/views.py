@@ -79,6 +79,77 @@ class CartDetailView(TemplateView):
             # Se eliminaron items no disponibles silenciosamente para evitar recargas
 
 
+class MyCartView(TemplateView):
+    """Vista unificada del carrito integrada con el perfil de usuario"""
+    template_name = 'cart/my_cart.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        if self.request.user.is_authenticated:
+            # Carrito de usuario autenticado
+            cart, created = Cart.objects.get_or_create(user=self.request.user)
+            
+            # Limpiar items con productos no disponibles o eliminados
+            self.clean_invalid_cart_items(cart)
+            
+            context['cart'] = cart
+            context['cart_items'] = cart.items.all()
+            context['is_authenticated_cart'] = True
+            
+            # Calcular cantidad faltante para envío gratis
+            missing_for_free_shipping = max(0, 15000 - cart.total_price) if cart.total_price < 15000 else 0
+            context['missing_for_free_shipping'] = missing_for_free_shipping
+            
+            # Productos recomendados (excluir los que ya están en el carrito)
+            cart_product_ids = cart.items.values_list('product_id', flat=True)
+            recommended_products = Product.objects.filter(available=True).exclude(id__in=cart_product_ids)[:4]
+        else:
+            # Carrito de sesión para usuarios no autenticados
+            session_cart = SessionCart(self.request)
+            context['session_cart'] = session_cart
+            context['cart_items'] = list(session_cart)
+            context['is_authenticated_cart'] = False
+            
+            # Calcular totales para carrito de sesión
+            total_price = session_cart.get_total_price()
+            shipping_cost = 0 if total_price >= 15000 else 3000
+            missing_for_free_shipping = max(0, 15000 - total_price) if total_price < 15000 else 0
+            context['cart_totals'] = {
+                'total_price': total_price,
+                'shipping_cost': shipping_cost,
+                'final_total': total_price + shipping_cost,
+                'total_items': len(session_cart),
+                'missing_for_free_shipping': missing_for_free_shipping
+            }
+            
+            # Productos recomendados (excluir los que ya están en el carrito de sesión)
+            cart_product_ids = [item['product'].id for item in session_cart]
+            recommended_products = Product.objects.filter(available=True).exclude(id__in=cart_product_ids)[:4]
+        
+        # Siempre incluir productos recomendados
+        context['recommended_products'] = recommended_products
+        return context
+    
+    def clean_invalid_cart_items(self, cart):
+        """Limpiar items del carrito que tienen productos no disponibles o eliminados"""
+        invalid_items = []
+        
+        for item in cart.items.all():
+            try:
+                product = item.product
+                # Verificar si el producto existe y está disponible
+                if not Product.objects.filter(id=product.id, available=True).exists():
+                    invalid_items.append(item)
+            except Product.DoesNotExist:
+                invalid_items.append(item)
+        
+        # Eliminar items inválidos silenciosamente
+        if invalid_items:
+            for item in invalid_items:
+                item.delete()
+
+
 @require_POST
 def add_to_cart(request, product_id):
     """Agregar producto al carrito"""
@@ -178,12 +249,18 @@ def add_to_cart(request, product_id):
             
             # Respuesta AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                # Recalcular totales con precios actuales
+                total_price = session_cart.get_total_price()
+                shipping_cost = 0 if total_price >= 15000 else 3000
+                final_total = total_price + shipping_cost
+                
                 return JsonResponse({
                     'success': True,
                     'message': f'{product.name} agregado al carrito',
                     'cart_count': len(session_cart),
                     'cart_total_items': len(session_cart),
-                    'cart_total_price': session_cart.get_total_price(),
+                    'cart_total_price': f"${int(total_price):,}".replace(',', '.'),
+                    'cart_final_total': f"${int(final_total):,}".replace(',', '.'),
                     # Información del producto para el modal
                     'product': {
                         'id': product.id,
@@ -191,7 +268,8 @@ def add_to_cart(request, product_id):
                         'price': product.formatted_current_price,
                         'image_url': product.image.url if product.image else '',
                         'slug': product.slug,
-                        'quantity_added': quantity
+                        'quantity_added': quantity,
+                        'total_quantity_in_cart': session_cart.cart.get(str(product.id), {}).get('quantity', 0)
                     }
                 })
         
