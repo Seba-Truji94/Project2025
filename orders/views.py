@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-from .models import Order, OrderItem
+from .models import Order, OrderItem, TransferPayment
 
 
 class OrderListView(LoginRequiredMixin, ListView):
@@ -27,6 +27,16 @@ class OrderListView(LoginRequiredMixin, ListView):
             'processing_orders': user_orders.filter(status__in=['confirmed', 'processing']).count(),
             'completed_orders': user_orders.filter(status__in=['shipped', 'delivered']).count(),
         })
+        
+        # Buscar transferencias verificadas con comentarios para mostrar notificaciones
+        verified_transfers_with_notes = TransferPayment.objects.filter(
+            order__user=self.request.user,
+            status='verified',
+            verification_notes__isnull=False
+        ).exclude(verification_notes='').select_related('order')
+        
+        context['verified_transfers_with_notes'] = verified_transfers_with_notes
+        
         return context
 
 
@@ -44,6 +54,14 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['order_items'] = self.object.items.all()
+        
+        # Incluir información de transferencia si existe
+        try:
+            transfer_payment = self.object.transfer_payment
+            context['transfer_payment'] = transfer_payment
+        except:
+            context['transfer_payment'] = None
+            
         return context
 
 

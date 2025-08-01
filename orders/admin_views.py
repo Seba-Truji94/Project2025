@@ -36,7 +36,20 @@ class OrderManagementView(SuperuserRequiredMixin, ListView):
     model = Order
     template_name = 'orders/admin/order_management.html'
     context_object_name = 'orders'
-    paginate_by = 20
+    paginate_by = 20  # Valor por defecto
+    
+    def get_paginate_by(self, queryset):
+        """Obtener la cantidad de elementos por página desde el parámetro GET"""
+        page_size = self.request.GET.get('page_size', '20')
+        try:
+            page_size = int(page_size)
+            # Validar que sea uno de los valores permitidos
+            if page_size in [10, 20, 50, 100]:
+                return page_size
+            else:
+                return 20  # Valor por defecto si no es válido
+        except (ValueError, TypeError):
+            return 20  # Valor por defecto si no es un número válido
     
     def get_queryset(self):
         queryset = Order.objects.select_related('user').prefetch_related('items__product')
@@ -91,11 +104,20 @@ class OrderManagementView(SuperuserRequiredMixin, ListView):
             'search': self.request.GET.get('search', ''),
             'date_from': self.request.GET.get('date_from', ''),
             'date_to': self.request.GET.get('date_to', ''),
+            'page_size': self.request.GET.get('page_size', '20'),
         }
         
         # Opciones de estado
         context['status_choices'] = Order.STATUS_CHOICES
         context['payment_status_choices'] = Order.PAYMENT_STATUS_CHOICES
+        
+        # Opciones de paginación
+        context['page_size_options'] = [
+            {'value': '10', 'label': '10 por página'},
+            {'value': '20', 'label': '20 por página'},
+            {'value': '50', 'label': '50 por página'},
+            {'value': '100', 'label': '100 por página'},
+        ]
         
         return context
 
@@ -113,6 +135,14 @@ class OrderDetailManagementView(SuperuserRequiredMixin, DetailView):
         context['status_form'] = OrderStatusForm(instance=self.object)
         context['notes_form'] = OrderNotesForm(instance=self.object)
         # context['status_history'] = self.object.status_history.all()
+        
+        # Incluir información de transferencia si existe
+        try:
+            transfer_payment = self.object.transfer_payment
+            context['transfer_payment'] = transfer_payment
+        except:
+            context['transfer_payment'] = None
+            
         return context
 
 

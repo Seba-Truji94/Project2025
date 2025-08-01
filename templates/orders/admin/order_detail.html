@@ -122,6 +122,132 @@
                 </div>
             </div>
 
+            <!-- Gestión de Transferencia -->
+            {% if order.payment_method == 'transfer' and transfer_payment %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-university"></i>
+                        Gestión de Transferencia
+                    </h5>
+                    <span class="badge 
+                        {% if transfer_payment.status == 'pending' %}bg-warning text-dark
+                        {% elif transfer_payment.status == 'verified' %}bg-info
+                        {% elif transfer_payment.status == 'approved' %}bg-success
+                        {% elif transfer_payment.status == 'rejected' %}bg-danger
+                        {% elif transfer_payment.status == 'expired' %}bg-secondary
+                        {% endif %} fs-6">
+                        {{ transfer_payment.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Información de la Transferencia</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Monto:</strong></td>
+                                    <td>${{ transfer_payment.transfer_amount|floatformat:0 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha:</strong></td>
+                                    <td>{{ transfer_payment.transfer_date|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Referencia:</strong></td>
+                                    <td>{{ transfer_payment.reference_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Banco Emisor:</strong></td>
+                                    <td>{{ transfer_payment.sender_bank }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Emisor:</strong></td>
+                                    <td>{{ transfer_payment.sender_name }} ({{ transfer_payment.sender_rut }})</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Enviado:</strong></td>
+                                    <td>{{ transfer_payment.created_at|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Comprobante</h6>
+                            {% if transfer_payment.receipt_image %}
+                                <div class="text-center mb-3">
+                                    <img src="{{ transfer_payment.receipt_image.url }}" 
+                                         alt="Comprobante" 
+                                         class="img-fluid rounded border receipt-preview-image"
+                                         style="max-height: 200px; cursor: pointer;"
+                                         onclick="openImageModal('{{ transfer_payment.receipt_image.url }}')">
+                                    <div class="mt-2">
+                                        <a href="{{ transfer_payment.receipt_image.url }}" 
+                                           target="_blank" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-external-link-alt me-1"></i>Ver Completo
+                                        </a>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No hay comprobante adjunto
+                                </div>
+                            {% endif %}
+
+                            {% if transfer_payment.verification_notes %}
+                                <div class="mb-3">
+                                    <h6 class="text-muted mb-1">Notas de Verificación</h6>
+                                    <div class="bg-light p-2 rounded">
+                                        {{ transfer_payment.verification_notes }}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if transfer_payment.verified_at %}
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <strong>Verificado:</strong> {{ transfer_payment.verified_at|date:"d/m/Y H:i" }}
+                                        {% if transfer_payment.verified_by %}por {{ transfer_payment.verified_by.get_full_name|default:transfer_payment.verified_by.username }}{% endif %}
+                                    </small>
+                                </div>
+                            {% endif %}
+
+                            <!-- Acciones de Verificación -->
+                            <div class="d-grid gap-2">
+                                {% if transfer_payment.status == 'pending' %}
+                                    <button class="btn btn-info btn-sm" onclick="showVerificationModal('verify')">
+                                        <i class="fas fa-check me-1"></i>Verificar
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="showVerificationModal('approve')">
+                                        <i class="fas fa-check-circle me-1"></i>Aprobar
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="showVerificationModal('reject')">
+                                        <i class="fas fa-times me-1"></i>Rechazar
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="showVerificationModal('expire')">
+                                        <i class="fas fa-clock me-1"></i>Marcar Expirado
+                                    </button>
+                                {% elif transfer_payment.status == 'verified' %}
+                                    <button class="btn btn-success btn-sm" onclick="showVerificationModal('approve')">
+                                        <i class="fas fa-check-circle me-1"></i>Aprobar
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="showVerificationModal('reject')">
+                                        <i class="fas fa-times me-1"></i>Rechazar
+                                    </button>
+                                {% elif transfer_payment.status in 'approved,rejected,expired' %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Transferencia procesada - Estado: <strong>{{ transfer_payment.get_status_display }}</strong>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Productos del Pedido -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -447,6 +573,281 @@
 .timeline-header {
     margin-bottom: 0.5rem;
 }
+
+/* Estilos específicos para imágenes de comprobante */
+.receipt-preview-image {
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    filter: none !important;
+    opacity: 1 !important;
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: optimize-contrast !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+}
+
+.receipt-preview-image:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+.receipt-preview-image:active,
+.receipt-preview-image:focus {
+    filter: none !important;
+    opacity: 1 !important;
+    outline: 3px solid var(--primary-blue) !important;
+    outline-offset: 2px !important;
+}
+
+/* Mejorar el modal de imagen */
+#imageModal .modal-body {
+    padding: 1rem;
+    background: #f8f9fa;
+}
+
+#imageModal #modalImage {
+    max-width: 100% !important;
+    max-height: 75vh !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    filter: none !important;
+    opacity: 1 !important;
+    image-rendering: high-quality !important;
+    image-rendering: -webkit-optimize-contrast !important;
+}
+
+/* Eliminar efectos de fade del modal de imagen */
+#imageModal {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+#imageModal.show {
+    display: block !important;
+}
+
+#imageModal .modal-dialog {
+    transition: none !important;
+    transform: none !important;
+}
+
+/* Eliminar efectos de fade del backdrop personalizado */
+.modal-backdrop {
+    transition: none !important;
+    animation: none !important;
+    z-index: 9998 !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5 !important;
+    background-color: #000 !important;
+    z-index: 9998 !important;
+}
+
+/* Limpiar backdrops residuales */
+#custom-backdrop {
+    display: none !important;
+}
+
+/* Asegurar que el modal esté por encima del navbar */
+.modal {
+    z-index: 9999 !important;
+}
+
+.modal-backdrop {
+    z-index: 9998 !important;
+}
+
+#imageModal {
+    z-index: 10000 !important;
+}
+
+#imageModal .modal-dialog {
+    z-index: 10001 !important;
+}
+
+/* Estilos para el modal personalizado de verificación */
+.custom-verification-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-verification-modal .custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.custom-verification-modal .custom-modal-dialog {
+    position: relative;
+    z-index: 10002;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.custom-verification-modal .custom-modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    animation: slideInUp 0.3s ease;
+}
+
+.custom-verification-modal .custom-modal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-verification-modal .custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    flex-grow: 1;
+}
+
+.custom-verification-modal .custom-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.custom-verification-modal .custom-close-btn:hover {
+    background-color: #f8f9fa;
+    color: #dc3545;
+}
+
+.custom-verification-modal .custom-modal-body {
+    padding: 1.5rem;
+}
+
+.custom-verification-modal .custom-modal-footer {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+@keyframes slideInUp {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(50px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
+/* Mejoras visuales adicionales */
+.custom-verification-modal .alert {
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+}
+
+.custom-verification-modal .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.custom-verification-modal .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para prevenir botones "pegados" */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:not(:disabled):not(.disabled) {
+    cursor: pointer;
+}
+
+.btn:focus,
+.btn:active,
+.btn:hover {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn:not(:focus):not(:hover):not(:active) {
+    transform: none !important;
+    box-shadow: none !important;
+    background-image: none !important;
+    border-color: inherit !important;
+}
+
+/* Reset específico para botones de verificación */
+.btn[onclick*="showVerificationModal"] {
+    transition: all 0.15s ease-in-out;
+}
+
+.btn[onclick*="showVerificationModal"]:not(:hover):not(:active):not(:focus) {
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    background-image: none !important;
+    border-style: solid !important;
+}
+
+/* Prevenir efectos persistentes */
+.btn-info:not(:hover):not(:active):not(:focus) {
+    background-color: #0dcaf0 !important;
+    border-color: #0dcaf0 !important;
+}
+
+.btn-success:not(:hover):not(:active):not(:focus) {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.btn-warning:not(:hover):not(:active):not(:focus) {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.btn-secondary:not(:hover):not(:active):not(:focus) {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
 </style>
 
 <script>
@@ -473,6 +874,308 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(form);
             form.submit();
         });
+    });
+});
+</script>
+
+<!-- Modal para visualizar comprobante -->
+<div class="modal" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">
+                    <i class="fas fa-image me-2"></i>
+                    Comprobante de Transferencia
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Comprobante" class="img-fluid rounded">
+            </div>
+            <div class="modal-footer">
+                <a id="downloadLink" href="" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i>
+                    Descargar Imagen
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal personalizado para acciones de verificación - Sin Backdrop -->
+<div class="custom-verification-modal" id="verificationModal" style="display: none;">
+    <div class="custom-modal-overlay" onclick="closeVerificationModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="verificationTitle">Verificar Transferencia</span>
+                </h5>
+                <button type="button" class="custom-close-btn" onclick="closeVerificationModal()">&times;</button>
+            </div>
+            <form id="verificationForm" method="post">
+                <div class="custom-modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="verificationNotes" class="form-label">Notas de Verificación</label>
+                        <textarea class="form-control" id="verificationNotes" name="notes" rows="3" 
+                                  placeholder="Ingresa cualquier observación o comentario sobre la verificación..."></textarea>
+                    </div>
+                    <div id="verificationAlert" class="alert d-none">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="verificationMessage"></span>
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeVerificationModal()">Cancelar</button>
+                    <button type="submit" id="verificationSubmitBtn" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>
+                        <span id="verificationAction">Verificar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openImageModal(imageUrl) {
+    const modalImage = document.getElementById('modalImage');
+    const downloadLink = document.getElementById('downloadLink');
+    const modalElement = document.getElementById('imageModal');
+    
+    // Eliminar cualquier backdrop existente
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    // Configurar imagen
+    modalImage.src = imageUrl;
+    modalImage.style.filter = 'none';
+    modalImage.style.opacity = '1';
+    downloadLink.href = imageUrl;
+    
+    // Mostrar modal sin backdrop
+    modalElement.style.display = 'block';
+    modalElement.style.zIndex = '9999';
+    modalElement.classList.add('show');
+    
+    // NO crear backdrop - dejarlo sin fondo oscuro
+    document.body.style.overflow = 'hidden'; // Prevenir scroll
+}
+
+function closeImageModal() {
+    const modalElement = document.getElementById('imageModal');
+    
+    // Ocultar modal
+    modalElement.style.display = 'none';
+    modalElement.classList.remove('show');
+    
+    // Restaurar scroll
+    document.body.style.overflow = '';
+    
+    // Eliminar cualquier backdrop residual
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Limpiar al cargar
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    const modal = document.getElementById('imageModal');
+    const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+    
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeImageModal();
+        });
+    });
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeImageModal();
+        }
+    });
+});
+
+function showVerificationModal(action) {
+    // Primero resetear el estado de todos los botones
+    resetVerificationButtons();
+    
+    // Eliminar cualquier backdrop residual
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    const modalElement = document.getElementById('verificationModal');
+    const form = document.getElementById('verificationForm');
+    const title = document.getElementById('verificationTitle');
+    const actionText = document.getElementById('verificationAction');
+    const submitBtn = document.getElementById('verificationSubmitBtn');
+    const alert = document.getElementById('verificationAlert');
+    const message = document.getElementById('verificationMessage');
+    
+    // Configurar según la acción
+    switch(action) {
+        case 'verify':
+            form.action = "{% url 'orders:admin_verify_transfer' order.order_number %}";
+            title.textContent = 'Verificar Transferencia';
+            actionText.textContent = 'Verificar';
+            submitBtn.className = 'btn btn-info';
+            submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verificar';
+            alert.className = 'alert alert-info';
+            message.textContent = 'Esta acción marcará la transferencia como verificada, pero aún requerirá aprobación final.';
+            break;
+        case 'approve':
+            form.action = "{% url 'orders:admin_approve_transfer' order.order_number %}";
+            title.textContent = 'Aprobar Transferencia';
+            actionText.textContent = 'Aprobar';
+            submitBtn.className = 'btn btn-success';
+            submitBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Aprobar';
+            alert.className = 'alert alert-success';
+            message.textContent = 'Esta acción aprobará la transferencia y marcará el pedido como pagado.';
+            break;
+        case 'reject':
+            form.action = "{% url 'orders:admin_reject_transfer' order.order_number %}";
+            title.textContent = 'Rechazar Transferencia';
+            actionText.textContent = 'Rechazar';
+            submitBtn.className = 'btn btn-warning';
+            submitBtn.innerHTML = '<i class="fas fa-times me-1"></i>Rechazar';
+            alert.className = 'alert alert-warning';
+            message.textContent = 'Esta acción rechazará la transferencia y marcará el pago como fallido.';
+            break;
+        case 'expire':
+            form.action = "{% url 'orders:admin_expire_transfer' order.order_number %}";
+            title.textContent = 'Marcar como Expirado';
+            actionText.textContent = 'Marcar Expirado';
+            submitBtn.className = 'btn btn-secondary';
+            submitBtn.innerHTML = '<i class="fas fa-clock me-1"></i>Marcar Expirado';
+            alert.className = 'alert alert-secondary';
+            message.textContent = 'Esta acción marcará la transferencia como expirada y cancelará el pedido.';
+            break;
+    }
+    
+    // Mostrar alert y modal personalizado
+    alert.classList.remove('d-none');
+    modalElement.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Limpiar el textarea
+    document.getElementById('verificationNotes').value = '';
+    
+    // Pequeño delay para asegurar que el modal se renderice correctamente
+    setTimeout(() => {
+        resetVerificationButtons();
+    }, 100);
+}
+
+function closeVerificationModal() {
+    const modalElement = document.getElementById('verificationModal');
+    
+    // Ocultar modal
+    modalElement.style.display = 'none';
+    document.body.style.overflow = '';
+    
+    // Eliminar cualquier backdrop residual
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    
+    // Limpiar formulario
+    document.getElementById('verificationNotes').value = '';
+    document.getElementById('verificationAlert').classList.add('d-none');
+    
+    // Resetear el estado de todos los botones de verificación
+    resetVerificationButtons();
+}
+
+function resetVerificationButtons() {
+    // Buscar todos los botones de verificación y resetear su estado
+    const verificationButtons = document.querySelectorAll('[onclick^="showVerificationModal"]');
+    
+    verificationButtons.forEach(button => {
+        // Remover clases de estado activo/hover/focus
+        button.classList.remove('active', 'focus');
+        button.blur(); // Remover el focus del botón
+        
+        // Remover cualquier estado CSS residual
+        button.style.transform = '';
+        button.style.boxShadow = '';
+        button.style.outline = '';
+        
+        // Resetear cualquier atributo de estado
+        button.removeAttribute('aria-pressed');
+        button.removeAttribute('data-pressed');
+    });
+    
+    // También resetear cualquier botón que pueda estar en hover/active
+    document.querySelectorAll('.btn:hover, .btn:active, .btn:focus').forEach(btn => {
+        btn.blur();
+        btn.classList.remove('active', 'focus');
+    });
+    
+    // Forzar un reflow para limpiar estados CSS
+    document.body.offsetHeight;
+}
+
+// Event listeners para el modal de verificación
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const verificationModal = document.getElementById('verificationModal');
+            if (verificationModal.style.display === 'flex') {
+                closeVerificationModal();
+            }
+        }
+    });
+    
+    // Agregar event listener al formulario
+    const verificationForm = document.getElementById('verificationForm');
+    if (verificationForm) {
+        verificationForm.addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('verificationSubmitBtn');
+            
+            // Deshabilitar botón para evitar múltiples envíos
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+            
+            // El formulario se enviará normalmente
+        });
+    }
+    
+    // Reset de botones al hacer clic en cualquier parte del documento
+    document.addEventListener('click', function(e) {
+        // Solo resetear si no se hizo clic en un botón de verificación
+        if (!e.target.closest('[onclick*="showVerificationModal"]')) {
+            // Delay pequeño para permitir que se complete el clic
+            setTimeout(() => {
+                resetVerificationButtons();
+            }, 100);
+        }
+    });
+    
+    // Reset adicional cuando se navega fuera del modal
+    document.addEventListener('focusout', function(e) {
+        // Si el focus sale de los botones de verificación, resetear
+        if (e.target && e.target.getAttribute('onclick') && e.target.getAttribute('onclick').includes('showVerificationModal')) {
+            setTimeout(() => {
+                resetVerificationButtons();
+            }, 200);
+        }
+    });
+    
+    // Limpiar estado al recargar la página
+    window.addEventListener('beforeunload', function() {
+        resetVerificationButtons();
     });
 });
 </script>

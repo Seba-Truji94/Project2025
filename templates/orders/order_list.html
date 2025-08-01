@@ -19,6 +19,36 @@
             </div>
 
             {% if user.is_authenticated %}
+                <!-- Notificaciones de transferencias verificadas con comentarios -->
+                {% if verified_transfers_with_notes %}
+                    <div class="alert alert-warning mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-bell fa-lg me-3 mt-1"></i>
+                            <div>
+                                <h5 class="mb-2">
+                                    <strong>💬 Tienes {{ verified_transfers_with_notes|length }} comentario{{ verified_transfers_with_notes|length|pluralize }} de verificación</strong>
+                                </h5>
+                                {% for transfer in verified_transfers_with_notes %}
+                                    <div class="mb-2">
+                                        <a href="{% url 'orders:order_detail' transfer.order.order_number %}" 
+                                           class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Ver Pedido #{{ transfer.order.order_number }}
+                                        </a>
+                                        <small class="text-muted">
+                                            Verificado el {{ transfer.verified_at|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </div>
+                                {% endfor %}
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Tus comprobantes han sido verificados pero están esperando aprobación final.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
                 <!-- Estadísticas de pedidos -->
                 <div class="row mb-4">
                     <div class="col-md-3">

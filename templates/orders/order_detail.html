@@ -146,6 +146,121 @@
                 </div>
             {% endif %}
 
+            <!-- Información del comprobante de transferencia -->
+            {% if transfer_payment %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2"></i>
+                            Comprobante de Transferencia
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-2">Información de la Transferencia</h6>
+                                        <p class="mb-1"><strong>Monto:</strong> ${{ transfer_payment.transfer_amount|floatformat:0 }}</p>
+                                        <p class="mb-1"><strong>Fecha:</strong> {{ transfer_payment.transfer_date|date:"d/m/Y H:i" }}</p>
+                                        <p class="mb-1"><strong>Número de Referencia:</strong> {{ transfer_payment.reference_number }}</p>
+                                        <p class="mb-1"><strong>Banco Emisor:</strong> {{ transfer_payment.sender_bank }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-2">Información del Emisor</h6>
+                                        <p class="mb-1"><strong>Nombre:</strong> {{ transfer_payment.sender_name }}</p>
+                                        <p class="mb-1"><strong>RUT:</strong> {{ transfer_payment.sender_rut }}</p>
+                                        <p class="mb-1"><strong>Enviado el:</strong> {{ transfer_payment.created_at|date:"d/m/Y H:i" }}</p>
+                                        
+                                        <div class="mt-3">
+                                            <span class="badge 
+                                                {% if transfer_payment.status == 'pending' %}bg-warning text-dark
+                                                {% elif transfer_payment.status == 'verified' %}bg-info
+                                                {% elif transfer_payment.status == 'approved' %}bg-success
+                                                {% elif transfer_payment.status == 'rejected' %}bg-danger
+                                                {% elif transfer_payment.status == 'expired' %}bg-secondary
+                                                {% endif %} fs-6">
+                                                {% if transfer_payment.status == 'pending' %}
+                                                    <i class="fas fa-clock me-1"></i>Pendiente de Verificación
+                                                {% elif transfer_payment.status == 'verified' %}
+                                                    <i class="fas fa-check me-1"></i>Verificado - Esperando Aprobación
+                                                {% elif transfer_payment.status == 'approved' %}
+                                                    <i class="fas fa-check-circle me-1"></i>Aprobado y Pagado
+                                                {% elif transfer_payment.status == 'rejected' %}
+                                                    <i class="fas fa-times me-1"></i>Rechazado
+                                                {% elif transfer_payment.status == 'expired' %}
+                                                    <i class="fas fa-clock me-1"></i>Expirado
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        {% if transfer_payment.verification_notes %}
+                                            <div class="mt-2">
+                                                <small class="text-muted"><strong>Notas:</strong> {{ transfer_payment.verification_notes }}</small>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if transfer_payment.verified_at %}
+                                            <div class="mt-1">
+                                                <small class="text-muted">
+                                                    Verificado el {{ transfer_payment.verified_at|date:"d/m/Y H:i" }}
+                                                    {% if transfer_payment.verified_by %}por {{ transfer_payment.verified_by.get_full_name|default:transfer_payment.verified_by.username }}{% endif %}
+                                                </small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                {% if transfer_payment.receipt_image %}
+                                    <h6 class="text-muted mb-2">Comprobante</h6>
+                                    <div class="text-center">
+                                        <img src="{{ transfer_payment.receipt_image.url }}" 
+                                             alt="Comprobante de transferencia" 
+                                             class="img-fluid rounded border receipt-preview-image"
+                                             style="max-height: 300px; cursor: pointer;"
+                                             onclick="openImageModal('{{ transfer_payment.receipt_image.url }}')">
+                                        <div class="mt-2">
+                                            <a href="{{ transfer_payment.receipt_image.url }}" 
+                                               target="_blank" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-expand me-1"></i>Ver Completo
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if transfer_payment.status == 'pending' and order.payment_status == 'pending' %}
+                            <div class="alert alert-info mt-3 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Tu comprobante está siendo verificado. Te notificaremos por email cuando se complete la verificación.
+                            </div>
+                        {% elif transfer_payment.status == 'verified' and transfer_payment.verification_notes %}
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-exclamation-triangle fa-lg me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="mb-1"><strong>Comentario de Verificación</strong></h6>
+                                        <p class="mb-2">{{ transfer_payment.verification_notes }}</p>
+                                        <small class="text-muted">
+                                            Tu comprobante ha sido verificado pero está esperando aprobación final. 
+                                            Te notificaremos cuando se complete el proceso.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif transfer_payment.status == 'verified' %}
+                            <div class="alert alert-info mt-3 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Tu comprobante ha sido verificado y está esperando aprobación final para completar el pago.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
             <div class="row">
                 <!-- Información del pedido -->
                 <div class="col-lg-8">
@@ -671,5 +786,211 @@
         transform: translateY(0);
     }
 }
+
+/* Estilos específicos para imágenes de comprobante */
+.receipt-preview-image {
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    filter: none !important;
+    opacity: 1 !important;
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: optimize-contrast !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+}
+
+.receipt-preview-image:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+.receipt-preview-image:active,
+.receipt-preview-image:focus {
+    filter: none !important;
+    opacity: 1 !important;
+    outline: 3px solid var(--primary-blue) !important;
+    outline-offset: 2px !important;
+}
+
+/* Mejorar el modal de imagen */
+#imageModal .modal-body {
+    padding: 1rem;
+    background: #f8f9fa;
+}
+
+#imageModal #modalImage {
+    max-width: 100% !important;
+    max-height: 75vh !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    filter: none !important;
+    opacity: 1 !important;
+    image-rendering: high-quality !important;
+    image-rendering: -webkit-optimize-contrast !important;
+}
+
+/* Eliminar efectos de fade del modal de imagen */
+#imageModal {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    z-index: 9999 !important;
+}
+
+#imageModal.show {
+    display: block !important;
+}
+
+#imageModal .modal-dialog {
+    transition: none !important;
+    transform: none !important;
+    z-index: 10000 !important;
+}
+
+/* Eliminar efectos de fade del backdrop personalizado */
+.modal-backdrop {
+    transition: none !important;
+    animation: none !important;
+    z-index: 9998 !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5 !important;
+    background-color: #000 !important;
+    z-index: 9998 !important;
+}
+
+/* Limpiar backdrops residuales */
+#custom-backdrop {
+    display: none !important;
+}
+
+/* Asegurar que el modal esté por encima del navbar */
+.modal {
+    z-index: 9999 !important;
+}
+
+.modal-backdrop {
+    z-index: 9998 !important;
+}
 </style>
+
+<!-- Modal para visualizar comprobante -->
+<div class="modal" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">
+                    <i class="fas fa-image me-2"></i>
+                    Comprobante de Transferencia
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Comprobante" class="img-fluid rounded">
+            </div>
+            <div class="modal-footer">
+                <a id="downloadLink" href="" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i>
+                    Descargar Imagen
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openImageModal(imageUrl) {
+    const modalImage = document.getElementById('modalImage');
+    const downloadLink = document.getElementById('downloadLink');
+    const modalElement = document.getElementById('imageModal');
+    
+    // Validar que los elementos existen
+    if (!modalElement || !modalImage || !downloadLink) {
+        console.error('Modal elements not found');
+        return;
+    }
+    
+    // Eliminar cualquier backdrop existente
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    // Configurar imagen
+    modalImage.src = imageUrl;
+    modalImage.style.filter = 'none';
+    modalImage.style.opacity = '1';
+    downloadLink.href = imageUrl;
+    
+    // Mostrar modal sin backdrop
+    modalElement.style.display = 'block';
+    modalElement.style.zIndex = '9999';
+    modalElement.classList.add('show');
+    
+    // NO crear backdrop - dejarlo sin fondo oscuro
+    document.body.style.overflow = 'hidden'; // Prevenir scroll
+}
+
+function closeImageModal() {
+    const modalElement = document.getElementById('imageModal');
+    
+    // Validar que el elemento existe
+    if (!modalElement) {
+        return;
+    }
+    
+    // Ocultar modal
+    modalElement.style.display = 'none';
+    modalElement.classList.remove('show');
+    
+    // Restaurar scroll
+    document.body.style.overflow = '';
+    
+    // Eliminar cualquier backdrop residual
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+}
+
+// Función stub para verificación de transferencias (no disponible en vista de cliente)
+function showVerificationModal(action) {
+    console.warn('showVerificationModal() is not available in customer view. This function is only available in admin interface.');
+    return false;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Limpiar al cargar
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    // Modal de imagen - siempre disponible
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+        
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeImageModal();
+            });
+        });
+        
+        // Cerrar al hacer clic fuera del modal
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+    
+    // Cerrar modales con Escape (general)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // Cerrar modal de imagen si está abierto
+            const imageModal = document.getElementById('imageModal');
+            if (imageModal && imageModal.style.display === 'block') {
+                closeImageModal();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

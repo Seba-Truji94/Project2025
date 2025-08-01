@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Pagos por Transferencia - Admin Dulce Bias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-university text-primary"></i>
+                Gestión de Pagos por Transferencia
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'orders:admin_management' %}">Gestión de Pedidos</a>
+                    </li>
+                    <li class="breadcrumb-item active">Transferencias</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button onclick="clearModalBackdrop()" class="btn btn-outline-warning btn-sm me-2" title="Limpiar vista si está difuminada">
+                <i class="fas fa-broom"></i>
+                Limpiar Vista
+            </button>
+            <a href="{% url 'orders:admin_management' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Volver a Pedidos
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ pending_count }}</h3>
+                    <small class="text-muted">Pendientes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ verified_count }}</h3>
+                    <small class="text-muted">Verificados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ approved_count }}</h3>
+                    <small class="text-muted">Aprobados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">{{ rejected_count }}</h3>
+                    <small class="text-muted">Rechazados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-secondary">{{ expired_count }}</h3>
+                    <small class="text-muted">Expirados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ transfer_payments.count }}</h3>
+                    <small class="text-muted">Total</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Estado</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">Todos los estados</option>
+                        {% for value, display in status_choices %}
+                            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                                {{ display }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'orders:admin_transfer_management' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Transferencias -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i>
+                Transferencias Registradas
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if transfer_payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Cliente</th>
+                                <th>Monto</th>
+                                <th>Fecha Transfer.</th>
+                                <th>Estado</th>
+                                <th>Enviado</th>
+                                <th>Verificado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transfer in transfer_payments %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'orders:admin_detail' transfer.order.order_number %}" 
+                                       class="text-decoration-none fw-bold">
+                                        #{{ transfer.order.order_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ transfer.order.user.get_full_name|default:transfer.order.user.username }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ transfer.order.user.email }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>${{ transfer.transfer_amount|floatformat:0 }}</strong>
+                                    {% if transfer.transfer_amount != transfer.order.total %}
+                                        <br>
+                                        <small class="text-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Esperado: ${{ transfer.order.total|floatformat:0 }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transfer.transfer_date|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if transfer.status == 'pending' %}bg-warning text-dark
+                                        {% elif transfer.status == 'verified' %}bg-info
+                                        {% elif transfer.status == 'approved' %}bg-success
+                                        {% elif transfer.status == 'rejected' %}bg-danger
+                                        {% elif transfer.status == 'expired' %}bg-secondary
+                                        {% endif %}">
+                                        {{ transfer.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ transfer.created_at|date:"d/m/Y H:i" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if transfer.verified_at %}
+                                        <small class="text-muted">
+                                            {{ transfer.verified_at|date:"d/m/Y H:i" }}
+                                            {% if transfer.verified_by %}
+                                                <br>por {{ transfer.verified_by.get_full_name|default:transfer.verified_by.username }}
+                                            {% endif %}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'orders:admin_detail' transfer.order.order_number %}" 
+                                           class="btn btn-outline-primary btn-sm" title="Ver Detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if transfer.receipt_image %}
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    title="Ver Comprobante"
+                                                    onclick="openImageModal('{{ transfer.receipt_image.url }}')">
+                                                <i class="fas fa-image"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay transferencias registradas</h5>
+                    <p class="text-muted">Cuando los clientes envíen comprobantes de transferencia, aparecerán aquí.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visualizar comprobante -->
+<div class="modal" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">
+                    <i class="fas fa-image me-2"></i>
+                    Comprobante de Transferencia
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Comprobante" class="img-fluid rounded">
+            </div>
+            <div class="modal-footer">
+                <a id="downloadLink" href="" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i>
+                    Descargar Imagen
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.badge {
+    border-radius: 20px;
+    padding: 6px 12px;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.breadcrumb {
+    background: none;
+    padding: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Estilos para modal de imagen sin backdrop */
+#imageModal {
+    z-index: 9999 !important;
+}
+
+#imageModal.show {
+    display: block !important;
+}
+
+#imageModal .modal-dialog {
+    transition: none !important;
+    transform: none !important;
+    z-index: 10000 !important;
+}
+
+#imageModal #modalImage {
+    max-width: 100% !important;
+    max-height: 75vh !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+</style>
+
+<script>
+function openImageModal(imageUrl) {
+    const modalImage = document.getElementById('modalImage');
+    const downloadLink = document.getElementById('downloadLink');
+    const modalElement = document.getElementById('imageModal');
+    
+    // Eliminar cualquier backdrop existente
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    // Configurar imagen
+    modalImage.src = imageUrl;
+    modalImage.style.filter = 'none';
+    modalImage.style.opacity = '1';
+    downloadLink.href = imageUrl;
+    
+    // Mostrar modal sin backdrop
+    modalElement.style.display = 'block';
+    modalElement.style.zIndex = '9999';
+    modalElement.classList.add('show');
+    
+    // NO crear backdrop - dejarlo sin fondo oscuro
+    document.body.style.overflow = 'hidden'; // Prevenir scroll
+}
+
+function closeImageModal() {
+    const modalElement = document.getElementById('imageModal');
+    
+    // Ocultar modal
+    modalElement.style.display = 'none';
+    modalElement.classList.remove('show');
+    
+    // Restaurar scroll
+    document.body.style.overflow = '';
+    
+    // Eliminar cualquier backdrop residual
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Limpiar al cargar
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    const modal = document.getElementById('imageModal');
+    const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+    
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeImageModal();
+        });
+    });
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeImageModal();
+        }
+    });
+});
+
+// Función de emergencia para limpiar backdrop
+window.clearModalBackdrop = function() {
+    // Cerrar modal de imagen si está abierto
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal && imageModal.style.display === 'block') {
+        closeImageModal();
+    }
+    
+    // Limpiar cualquier resto de Bootstrap modals
+    const bootstrapBackdrops = document.querySelectorAll('.modal-backdrop');
+    bootstrapBackdrops.forEach(backdrop => backdrop.remove());
+    
+    // Restaurar estado del body
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    document.body.style.marginRight = '';
+    
+    // Mostrar mensaje de confirmación
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-info alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        <i class="fas fa-broom me-2"></i>Vista limpiada correctamente
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss después de 3 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 3000);
+    
+    console.log('Vista de transferencias limpiada completamente');
+};
+</script>
+{% endblock %}

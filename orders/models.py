@@ -243,7 +243,8 @@ class TransferPayment(models.Model):
     """Pagos por transferencia bancaria"""
     TRANSFER_STATUS_CHOICES = [
         ('pending', 'Pendiente de Verificación'),
-        ('verified', 'Verificado y Aprobado'),
+        ('verified', 'Verificado - Esperando Aprobación'),
+        ('approved', 'Aprobado y Pagado'),
         ('rejected', 'Rechazado'),
         ('expired', 'Expirado'),
     ]
@@ -291,14 +292,21 @@ class TransferPayment(models.Model):
         return f"Transferencia {self.order.order_number} - {self.get_status_display()}"
     
     def save(self, *args, **kwargs):
-        # Si se verifica el pago, actualizar el pedido
-        if self.status == 'verified' and self.order.payment_status == 'pending':
+        # Solo cuando se APRUEBA el pago se marca como pagado
+        if self.status == 'approved' and self.order.payment_status == 'pending':
             self.order.payment_status = 'paid'
             self.order.status = 'confirmed'
             self.order.save()
             self.verified_at = timezone.now()
+        # Si solo está verificado, marcamos la fecha pero no cambiamos el payment_status
+        elif self.status == 'verified':
+            self.verified_at = timezone.now()
         elif self.status == 'rejected' and self.order.payment_status == 'pending':
             self.order.payment_status = 'failed'
+            self.order.save()
+        elif self.status == 'expired' and self.order.payment_status == 'pending':
+            self.order.payment_status = 'failed'
+            self.order.status = 'cancelled'
             self.order.save()
         
         super().save(*args, **kwargs)
