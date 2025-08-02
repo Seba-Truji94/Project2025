@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Tickets - Administración{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .ticket-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+        border-left: 4px solid #007bff;
+    }
+    
+    .ticket-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .ticket-card.priority-urgent { border-left-color: #dc3545; }
+    .ticket-card.priority-high { border-left-color: #fd7e14; }
+    .ticket-card.priority-normal { border-left-color: #007bff; }
+    .ticket-card.priority-low { border-left-color: #6c757d; }
+    
+    .priority-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .action-btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+    }
+    
+    .bulk-actions {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .ticket-meta {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .unassigned {
+        background: #fff3cd;
+        border-left-color: #ffc107 !important;
+    }
+    
+    .overdue {
+        background: #f8d7da;
+        border-left-color: #dc3545 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-ticket-alt me-3"></i>
+                    Gestión de Tickets
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">Administra todos los tickets de soporte</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'support:admin_dashboard' %}" class="btn btn-light me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Dashboard
+                </a>
+                <a href="{% url 'support:create_ticket' %}" class="btn btn-warning">
+                    <i class="fas fa-plus me-2"></i>Nuevo Ticket
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filtros -->
+    <div class="filters-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Estado</label>
+                <select name="status" class="form-select">
+                    <option value="">Todos</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Prioridad</label>
+                <select name="priority" class="form-select">
+                    <option value="">Todas</option>
+                    {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if current_filters.priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Categoría</label>
+                <select name="category" class="form-select">
+                    <option value="">Todas</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if current_filters.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Asignado</label>
+                <select name="assigned" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="unassigned" {% if current_filters.assigned == 'unassigned' %}selected{% endif %}>Sin asignar</option>
+                    {% for user in staff_users %}
+                        <option value="{{ user.id }}" {% if current_filters.assigned == user.id|stringformat:"s" %}selected{% endif %}>
+                            {{ user.get_full_name|default:user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Búsqueda</label>
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Ticket #, asunto, usuario..." 
+                       value="{{ current_filters.search }}">
+            </div>
+            
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Acciones en lote -->
+    <form method="post" action="{% url 'support:admin_bulk_actions' %}" id="bulkForm">
+        {% csrf_token %}
+        <div class="bulk-actions" style="display: none;" id="bulkActions">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <strong><span id="selectedCount">0</span> tickets seleccionados</strong>
+                </div>
+                <div class="col-md-6 text-end">
+                    <select name="bulk_action" class="form-select d-inline-block w-auto me-2">
+                        <option value="">Seleccionar acción...</option>
+                        <option value="mark_in_progress">Marcar como "En Progreso"</option>
+                        <option value="mark_resolved">Marcar como "Resueltos"</option>
+                        <option value="assign_to_me">Asignar a mí</option>
+                        <option value="unassign">Desasignar</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Ejecutar</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearSelection()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de tickets -->
+        {% if tickets %}
+            {% for ticket in tickets %}
+            <div class="ticket-card priority-{{ ticket.priority }} {% if not ticket.assigned_to %}unassigned{% endif %}">
+                <div class="row align-items-center">
+                    <div class="col-md-1">
+                        <input type="checkbox" class="form-check-input ticket-checkbox" 
+                               name="ticket_ids" value="{{ ticket.id }}" 
+                               onchange="updateBulkActions()">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <h5 class="mb-0 me-3">
+                                <a href="{% url 'support:admin_ticket_detail' ticket.id %}" 
+                                   class="text-decoration-none">
+                                    #{{ ticket.ticket_number }}
+                                </a>
+                            </h5>
+                            
+                            <span class="priority-badge 
+                                {% if ticket.priority == 'urgent' %}bg-danger text-white
+                                {% elif ticket.priority == 'high' %}bg-warning text-dark
+                                {% elif ticket.priority == 'normal' %}bg-primary text-white
+                                {% else %}bg-secondary text-white{% endif %}">
+                                {{ ticket.get_priority_display }}
+                            </span>
+                            
+                            <span class="status-badge ms-2
+                                {% if ticket.status == 'open' %}bg-danger text-white
+                                {% elif ticket.status == 'in_progress' %}bg-warning text-dark
+                                {% elif ticket.status == 'resolved' %}bg-success text-white
+                                {% else %}bg-secondary text-white{% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <p class="mb-1"><strong>{{ ticket.subject }}</strong></p>
+                        <div class="ticket-meta">
+                            <i class="fas fa-user me-1"></i>{{ ticket.user.get_full_name|default:ticket.user.username }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-folder me-1"></i>{{ ticket.category.name }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-clock me-1"></i>{{ ticket.created_at|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        {% if ticket.assigned_to %}
+                            <div class="text-center">
+                                <i class="fas fa-user-check text-success"></i>
+                                <br>
+                                <small class="text-muted">{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</small>
+                            </div>
+                        {% else %}
+                            <div class="text-center">
+                                <i class="fas fa-user-slash text-warning"></i>
+                                <br>
+                                <small class="text-warning">Sin asignar</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="quick-actions">
+                            <a href="{% url 'support:admin_ticket_detail' ticket.id %}" 
+                               class="action-btn bg-primary text-white" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            
+                            {% if ticket.status == 'open' %}
+                                <button type="button" class="action-btn bg-warning text-dark" 
+                                        onclick="quickUpdate('{{ ticket.id }}', 'status', 'in_progress')"
+                                        title="Marcar en progreso">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            {% endif %}
+                            
+                            {% if ticket.status != 'resolved' %}
+                                <button type="button" class="action-btn bg-success text-white" 
+                                        onclick="quickUpdate('{{ ticket.id }}', 'status', 'resolved')"
+                                        title="Marcar como resuelto">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            {% endif %}
+                            
+                            {% if not ticket.assigned_to %}
+                                <button type="button" class="action-btn bg-info text-white" 
+                                        onclick="quickAssign('{{ ticket.id }}')"
+                                        title="Asignar a mí">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h4>No se encontraron tickets</h4>
+                <p class="text-muted">Ajusta los filtros o espera a que se creen nuevos tickets.</p>
+            </div>
+        {% endif %}
+    </form>
+    
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <nav aria-label="Paginación tickets" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{{ request.GET.urlencode|slice:'1:' }}">Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|slice:'1:' }}">Anterior</a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{{ request.GET.urlencode|slice:'1:' }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|slice:'1:' }}">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|slice:'1:' }}">Última</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.ticket-checkbox:checked');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    selectedCount.textContent = checkboxes.length;
+    
+    if (checkboxes.length > 0) {
+        bulkActions.style.display = 'block';
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.ticket-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateBulkActions();
+}
+
+function quickUpdate(ticketId, field, value) {
+    if (confirm('¿Estás seguro de realizar esta acción?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/support/admin/tickets/${ticketId}/update/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="${field}" value="${value}">
+        `;
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function quickAssign(ticketId) {
+    if (confirm('¿Asignar este ticket a ti?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/support/admin/tickets/${ticketId}/update/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="assigned_to" value="{{ request.user.id }}">
+        `;
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Auto-submit en cambio de filtros
+document.querySelector('form[method="get"]').addEventListener('change', function() {
+    this.submit();
+});
+</script>
+{% endblock %}

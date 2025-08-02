@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Nuevo Mensaje - Galletas Kati</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #28a745; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .message-info { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .message-content { background: #e9ecef; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+        .btn { display: inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Galletas Kati</h1>
+            <h2>Nuevo Mensaje en tu Ticket</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hola {{ recipient.get_full_name|default:recipient.username }},</p>
+            
+            <p>Has recibido un nuevo mensaje en tu ticket de soporte.</p>
+            
+            <div class="message-info">
+                <h3>Información del Ticket</h3>
+                <p><strong>Número:</strong> #{{ ticket.ticket_number }}</p>
+                <p><strong>Asunto:</strong> {{ ticket.subject }}</p>
+                <p><strong>Estado:</strong> {{ ticket.get_status_display }}</p>
+            </div>
+            
+            <div class="message-content">
+                <p><strong>De:</strong> {{ message.sender.get_full_name|default:message.sender.username }}
+                {% if message.sender.is_staff %}<em>(Equipo de Soporte)</em>{% endif %}</p>
+                <p><strong>Fecha:</strong> {{ message.created_at|date:"d/m/Y H:i" }}</p>
+                <hr>
+                {{ message.content|linebreaks }}
+            </div>
+            
+            {% if message.attachment %}
+            <p><strong>📎 Archivo adjunto:</strong> Se incluye un archivo en la respuesta.</p>
+            {% endif %}
+            
+            <p>Para responder o ver el historial completo, accede a tu ticket:</p>
+            
+            <p style="text-align: center;">
+                <a href="{{ request.build_absolute_uri }}{% url 'support:ticket_detail' ticket.id %}" class="btn">Ver Ticket Completo</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un mensaje automático. Por favor no respondas a este email.</p>
+            <p>Para continuar la conversación, accede a tu ticket desde tu cuenta.</p>
+            <p>&copy; {{ current_year }} Galletas Kati - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

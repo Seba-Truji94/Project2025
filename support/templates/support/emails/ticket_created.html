@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ticket Creado - Galletas Kati</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #007bff; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .ticket-info { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Galletas Kati</h1>
+            <h2>Ticket de Soporte Creado</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hola {{ ticket.user.get_full_name|default:ticket.user.username }},</p>
+            
+            <p>Tu ticket de soporte ha sido creado exitosamente. Nuestro equipo lo revisará y te responderá lo antes posible.</p>
+            
+            <div class="ticket-info">
+                <h3>Detalles del Ticket</h3>
+                <p><strong>Número de Ticket:</strong> #{{ ticket.ticket_number }}</p>
+                <p><strong>Asunto:</strong> {{ ticket.subject }}</p>
+                <p><strong>Categoría:</strong> {{ ticket.category.name }}</p>
+                <p><strong>Prioridad:</strong> {{ ticket.get_priority_display }}</p>
+                <p><strong>Estado:</strong> {{ ticket.get_status_display }}</p>
+                <p><strong>Fecha de Creación:</strong> {{ ticket.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            
+            <p><strong>Tu consulta:</strong></p>
+            <div style="background: white; padding: 15px; border-left: 4px solid #007bff; margin: 15px 0;">
+                {{ ticket.description|linebreaks }}
+            </div>
+            
+            <p>Puedes hacer seguimiento de tu ticket en cualquier momento accediendo a tu cuenta.</p>
+            
+            <p style="text-align: center;">
+                <a href="{{ request.build_absolute_uri }}{% url 'support:ticket_detail' ticket.id %}" class="btn">Ver Mi Ticket</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un mensaje automático. Por favor no respondas a este email.</p>
+            <p>Si necesitas ayuda adicional, accede a tu cuenta o contáctanos a través de nuestro sitio web.</p>
+            <p>&copy; {{ current_year }} Galletas Kati - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

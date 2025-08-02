@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Notificaciones - Soporte{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .notification-item {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #007bff;
+        transition: all 0.2s;
+    }
+    
+    .notification-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .notification-item.unread {
+        border-left-color: #28a745;
+        background: #f8fff9;
+    }
+    
+    .notification-item.ticket_created {
+        border-left-color: #007bff;
+    }
+    
+    .notification-item.ticket_resolved {
+        border-left-color: #28a745;
+    }
+    
+    .notification-item.status_changed {
+        border-left-color: #ffc107;
+    }
+    
+    .notification-item.new_message {
+        border-left-color: #17a2b8;
+    }
+    
+    .notification-item.assigned {
+        border-left-color: #fd7e14;
+    }
+    
+    .notification-meta {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .notification-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        width: 3rem;
+        text-align: center;
+    }
+    
+    .notification-content {
+        flex: 1;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+    
+    .notification-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-ticket {
+        font-size: 0.875rem;
+        padding: 0.375rem 1rem;
+        border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-bell me-3"></i>
+                    Notificaciones
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">Mantente al día con tus tickets de soporte</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'support:home' %}" class="btn btn-light me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Soporte
+                </a>
+                {% if unread_count > 0 %}
+                <span class="badge bg-success fs-6">{{ unread_count }} nuevas</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if notifications %}
+        {% for notification in notifications %}
+        <div class="notification-item {{ notification.notification_type }} {% if not notification.is_read %}unread{% endif %}">
+            <div class="d-flex align-items-start">
+                <div class="notification-icon">
+                    {% if notification.notification_type == 'ticket_created' %}
+                        <i class="fas fa-plus-circle text-primary"></i>
+                    {% elif notification.notification_type == 'ticket_resolved' %}
+                        <i class="fas fa-check-circle text-success"></i>
+                    {% elif notification.notification_type == 'status_changed' %}
+                        <i class="fas fa-exchange-alt text-warning"></i>
+                    {% elif notification.notification_type == 'new_message' %}
+                        <i class="fas fa-comment text-info"></i>
+                    {% elif notification.notification_type == 'assigned' %}
+                        <i class="fas fa-user-check text-orange"></i>
+                    {% else %}
+                        <i class="fas fa-bell text-secondary"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="notification-content">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="mb-0">{{ notification.title }}</h5>
+                        <span class="notification-type-badge 
+                            {% if notification.notification_type == 'ticket_created' %}bg-primary text-white
+                            {% elif notification.notification_type == 'ticket_resolved' %}bg-success text-white
+                            {% elif notification.notification_type == 'status_changed' %}bg-warning text-dark
+                            {% elif notification.notification_type == 'new_message' %}bg-info text-white
+                            {% elif notification.notification_type == 'assigned' %}bg-orange text-white
+                            {% else %}bg-secondary text-white{% endif %}">
+                            {{ notification.get_notification_type_display }}
+                        </span>
+                    </div>
+                    
+                    <p class="mb-2">{{ notification.message }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'support:ticket_detail' notification.ticket.id %}" 
+                           class="btn btn-primary btn-ticket">
+                            <i class="fas fa-eye me-1"></i>
+                            Ver Ticket #{{ notification.ticket.ticket_number }}
+                        </a>
+                        
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-clock me-1"></i>
+                                {{ notification.created_at|timesince }} atrás
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-meta">
+                        <div class="row text-muted">
+                            <div class="col-md-6">
+                                <i class="fas fa-ticket-alt me-1"></i>
+                                <strong>Ticket:</strong> {{ notification.ticket.subject }}
+                            </div>
+                            <div class="col-md-6">
+                                <i class="fas fa-folder me-1"></i>
+                                <strong>Categoría:</strong> {{ notification.ticket.category.name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Paginación -->
+        {% if notifications.has_other_pages %}
+        <nav aria-label="Paginación notificaciones" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if notifications.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notifications.previous_page_number }}">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in notifications.paginator.page_range %}
+                    {% if notifications.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if notifications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notifications.next_page_number }}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notifications.paginator.num_pages }}">Última</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-bell-slash fa-4x mb-4"></i>
+            <h3>No tienes notificaciones</h3>
+            <p class="lead">Cuando recibas actualizaciones sobre tus tickets, aparecerán aquí.</p>
+            <a href="{% url 'support:create_ticket' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Crear Primer Ticket
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-actualizar el contador de notificaciones cada 30 segundos
+setInterval(function() {
+    fetch('{% url "support:unread_notifications_count" %}')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.notification-count-badge');
+            if (badge) {
+                if (data.count > 0) {
+                    badge.textContent = data.count;
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.log('Error actualizando notificaciones:', error));
+}, 30000);
+
+// Marcar notificación como vista al hacer clic
+document.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', function() {
+        this.classList.remove('unread');
+    });
+});
+</script>
+{% endblock %}

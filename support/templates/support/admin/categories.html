@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Categorías - Admin Soporte{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    .category-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        border-left: 4px solid #007bff;
+    }
+    .category-card.inactive {
+        border-left-color: #dc3545;
+        opacity: 0.7;
+    }
+    .stats-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    .form-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        border: 2px dashed #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'support:admin_management' %}" class="btn btn-outline-light me-3">
+                        <i class="fas fa-arrow-left"></i> Volver al Admin
+                    </a>
+                    <div>
+                        <h1><i class="fas fa-tags"></i> Gestión de Categorías</h1>
+                        <p class="mb-0">Administrar categorías de tickets de soporte</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                    <i class="fas fa-plus"></i> Nueva Categoría
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- Formulario para Nueva Categoría -->
+        <div class="col-md-4">
+            <div class="form-card">
+                <h5 class="mb-3"><i class="fas fa-plus-circle text-primary"></i> Crear Nueva Categoría</h5>
+                
+                <form method="post" action="{% url 'support:admin_create_category' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre de la Categoría</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="Ej: Problemas de Envío" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Descripción detallada de la categoría..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Crear Categoría
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Estadísticas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Categorías:</span>
+                        <span class="fw-bold">{{ categories.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Activas:</span>
+                        <span class="text-success fw-bold">{{ categories|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Con Tickets:</span>
+                        <span class="text-info fw-bold">
+                            {% for cat in categories %}
+                                {% if cat.ticket_count > 0 %}{{ forloop.counter }}{% endif %}
+                            {% empty %}0{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de Categorías -->
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>📁 Categorías Existentes</h5>
+                <small class="text-muted">{{ categories.count }} categorías encontradas</small>
+            </div>
+            
+            {% if categories %}
+                {% for category in categories %}
+                <div class="category-card {% if not category.is_active %}inactive{% endif %}">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <h6 class="mb-0 me-3">{{ category.name }}</h6>
+                                <span class="stats-badge me-2">
+                                    <i class="fas fa-ticket-alt"></i> {{ category.ticket_count }} tickets
+                                </span>
+                                {% if category.is_active %}
+                                <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactiva</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if category.description %}
+                            <p class="text-muted mb-2">{{ category.description }}</p>
+                            {% endif %}
+                            
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> Creada: {{ category.created_at|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editCategoryModal"
+                                        data-category-id="{{ category.id }}"
+                                        data-category-name="{{ category.name }}"
+                                        data-category-description="{{ category.description }}"
+                                        data-category-active="{{ category.is_active|yesno:'true,false' }}">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                
+                                {% if category.is_active %}
+                                <button class="btn btn-outline-warning toggle-category-btn" 
+                                        data-category-id="{{ category.id }}"
+                                        data-action="false">
+                                    <i class="fas fa-pause"></i> Desactivar
+                                </button>
+                                {% else %}
+                                <button class="btn btn-outline-success toggle-category-btn" 
+                                        data-category-id="{{ category.id }}"
+                                        data-action="true">
+                                    <i class="fas fa-play"></i> Activar
+                                </button>
+                                {% endif %}
+                                
+                                {% if category.ticket_count == 0 %}
+                                <button class="btn btn-outline-danger delete-category-btn" 
+                                        data-category-id="{{ category.id }}"
+                                        data-category-name="{{ category.name }}">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <h5>No hay categorías</h5>
+                    <p class="text-muted">Crea la primera categoría para organizar los tickets de soporte.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                        <i class="fas fa-plus"></i> Crear Primera Categoría
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear Categoría -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus"></i> Nueva Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'support:admin_create_category' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="modal-name" class="form-label">Nombre de la Categoría</label>
+                        <input type="text" class="form-control" id="modal-name" name="name" 
+                               placeholder="Ej: Problemas de Envío" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modal-description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="modal-description" name="description" rows="3"
+                                  placeholder="Descripción detallada de la categoría..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Categoría
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Categoría -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCategoryForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit-name" class="form-label">Nombre de la Categoría</label>
+                        <input type="text" class="form-control" id="edit-name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit-description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="edit-description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="edit-is-active" name="is_active">
+                        <label class="form-check-label" for="edit-is-active">
+                            Categoría activa
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('[data-bs-target="#editCategoryModal"]');
+    
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const categoryId = this.getAttribute('data-category-id');
+            const categoryName = this.getAttribute('data-category-name');
+            const categoryDescription = this.getAttribute('data-category-description');
+            const categoryActive = this.getAttribute('data-category-active') === 'true';
+            
+            document.getElementById('edit-name').value = categoryName;
+            document.getElementById('edit-description').value = categoryDescription;
+            document.getElementById('edit-is-active').checked = categoryActive;
+            
+            const form = document.getElementById('editCategoryForm');
+            form.action = `/support/admin/categories/${categoryId}/edit/`;
+        });
+    });
+});
+</script>
+{% endblock %}

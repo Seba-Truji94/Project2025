@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket #{{ ticket.ticket_number }} - Administración{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .ticket-info {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .priority-badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-left: 1rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 1.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #007bff;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #007bff;
+    }
+    
+    .timeline-item.user-message::before {
+        background: #28a745;
+        box-shadow: 0 0 0 2px #28a745;
+    }
+    
+    .timeline-item.staff-message::before {
+        background: #ffc107;
+        box-shadow: 0 0 0 2px #ffc107;
+    }
+    
+    .timeline-item.ai-message::before {
+        background: #17a2b8;
+        box-shadow: 0 0 0 2px #17a2b8;
+    }
+    
+    .timeline-item.internal-message {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .timeline-item.internal-message::before {
+        background: #ffc107;
+        box-shadow: 0 0 0 2px #ffc107;
+    }
+    
+    .quick-actions {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .action-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    
+    .action-card:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    .customer-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .response-form {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #28a745;
+    }
+    
+    .message-content {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .message-meta {
+        font-size: 0.875rem;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .attachment-list {
+        margin-top: 1rem;
+    }
+    
+    .attachment-item {
+        display: inline-block;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        text-decoration: none;
+        color: #495057;
+        transition: all 0.2s;
+    }
+    
+    .attachment-item:hover {
+        background: #e9ecef;
+        color: #495057;
+        text-decoration: none;
+    }
+    
+    .ticket-actions {
+        position: sticky;
+        top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-ticket-alt me-3"></i>
+                    Ticket #{{ ticket.ticket_number }}
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">{{ ticket.subject }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'support:admin_ticket_list' %}" class="btn btn-light me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a lista
+                </a>
+                <a href="{% url 'support:admin_dashboard' %}" class="btn btn-outline-light">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Información del ticket -->
+            <div class="ticket-info">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3>{{ ticket.subject }}</h3>
+                        <p class="text-muted mb-3">{{ ticket.description|linebreaks }}</p>
+                        
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="status-badge 
+                                {% if ticket.status == 'open' %}bg-danger text-white
+                                {% elif ticket.status == 'in_progress' %}bg-warning text-dark
+                                {% elif ticket.status == 'resolved' %}bg-success text-white
+                                {% else %}bg-secondary text-white{% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                            
+                            <span class="priority-badge 
+                                {% if ticket.priority == 'urgent' %}bg-danger text-white
+                                {% elif ticket.priority == 'high' %}bg-warning text-dark
+                                {% elif ticket.priority == 'normal' %}bg-primary text-white
+                                {% else %}bg-secondary text-white{% endif %}">
+                                {{ ticket.get_priority_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                <br>
+                                <small class="text-muted">Creado</small>
+                                <br>
+                                <strong>{{ ticket.created_at|date:"d/m/Y H:i" }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <i class="fas fa-sync fa-2x text-info mb-2"></i>
+                                <br>
+                                <small class="text-muted">Actualizado</small>
+                                <br>
+                                <strong>{{ ticket.updated_at|date:"d/m/Y H:i" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información del cliente -->
+            <div class="customer-info">
+                <h5><i class="fas fa-user me-2"></i>Información del Cliente</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Nombre:</strong> {{ ticket.user.get_full_name|default:ticket.user.username }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ ticket.user.email }}</p>
+                        <p class="mb-0"><strong>Usuario desde:</strong> {{ ticket.user.date_joined|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Categoría:</strong> {{ ticket.category.name }}</p>
+                        <p class="mb-1"><strong>Asignado a:</strong> 
+                            {% if ticket.assigned_to %}
+                                {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                            {% else %}
+                                <span class="text-warning">Sin asignar</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0"><strong>Total tickets del usuario:</strong> {{ ticket.user.supportticket_set.count }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline de mensajes -->
+            <div class="timeline">
+                <h4 class="mb-4">
+                    <i class="fas fa-history me-2"></i>
+                    Historial de Conversación 
+                    <span class="badge bg-secondary">{{ messages|length }} mensajes</span>
+                </h4>
+                
+                {% for message in messages %}
+                <div class="timeline-item 
+                    {% if message.message_type == 'human' or message.message_type == 'system' %}staff-message
+                    {% elif message.message_type == 'ai' %}ai-message
+                    {% elif message.message_type == 'status_change' %}system-event
+                    {% elif message.message_type == 'assignment_change' %}system-event
+                    {% elif message.message_type == 'closure' %}system-event
+                    {% else %}user-message{% endif %}
+                    {% if message.is_internal %} internal-message{% endif %}">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">
+                            {% if message.message_type == 'system' or message.message_type == 'status_change' or message.message_type == 'assignment_change' %}
+                                <i class="fas fa-cog text-secondary me-2"></i>
+                                Sistema
+                                {% if message.is_internal %}<span class="badge bg-warning text-dark ms-2">Interno</span>{% endif %}
+                            {% elif message.message_type == 'ai' %}
+                                <i class="fas fa-robot text-info me-2"></i>
+                                Asistente IA
+                            {% elif message.message_type == 'human' %}
+                                <i class="fas fa-user-tie text-primary me-2"></i>
+                                {{ message.sender.get_full_name|default:message.sender.username }} (Staff)
+                            {% elif message.message_type == 'closure' %}
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Cierre Automático
+                            {% else %}
+                                <i class="fas fa-user text-success me-2"></i>
+                                {{ message.sender.get_full_name|default:message.sender.username }}
+                            {% endif %}
+                        </h6>
+                        <div class="text-end">
+                            {% if message.message_type == 'status_change' and message.previous_status and message.new_status %}
+                                <span class="badge bg-warning text-dark me-2">
+                                    {{ message.previous_status|title }} → {{ message.new_status|title }}
+                                </span>
+                            {% endif %}
+                            <small class="text-muted">{{ message.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="message-content">
+                        {% if message.message_type == 'closure' %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Ticket Cerrado</strong>
+                            </div>
+                        {% endif %}
+                        {{ message.content|linebreaks }}
+                    </div>
+                    
+                    {% if message.attachment %}
+                    <div class="attachment-list">
+                        <a href="{{ message.attachment.url }}" class="attachment-item" target="_blank">
+                            <i class="fas fa-paperclip me-1"></i>
+                            Archivo adjunto
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if message.is_status_change or message.is_assignment_change %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {{ message.get_change_description }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No hay mensajes en este ticket aún.</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Formulario de respuesta -->
+            {% if ticket.status != 'resolved' %}
+            <div class="response-form">
+                <h5><i class="fas fa-reply me-2"></i>Responder al Cliente</h5>
+                
+                <form method="post" action="{% url 'support:admin_respond_ticket' ticket.id %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Mensaje de respuesta</label>
+                        <textarea class="form-control" id="content" name="content" rows="6" 
+                                  placeholder="Escribe tu respuesta al cliente..." required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="attachment" class="form-label">Archivo adjunto (opcional)</label>
+                                <input type="file" class="form-control" id="attachment" name="attachment">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Cambiar estado</label>
+                                <select class="form-select" id="status" name="status">
+                                    {% for value, label in status_choices %}
+                                        <option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar Respuesta
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary" onclick="useTemplate()">
+                            <i class="fas fa-magic me-2"></i>Usar IA
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Panel lateral de acciones -->
+        <div class="col-lg-4">
+            <div class="ticket-actions">
+                <div class="quick-actions">
+                    <h5><i class="fas fa-tools me-2"></i>Acciones Rápidas</h5>
+                    
+                    <!-- Cambio de estado -->
+                    <div class="action-card">
+                        <h6><i class="fas fa-traffic-light me-2"></i>Estado del Ticket</h6>
+                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}">
+                            {% csrf_token %}
+                            <div class="d-flex gap-2">
+                                <select name="status" class="form-select form-select-sm">
+                                    {% for value, label in status_choices %}
+                                        <option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Asignación -->
+                    <div class="action-card">
+                        <h6><i class="fas fa-user-cog me-2"></i>Asignación</h6>
+                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}">
+                            {% csrf_token %}
+                            <div class="d-flex gap-2">
+                                <select name="assigned_to" class="form-select form-select-sm">
+                                    <option value="">Sin asignar</option>
+                                    {% for user in staff_users %}
+                                        <option value="{{ user.id }}" {% if ticket.assigned_to.id == user.id %}selected{% endif %}>
+                                            {{ user.get_full_name|default:user.username }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-info btn-sm">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Prioridad -->
+                    <div class="action-card">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Prioridad</h6>
+                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}">
+                            {% csrf_token %}
+                            <div class="d-flex gap-2">
+                                <select name="priority" class="form-select form-select-sm">
+                                    {% for value, label in priority_choices %}
+                                        <option value="{{ value }}" {% if ticket.priority == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-flag"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Acciones especiales -->
+                    <div class="action-card">
+                        <h6><i class="fas fa-bolt me-2"></i>Acciones Especiales</h6>
+                        <div class="d-grid gap-2">
+                            {% if not ticket.assigned_to %}
+                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="assigned_to" value="{{ request.user.id }}">
+                                    <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                                        <i class="fas fa-hand-paper me-2"></i>Asignar a mí
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            {% if ticket.status == 'open' %}
+                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                                        <i class="fas fa-play me-2"></i>Iniciar trabajo
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            {% if ticket.status != 'resolved' %}
+                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="resolved">
+                                    <button type="submit" class="btn btn-outline-success btn-sm w-100" 
+                                            onclick="return confirm('¿Marcar como resuelto?')">
+                                        <i class="fas fa-check-circle me-2"></i>Resolver ticket
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información adicional -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6><i class="fas fa-info-circle me-2"></i>Información del Sistema</h6>
+                    <small class="text-muted">
+                        <strong>ID:</strong> {{ ticket.id }}<br>
+                        <strong>Número:</strong> {{ ticket.ticket_number }}<br>
+                        <strong>Total mensajes:</strong> {{ messages|length }}<br>
+                        <strong>Última actividad:</strong> {{ ticket.updated_at|timesince }} atrás
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function useTemplate() {
+    // Simulación de IA - aquí podrías integrar con tu sistema de IA
+    const templates = [
+        "Hola, gracias por contactarnos. Hemos revisado tu consulta y estamos trabajando en una solución. Te mantendremos informado.",
+        "Entendemos tu preocupación. Hemos escalado tu caso a nuestro equipo técnico especializado. Esperamos resolver esto en las próximas 24 horas.",
+        "Gracias por proporcionar la información adicional. Esto nos ayudará a resolver tu problema más rápidamente.",
+        "Hemos identificado la causa del problema y estamos implementando una solución. Te notificaremos tan pronto como esté completa."
+    ];
+    
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    document.getElementById('content').value = randomTemplate;
+}
+
+// Auto-scroll to bottom of timeline on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const timeline = document.querySelector('.timeline');
+    if (timeline) {
+        timeline.scrollTop = timeline.scrollHeight;
+    }
+});
+
+// Confirmación para acciones críticas
+document.querySelectorAll('form').forEach(form => {
+    const button = form.querySelector('button[type="submit"]');
+    if (button && button.textContent.includes('Resolver')) {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('¿Estás seguro de que deseas marcar este ticket como resuelto?')) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

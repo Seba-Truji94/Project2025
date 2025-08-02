@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Centro de Soporte - Galletas Kati{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">Centro de Soporte</h1>
+            <p class="text-center text-muted">¿En qué podemos ayudarte hoy?</p>
+        </div>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-ticket-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Crear Ticket</h5>
+                    <p class="card-text">Reporta un problema o solicita ayuda específica. Nuestro equipo te responderá pronto.</p>
+                    <a href="{% url 'support:create_ticket' %}" class="btn btn-primary">Crear Ticket</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-robot fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Chat Rápido con IA</h5>
+                    <p class="card-text">Obtén respuestas inmediatas a preguntas comunes con nuestro asistente inteligente.</p>
+                    <a href="{% url 'support:quick_support' %}" class="btn btn-success">Chatear Ahora</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-question-circle fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Preguntas Frecuentes</h5>
+                    <p class="card-text">Consulta las respuestas a las preguntas más comunes de nuestros clientes.</p>
+                    <a href="{% url 'support:faq_list' %}" class="btn btn-info">Ver FAQs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.is_authenticated %}
+    <div class="row">
+        <div class="col-12">
+            <h3>Mis Tickets Recientes</h3>
+            {% if recent_tickets %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Ticket #</th>
+                                <th>Asunto</th>
+                                <th>Estado</th>
+                                <th>Prioridad</th>
+                                <th>Última Actualización</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in recent_tickets %}
+                            <tr>
+                                <td>{{ ticket.ticket_number }}</td>
+                                <td>{{ ticket.subject|truncatechars:50 }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if ticket.status == 'open' %}badge-primary
+                                        {% elif ticket.status == 'pending' %}badge-warning
+                                        {% elif ticket.status == 'resolved' %}badge-success
+                                        {% else %}badge-secondary{% endif %}">
+                                        {{ ticket.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if ticket.priority == 'low' %}badge-light
+                                        {% elif ticket.priority == 'medium' %}badge-info
+                                        {% elif ticket.priority == 'high' %}badge-warning
+                                        {% else %}badge-danger{% endif %}">
+                                        {{ ticket.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>{{ ticket.updated_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'support:ticket_detail' ticket.id %}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{% url 'support:ticket_list' %}" class="btn btn-outline-primary">Ver Todos mis Tickets</a>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No tienes tickets creados aún.
+                    <a href="{% url 'support:create_ticket' %}" class="alert-link">Crear tu primer ticket</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

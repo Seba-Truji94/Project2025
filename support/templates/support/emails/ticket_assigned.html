@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ticket Asignado - Galletas Kati</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #17a2b8; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .assignment-info { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #17a2b8; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+        .btn { display: inline-block; padding: 10px 20px; background: #17a2b8; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Galletas Kati</h1>
+            <h2>Ticket Asignado para Atención</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hola {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }},</p>
+            
+            <p>Se te ha asignado un nuevo ticket de soporte para su atención.</p>
+            
+            <div class="assignment-info">
+                <h3>Detalles del Ticket</h3>
+                <p><strong>Número:</strong> #{{ ticket.ticket_number }}</p>
+                <p><strong>Asunto:</strong> {{ ticket.subject }}</p>
+                <p><strong>Categoría:</strong> {{ ticket.category.name }}</p>
+                <p><strong>Prioridad:</strong> {{ ticket.get_priority_display }}</p>
+                <p><strong>Cliente:</strong> {{ ticket.user.get_full_name|default:ticket.user.username }}</p>
+                <p><strong>Email del cliente:</strong> {{ ticket.user.email }}</p>
+                <p><strong>Fecha de creación:</strong> {{ ticket.created_at|date:"d/m/Y H:i" }}</p>
+                {% if assigned_by %}
+                <p><strong>Asignado por:</strong> {{ assigned_by.get_full_name|default:assigned_by.username }}</p>
+                {% endif %}
+            </div>
+            
+            <h4>Descripción del problema:</h4>
+            <div style="background: #e9ecef; padding: 15px; border-radius: 5px; border-left: 4px solid #6c757d;">
+                {{ ticket.description|linebreaks }}
+            </div>
+            
+            {% if ticket.priority == 'urgent' %}
+            <div style="background: #f8d7da; padding: 15px; border-radius: 5px; border-left: 4px solid #dc3545; margin: 15px 0;">
+                <h4>⚠️ PRIORIDAD URGENTE</h4>
+                <p>Este ticket requiere atención inmediata. Por favor responde lo antes posible.</p>
+            </div>
+            {% elif ticket.priority == 'high' %}
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 15px 0;">
+                <h4>🔥 PRIORIDAD ALTA</h4>
+                <p>Este ticket tiene alta prioridad. Se recomienda atenderlo pronto.</p>
+            </div>
+            {% endif %}
+            
+            <p style="text-align: center;">
+                <a href="{{ request.build_absolute_uri }}{% url 'support:admin_ticket_detail' ticket.id %}" class="btn">Atender Ticket</a>
+            </p>
+            
+            <p>Recuerda mantener al cliente informado sobre el progreso y responder de manera profesional y útil.</p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Panel de Administración</strong></p>
+            <p>Galletas Kati - Sistema de Soporte</p>
+            <hr>
+            <p>Este es un mensaje automático del sistema de asignación de tickets.</p>
+            <p>&copy; {{ current_year }} Galletas Kati - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

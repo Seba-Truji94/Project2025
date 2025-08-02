@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Tickets de Soporte - Galletas Kati{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-ticket-alt"></i> Mis Tickets de Soporte</h1>
+                <a href="{% url 'support:create_ticket' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Ticket
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" 
+                       class="form-control" 
+                       id="searchTickets" 
+                       placeholder="Buscar tickets por asunto o número...">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterStatus">
+                <option value="">Todos los estados</option>
+                <option value="open">Abierto</option>
+                <option value="pending">Pendiente</option>
+                <option value="resolved">Resuelto</option>
+                <option value="closed">Cerrado</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterPriority">
+                <option value="">Todas las prioridades</option>
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+            </select>
+        </div>
+    </div>
+    
+    {% if tickets %}
+        <div class="row">
+            {% for ticket in tickets %}
+            <div class="col-md-6 mb-4 ticket-card" 
+                 data-status="{{ ticket.status }}" 
+                 data-priority="{{ ticket.priority }}"
+                 data-search="{{ ticket.subject|lower }} {{ ticket.ticket_number|lower }}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Ticket #{{ ticket.ticket_number }}</strong>
+                            <br>
+                            <small class="text-muted">{{ ticket.category.name }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge 
+                                {% if ticket.status == 'open' %}bg-primary
+                                {% elif ticket.status == 'pending' %}bg-warning
+                                {% elif ticket.status == 'resolved' %}bg-success
+                                {% else %}bg-secondary{% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                            <br>
+                            <span class="badge mt-1
+                                {% if ticket.priority == 'low' %}bg-light text-dark
+                                {% elif ticket.priority == 'medium' %}bg-info
+                                {% elif ticket.priority == 'high' %}bg-warning
+                                {% else %}bg-danger{% endif %}">
+                                {{ ticket.get_priority_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h6 class="card-title">{{ ticket.subject|truncatechars:60 }}</h6>
+                        <p class="card-text text-muted">
+                            {{ ticket.description|truncatechars:100 }}
+                        </p>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <small class="text-muted">Creado</small><br>
+                                <small>{{ ticket.created_at|date:"d/m/Y" }}</small>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Actualizado</small><br>
+                                <small>{{ ticket.updated_at|date:"d/m/Y" }}</small>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Mensajes</small><br>
+                                <small>
+                                    <i class="fas fa-comments"></i> 
+                                    {{ ticket.supportmessage_set.count }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        {% if ticket.rating %}
+                        <div class="mb-2">
+                            <small class="text-muted">Tu calificación:</small>
+                            <div class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= ticket.rating %}⭐{% else %}☆{% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'support:ticket_detail' ticket.id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalle
+                            </a>
+                            
+                            {% if ticket.status != 'closed' %}
+                            <a href="{% url 'support:ticket_detail' ticket.id %}#message-form" 
+                               class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-reply"></i> Responder
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav aria-label="Navegación tickets" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                    <h4>No tienes tickets de soporte</h4>
+                    <p class="text-muted">¿Necesitas ayuda? Crea tu primer ticket de soporte</p>
+                    <a href="{% url 'support:create_ticket' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus"></i> Crear Primer Ticket
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5><i class="fas fa-info-circle"></i> ¿Necesitas ayuda inmediata?</h5>
+                    <p class="text-muted">Prueba nuestras otras opciones de soporte</p>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'support:quick_support' %}" class="btn btn-success">
+                            <i class="fas fa-robot"></i> Chat con IA
+                        </a>
+                        <a href="{% url 'support:faq_list' %}" class="btn btn-info">
+                            <i class="fas fa-question-circle"></i> Ver FAQs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchTickets');
+    const statusFilter = document.getElementById('filterStatus');
+    const priorityFilter = document.getElementById('filterPriority');
+    const ticketCards = document.querySelectorAll('.ticket-card');
+    
+    function filterTickets() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedStatus = statusFilter.value;
+        const selectedPriority = priorityFilter.value;
+        
+        ticketCards.forEach(card => {
+            const searchText = card.dataset.search;
+            const status = card.dataset.status;
+            const priority = card.dataset.priority;
+            
+            const matchesSearch = !searchTerm || searchText.includes(searchTerm);
+            const matchesStatus = !selectedStatus || status === selectedStatus;
+            const matchesPriority = !selectedPriority || priority === selectedPriority;
+            
+            if (matchesSearch && matchesStatus && matchesPriority) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Mostrar mensaje si no hay resultados
+        const visibleCards = Array.from(ticketCards).filter(card => 
+            card.style.display !== 'none'
+        );
+        
+        let noResultsMsg = document.getElementById('noResultsMessage');
+        if (visibleCards.length === 0) {
+            if (!noResultsMsg) {
+                noResultsMsg = document.createElement('div');
+                noResultsMsg.id = 'noResultsMessage';
+                noResultsMsg.className = 'col-12 text-center py-4';
+                noResultsMsg.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-search"></i> 
+                        No se encontraron tickets que coincidan con los filtros aplicados.
+                    </div>
+                `;
+                document.querySelector('.row').appendChild(noResultsMsg);
+            }
+            noResultsMsg.style.display = 'block';
+        } else if (noResultsMsg) {
+            noResultsMsg.style.display = 'none';
+        }
+    }
+    
+    searchInput.addEventListener('input', filterTickets);
+    statusFilter.addEventListener('change', filterTickets);
+    priorityFilter.addEventListener('change', filterTickets);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,493 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Soporte - Admin{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    .ticket-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-left: 4px solid #dee2e6;
+    }
+    .ticket-card.priority-high {
+        border-left-color: #dc3545;
+    }
+    .ticket-card.priority-medium {
+        border-left-color: #ffc107;
+    }
+    .ticket-card.priority-low {
+        border-left-color: #28a745;
+    }
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .filters-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .quick-actions {
+        position: sticky;
+        top: 20px;
+    }
+    .category-stats {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-headset"></i> Gestión de Soporte</h1>
+                <p class="mb-0">Panel de administración para tickets de soporte</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group">
+                    <a href="{% url 'support:admin_statistics' %}" class="btn btn-light">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </a>
+                    <a href="{% url 'support:admin_category_management' %}" class="btn btn-light">
+                        <i class="fas fa-tags"></i> Categorías
+                    </a>
+                    <a href="{% url 'admin:index' %}" class="btn btn-outline-light">
+                        <i class="fas fa-cog"></i> Admin Principal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Estadísticas -->
+        <div class="col-md-3">
+            <div class="quick-actions">
+                <h5>📊 Estadísticas en Tiempo Real</h5>
+                
+                <div class="stats-card">
+                    <div class="stats-number" id="total-tickets">{{ total_tickets }}</div>
+                    <div class="stats-label">Total Tickets</div>
+                </div>
+                
+                <div class="stats-card">
+                    <div class="stats-number text-warning" id="open-tickets">{{ open_tickets }}</div>
+                    <div class="stats-label">Tickets Abiertos</div>
+                </div>
+                
+                <div class="stats-card">
+                    <div class="stats-number text-success" id="resolved-tickets">{{ resolved_tickets }}</div>
+                    <div class="stats-label">Tickets Resueltos</div>
+                </div>
+                
+                <div class="stats-card">
+                    <div class="stats-number text-info" id="recent-tickets">{{ recent_tickets }}</div>
+                    <div class="stats-label">Últimas 24h</div>
+                </div>
+                
+                {% if category_stats %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">📁 Tickets por Categoría</h6>
+                    </div>
+                    <div class="card-body category-stats">
+                        {% for stat in category_stats %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">{{ stat.category__name|default:"Sin categoría" }}</span>
+                            <span class="badge bg-primary">{{ stat.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Lista de Tickets -->
+        <div class="col-md-9">
+            <!-- Filtros -->
+            <div class="filters-section">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Estado</label>
+                        <select name="status" class="form-select">
+                            <option value="">Todos los estados</option>
+                            {% for status_code, status_name in status_choices %}
+                            <option value="{{ status_code }}" {% if request.GET.status == status_code %}selected{% endif %}>
+                                {{ status_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Prioridad</label>
+                        <select name="priority" class="form-select">
+                            <option value="">Todas las prioridades</option>
+                            {% for priority_code, priority_name in priority_choices %}
+                            <option value="{{ priority_code }}" {% if request.GET.priority == priority_code %}selected{% endif %}>
+                                {{ priority_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Categoría</label>
+                        <select name="category" class="form-select">
+                            <option value="">Todas las categorías</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Buscar</label>
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Ticket, usuario..." value="{{ request.GET.search }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Acciones Masivas -->
+            {% if tickets %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>{{ tickets|length }}</strong> tickets encontrados
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="selectAll()">
+                        <i class="fas fa-check-square"></i> Seleccionar Todos
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
+                        <i class="fas fa-square"></i> Limpiar
+                    </button>
+                    <button class="btn btn-warning btn-sm" onclick="showBulkActions()">
+                        <i class="fas fa-tasks"></i> Acciones Masivas
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Lista de Tickets -->
+            <form id="bulk-form" method="post" action="{% url 'support:admin_bulk_update_status' %}">
+                {% csrf_token %}
+                
+                {% for ticket in tickets %}
+                <div class="ticket-card priority-{{ ticket.priority }}">
+                    <div class="row align-items-center">
+                        <div class="col-md-1">
+                            <input type="checkbox" name="ticket_ids" value="{{ ticket.id }}" 
+                                   class="form-check-input ticket-checkbox">
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <strong class="me-3">
+                                    <a href="{% url 'support:admin_detail' ticket.ticket_number %}" 
+                                       class="text-decoration-none">
+                                        #{{ ticket.ticket_number }}
+                                    </a>
+                                </strong>
+                                <span class="badge bg-{{ ticket.status|default:'secondary' }} status-badge me-2">
+                                    {{ ticket.get_status_display }}
+                                </span>
+                                <span class="badge bg-outline-{{ ticket.priority }} status-badge me-2">
+                                    {{ ticket.get_priority_display }}
+                                </span>
+                                {% if ticket.category %}
+                                <span class="badge bg-light text-dark status-badge">
+                                    {{ ticket.category.name }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <h6 class="mb-1">{{ ticket.subject }}</h6>
+                            <div class="text-muted small">
+                                <i class="fas fa-user"></i> {{ ticket.user.username }}
+                                <i class="fas fa-clock ms-3"></i> {{ ticket.created_at|date:"d/m/Y H:i" }}
+                                {% if ticket.assigned_to %}
+                                <i class="fas fa-user-tag ms-3"></i> Asignado a {{ ticket.assigned_to.username }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'support:admin_detail' ticket.ticket_number %}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" 
+                                           onclick="changeStatus('{{ ticket.id }}', 'in_progress')">
+                                        <i class="fas fa-play text-warning"></i> En Progreso
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" 
+                                           onclick="changeStatus('{{ ticket.id }}', 'resolved')">
+                                        <i class="fas fa-check text-success"></i> Resolver
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" 
+                                           onclick="changeStatus('{{ ticket.id }}', 'closed')">
+                                        <i class="fas fa-times text-danger"></i> Cerrar
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </form>
+            
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <nav aria-label="Paginación de tickets">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
+                            Anterior
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_num }}&{{ request.GET.urlencode }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
+                            Siguiente
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h4>No hay tickets</h4>
+                <p class="text-muted">No se encontraron tickets con los filtros seleccionados.</p>
+                {% if not total_tickets %}
+                <div class="alert alert-info">
+                    <h5>🎯 Sistema Listo para Datos Reales</h5>
+                    <p>El sistema está configurado y esperando tickets reales de los usuarios.</p>
+                    <a href="{% url 'support:home' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ir al Soporte de Usuario
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Acciones Masivas -->
+<div class="modal fade" id="bulkActionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Acciones Masivas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Acción</label>
+                    <select id="bulk-action" class="form-select">
+                        <option value="">Seleccionar acción...</option>
+                        <option value="change_status">Cambiar Estado</option>
+                        <option value="change_priority">Cambiar Prioridad</option>
+                    </select>
+                </div>
+                
+                <div id="status-options" class="mb-3" style="display: none;">
+                    <label class="form-label">Nuevo Estado</label>
+                    <select id="new-status" class="form-select">
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}">{{ status_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div id="priority-options" class="mb-3" style="display: none;">
+                    <label class="form-label">Nueva Prioridad</label>
+                    <select id="new-priority" class="form-select">
+                        {% for priority_code, priority_name in priority_choices %}
+                        <option value="{{ priority_code }}">{{ priority_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="executeBulkAction()">Ejecutar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Actualizar estadísticas cada 30 segundos
+setInterval(updateStats, 30000);
+
+function updateStats() {
+    fetch('{% url "support:admin_ajax_stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-tickets').textContent = data.total_tickets;
+            document.getElementById('open-tickets').textContent = data.open_tickets;
+            document.getElementById('resolved-tickets').textContent = data.resolved_tickets;
+            document.getElementById('recent-tickets').textContent = data.recent_tickets;
+        });
+}
+
+function selectAll() {
+    document.querySelectorAll('.ticket-checkbox').forEach(cb => cb.checked = true);
+}
+
+function clearSelection() {
+    document.querySelectorAll('.ticket-checkbox').forEach(cb => cb.checked = false);
+}
+
+function showBulkActions() {
+    const selected = document.querySelectorAll('.ticket-checkbox:checked');
+    if (selected.length === 0) {
+        alert('Selecciona al menos un ticket.');
+        return;
+    }
+    
+    new bootstrap.Modal(document.getElementById('bulkActionsModal')).show();
+}
+
+function executeBulkAction() {
+    const action = document.getElementById('bulk-action').value;
+    if (!action) {
+        alert('Selecciona una acción.');
+        return;
+    }
+    
+    const form = document.getElementById('bulk-form');
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+    form.appendChild(actionInput);
+    
+    if (action === 'change_status') {
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'new_status';
+        statusInput.value = document.getElementById('new-status').value;
+        form.appendChild(statusInput);
+    } else if (action === 'change_priority') {
+        const priorityInput = document.createElement('input');
+        priorityInput.type = 'hidden';
+        priorityInput.name = 'new_priority';
+        priorityInput.value = document.getElementById('new-priority').value;
+        form.appendChild(priorityInput);
+    }
+    
+    form.submit();
+}
+
+function changeStatus(ticketId, newStatus) {
+    fetch('{% url "support:admin_ajax_change_status" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            ticket_id: ticketId,
+            status: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    });
+}
+
+// Mostrar/ocultar opciones según la acción seleccionada
+document.getElementById('bulk-action').addEventListener('change', function() {
+    const statusOptions = document.getElementById('status-options');
+    const priorityOptions = document.getElementById('priority-options');
+    
+    statusOptions.style.display = 'none';
+    priorityOptions.style.display = 'none';
+    
+    if (this.value === 'change_status') {
+        statusOptions.style.display = 'block';
+    } else if (this.value === 'change_priority') {
+        priorityOptions.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

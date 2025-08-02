@@ -82,6 +82,7 @@
                         <li><a href="{% url 'shop:home' %}">Inicio</a></li>
                         <li><a href="{% url 'shop:product_list' %}">Productos</a></li>
                         <li><a href="#testimonios">Reseñas</a></li>
+                        <li><a href="{% url 'support:home' %}">Soporte</a></li>
                         <li><a href="#contacto">Contacto</a></li>
                     </ul>
                     
@@ -105,12 +106,23 @@
                                         {% endif %}
                                     </a></li>
                                     <li><a class="dropdown-item" href="{% url 'orders:order_list' %}">Mis Pedidos</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'support:ticket_list' %}">
+                                        <i class="fas fa-life-ring me-2"></i>Mis Tickets de Soporte
+                                    </a></li>
                                     <li><a class="dropdown-item" href="{% url 'accounts:wishlist' %}">Lista de Deseos</a></li>
                                     {% if user.is_superuser %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item text-warning" href="{% url 'orders:admin_management' %}">
                                             <i class="fas fa-cogs me-2"></i>
                                             Admin Pedidos
+                                        </a></li>
+                                        <li><a class="dropdown-item text-info" href="{% url 'support:admin_management' %}">
+                                            <i class="fas fa-headset me-2"></i>
+                                            Admin Soporte
+                                        </a></li>
+                                        <li><a class="dropdown-item text-secondary" href="{% url 'admin:index' %}">
+                                            <i class="fas fa-database me-2"></i>
+                                            Admin Principal
                                         </a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
@@ -201,6 +213,7 @@
                         <i class="fas fa-shopping-cart me-2"></i>Carrito 
                         <span class="badge bg-primary">{{ cart_items_count|default:0 }}</span>
                     </a>
+                    <a href="{% url 'support:home' %}">Soporte</a>
                     <a href="#testimonios">Reseñas</a>
                     <a href="#contacto">Contacto</a>
                     {% if user.is_authenticated %}
@@ -271,7 +284,9 @@
                 <div class="footer-section">
                     <h4>Ayuda</h4>
                     <ul>
-                        <li><a href="#">Centro de Ayuda</a></li>
+                        <li><a href="{% url 'support:home' %}">Centro de Soporte</a></li>
+                        <li><a href="{% url 'support:faq_list' %}">Preguntas Frecuentes</a></li>
+                        <li><a href="{% url 'support:quick_support' %}">Chat con IA</a></li>
                         <li><a href="#">Política de Envíos</a></li>
                         <li><a href="#">Política de Devoluciones</a></li>
                         <li><a href="#">Términos y Condiciones</a></li>

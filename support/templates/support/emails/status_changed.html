@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Estado Actualizado - Galletas Kati</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #ffc107; color: #212529; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .status-change { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107; }
+        .footer { text-align: center; padding: 20px; color: #666; }
+        .btn { display: inline-block; padding: 10px 20px; background: #ffc107; color: #212529; text-decoration: none; border-radius: 5px; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .status-open { background: #f8d7da; color: #721c24; }
+        .status-in_progress { background: #fff3cd; color: #856404; }
+        .status-resolved { background: #d4edda; color: #155724; }
+        .status-closed { background: #e2e3e5; color: #383d41; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Galletas Kati</h1>
+            <h2>Estado del Ticket Actualizado</h2>
+        </div>
+        
+        <div class="content">
+            <p>Hola {{ ticket.user.get_full_name|default:ticket.user.username }},</p>
+            
+            <p>Te informamos que el estado de tu ticket de soporte ha sido actualizado.</p>
+            
+            <div class="status-change">
+                <h3>Cambio de Estado</h3>
+                <p><strong>Ticket:</strong> #{{ ticket.ticket_number }} - {{ ticket.subject }}</p>
+                
+                <p><strong>Estado anterior:</strong> 
+                    <span class="status-badge status-{{ old_status }}">{{ old_status }}</span>
+                </p>
+                
+                <p><strong>Estado actual:</strong> 
+                    <span class="status-badge status-{{ ticket.status }}">{{ new_status }}</span>
+                </p>
+                
+                {% if changed_by %}
+                <p><strong>Actualizado por:</strong> {{ changed_by.get_full_name|default:changed_by.username }}</p>
+                {% endif %}
+                
+                <p><strong>Fecha de actualización:</strong> {{ ticket.updated_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            
+            {% if ticket.status == 'in_progress' %}
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                <h4>🔧 Tu ticket está siendo atendido</h4>
+                <p>Nuestro equipo está trabajando activamente en la resolución de tu consulta. Te mantendremos informado sobre cualquier progreso.</p>
+            </div>
+            {% elif ticket.status == 'resolved' %}
+            <div style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
+                <h4>✅ ¡Tu ticket ha sido resuelto!</h4>
+                <p>Creemos haber solucionado tu consulta. Por favor revisa la respuesta y déjanos saber si necesitas alguna aclaración adicional.</p>
+            </div>
+            {% endif %}
+            
+            <p>Para ver los detalles completos y el historial de tu ticket:</p>
+            
+            <p style="text-align: center;">
+                <a href="{{ request.build_absolute_uri }}{% url 'support:ticket_detail' ticket.id %}" class="btn">Ver Ticket Completo</a>
+            </p>
+            
+            <p>Si tienes alguna pregunta sobre este cambio, no dudes en responder al ticket o contactarnos.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un mensaje automático. Para continuar la conversación, accede a tu ticket.</p>
+            <p>&copy; {{ current_year }} Galletas Kati - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

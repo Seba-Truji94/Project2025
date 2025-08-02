@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard de Gestión de Tickets - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #007bff;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card.danger { border-left-color: #dc3545; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.info { border-left-color: #17a2b8; }
+    .stat-card.secondary { border-left-color: #6c757d; }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .quick-actions {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .action-btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        margin: 0.25rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    .recent-tickets {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .ticket-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
+    
+    .ticket-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .ticket-item:last-child {
+        border-bottom: none;
+    }
+    
+    .priority-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    Dashboard de Gestión de Tickets
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">Centro de control para soporte técnico</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'support:admin_ticket_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-list me-2"></i>Ver Todos los Tickets
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Estadísticas principales -->
+    <div class="row mb-4">
+        <div class="col-md-2 mb-3">
+            <div class="stat-card info">
+                <div class="stat-number">{{ total_tickets }}</div>
+                <div class="stat-label">Total Tickets</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card danger">
+                <div class="stat-number">{{ open_tickets }}</div>
+                <div class="stat-label">Abiertos</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card warning">
+                <div class="stat-number">{{ in_progress_tickets }}</div>
+                <div class="stat-label">En Progreso</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card success">
+                <div class="stat-number">{{ resolved_tickets }}</div>
+                <div class="stat-label">Resueltos</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card secondary">
+                <div class="stat-number">{{ closed_tickets }}</div>
+                <div class="stat-label">Cerrados</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card warning">
+                <div class="stat-number">{{ unassigned_tickets }}</div>
+                <div class="stat-label">Sin Asignar</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alertas de prioridad -->
+    {% if urgent_tickets > 0 or high_tickets > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Tickets de Alta Prioridad</h5>
+                    <p class="mb-0">
+                        {% if urgent_tickets > 0 %}
+                            <strong>{{ urgent_tickets }}</strong> ticket{{ urgent_tickets|pluralize }} urgente{{ urgent_tickets|pluralize }}
+                        {% endif %}
+                        {% if urgent_tickets > 0 and high_tickets > 0 %} y {% endif %}
+                        {% if high_tickets > 0 %}
+                            <strong>{{ high_tickets }}</strong> ticket{{ high_tickets|pluralize }} de alta prioridad
+                        {% endif %}
+                        requieren atención inmediata.
+                    </p>
+                </div>
+                <div class="ms-auto">
+                    <a href="{% url 'support:admin_ticket_list' %}?priority=urgent" class="btn btn-outline-dark">
+                        Ver Urgentes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Acciones rápidas -->
+    <div class="quick-actions">
+        <h4 class="mb-3">
+            <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+        </h4>
+        <div class="row">
+            <div class="col-md-3">
+                <a href="{% url 'support:admin_ticket_list' %}?status=open" class="action-btn btn-outline-danger w-100">
+                    <i class="fas fa-inbox me-2"></i>Tickets Abiertos
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'support:admin_ticket_list' %}?assigned=unassigned" class="action-btn btn-outline-warning w-100">
+                    <i class="fas fa-user-slash me-2"></i>Sin Asignar
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'support:admin_ticket_list' %}?priority=urgent" class="action-btn btn-outline-dark w-100">
+                    <i class="fas fa-fire me-2"></i>Urgentes
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'support:admin_ticket_list' %}?order_by=created_at" class="action-btn btn-outline-info w-100">
+                    <i class="fas fa-clock me-2"></i>Más Antiguos
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tickets recientes -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="recent-tickets">
+                <div class="p-3 bg-light border-bottom">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Tickets Recientes
+                    </h4>
+                </div>
+                
+                {% if recent_tickets %}
+                    {% for ticket in recent_tickets %}
+                    <div class="ticket-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <span class="priority-badge 
+                                            {% if ticket.priority == 'urgent' %}bg-danger text-white
+                                            {% elif ticket.priority == 'high' %}bg-warning text-dark
+                                            {% elif ticket.priority == 'normal' %}bg-info text-white
+                                            {% else %}bg-secondary text-white{% endif %}">
+                                            {% if ticket.priority == 'urgent' %}🔥
+                                            {% elif ticket.priority == 'high' %}⚠️
+                                            {% elif ticket.priority == 'normal' %}📋
+                                            {% else %}📝{% endif %}
+                                            {{ ticket.get_priority_display }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'support:admin_ticket_detail' ticket.id %}" class="text-decoration-none">
+                                                #{{ ticket.ticket_number }}
+                                            </a>
+                                        </h6>
+                                        <p class="mb-0 text-muted small">{{ ticket.subject|truncatechars:50 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <small class="text-muted">{{ ticket.user.get_full_name|default:ticket.user.username }}</small>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="status-badge 
+                                    {% if ticket.status == 'open' %}bg-danger text-white
+                                    {% elif ticket.status == 'in_progress' %}bg-warning text-dark
+                                    {% elif ticket.status == 'resolved' %}bg-success text-white
+                                    {% else %}bg-secondary text-white{% endif %}">
+                                    {{ ticket.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <small class="text-muted">{{ ticket.created_at|date:"d/m H:i" }}</small>
+                                {% if ticket.assigned_to %}
+                                    <br><small class="text-info">→ {{ ticket.assigned_to.username }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="p-3 text-center bg-light">
+                        <a href="{% url 'support:admin_ticket_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-2"></i>Ver Todos los Tickets
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="ticket-item text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No hay tickets creados</h5>
+                        <p class="text-muted">Los tickets aparecerán aquí cuando los usuarios los creen.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
