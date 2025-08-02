@@ -1,12 +1,41 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Crear Cuenta - Dulce Bias{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/security.css' %}" rel="stylesheet">
+<style>
+    .password-strength {
+        margin-top: 0.5rem;
+    }
+    .field-feedback {
+        font-size: 0.875rem;
+    }
+    .security-info {
+        background: linear-gradient(135deg, #e3f2fd, #f1f8e9);
+        border-left: 4px solid #2196f3;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
+            <!-- Información de Seguridad -->
+            <div class="alert security-info mb-4">
+                <h6 class="alert-heading">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Registro Seguro
+                </h6>
+                <small>
+                    Sus datos están protegidos con cifrado y medidas de seguridad avanzadas.
+                    La contraseña debe tener al menos 12 caracteres con mayúsculas, minúsculas, números y símbolos.
+                </small>
+            </div>
+
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
@@ -27,26 +56,32 @@
                     <form method="post" novalidate>
                         {% csrf_token %}
                         
+                        <!-- Honeypot para prevenir bots -->
+                        {{ form.website }}
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_first_name" class="form-label">
-                                    <i class="fas fa-user me-2"></i>Nombre
+                                    <i class="fas fa-user me-2"></i>Nombre *
                                 </label>
                                 <input type="text" 
                                        class="form-control" 
                                        id="id_first_name" 
                                        name="first_name" 
                                        placeholder="Tu nombre"
+                                       autocomplete="given-name"
+                                       required
                                        autofocus>
                                 {% if form.first_name.errors %}
                                     <div class="text-danger small mt-1">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
                                         {{ form.first_name.errors|first }}
                                     </div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="id_last_name" class="form-label">
-                                    <i class="fas fa-user me-2"></i>Apellido
+                                    <i class="fas fa-user me-2"></i>Apellido *
                                 </label>
                                 <input type="text" 
                                        class="form-control" 
@@ -271,4 +306,20 @@
     color: #333;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/security.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Guardar texto original del botón
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.setAttribute('data-original-text', submitBtn.textContent);
+    }
+    
+    // Mensaje de bienvenida con información de seguridad
+    console.log('🔒 Formulario de registro con validaciones de seguridad activadas');
+});
+</script>
 {% endblock %}

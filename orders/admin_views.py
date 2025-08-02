@@ -442,3 +442,159 @@ def ajax_change_payment_status(request):
         return JsonResponse({'success': False, 'error': 'Pedido no encontrado'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Error interno: {str(e)}'})
+
+
+# Vistas de historial de órdenes
+
+from .models import OrderStatusHistory, OrderPaymentStatusHistory
+
+
+@user_passes_test(is_superuser)
+def admin_orders_dashboard(request):
+    """Panel de administración de órdenes con historial"""
+    # Estadísticas generales
+    total_orders = Order.objects.count()
+    recent_cutoff = timezone.now() - timedelta(days=7)
+    recent_orders = Order.objects.filter(created_at__gte=recent_cutoff).count()
+    
+    # Órdenes por estado
+    status_stats = {}
+    for status_code, status_name in Order.STATUS_CHOICES:
+        count = Order.objects.filter(status=status_code).count()
+        status_stats[status_name] = count
+    
+    # Órdenes por estado de pago
+    payment_status_stats = {}
+    for payment_code, payment_name in Order.PAYMENT_STATUS_CHOICES:
+        count = Order.objects.filter(payment_status=payment_code).count()
+        payment_status_stats[payment_name] = count
+    
+    # Órdenes recientes con historial
+    recent_orders_with_history = Order.objects.filter(
+        created_at__gte=recent_cutoff
+    ).prefetch_related('status_history', 'payment_status_history').order_by('-created_at')[:10]
+    
+    # Cambios recientes de estado
+    recent_status_changes = OrderStatusHistory.objects.filter(
+        changed_at__gte=recent_cutoff
+    ).select_related('order', 'changed_by').order_by('-changed_at')[:10]
+    
+    # Cambios recientes de estado de pago
+    recent_payment_changes = OrderPaymentStatusHistory.objects.filter(
+        changed_at__gte=recent_cutoff
+    ).select_related('order', 'changed_by').order_by('-changed_at')[:10]
+    
+    context = {
+        'total_orders': total_orders,
+        'recent_orders': recent_orders,
+        'status_stats': status_stats,
+        'payment_status_stats': payment_status_stats,
+        'recent_orders_with_history': recent_orders_with_history,
+        'recent_status_changes': recent_status_changes,
+        'recent_payment_changes': recent_payment_changes,
+    }
+    
+    return render(request, 'orders/admin/dashboard.html', context)
+
+
+@user_passes_test(is_superuser)
+def admin_order_detail(request, order_number):
+    """Vista detallada de orden para administradores con historial completo"""
+    order = get_object_or_404(Order, order_number=order_number)
+    
+    # Historial completo de estados
+    status_history = order.status_history.select_related('changed_by').order_by('-changed_at')
+    payment_history = order.payment_status_history.select_related('changed_by').order_by('-changed_at')
+    
+    # Items de la orden
+    order_items = order.items.select_related('product').all()
+    
+    context = {
+        'order': order,
+        'order_items': order_items,
+        'status_history': status_history,
+        'payment_history': payment_history,
+        'status_choices': Order.STATUS_CHOICES,
+        'payment_status_choices': Order.PAYMENT_STATUS_CHOICES,
+    }
+    
+    return render(request, 'orders/admin/order_detail_history.html', context)
+
+
+@user_passes_test(is_superuser)
+def admin_update_order_status(request, order_number):
+    """Actualizar estado de orden desde el panel administrativo"""
+    if request.method == 'POST':
+        order = get_object_or_404(Order, order_number=order_number)
+        new_status = request.POST.get('status')
+        new_payment_status = request.POST.get('payment_status')
+        notes = request.POST.get('notes', '')
+        
+        # Configurar usuario y notas para el historial
+        order._changed_by = request.user
+        order._change_notes = notes or f'Actualizado desde panel administrativo por {request.user.get_full_name() or request.user.username}'
+        
+        changes = []
+        
+        # Actualizar estado de orden
+        if new_status and new_status != order.status:
+            old_status_display = order.get_status_display()
+            order.status = new_status
+            new_status_display = dict(Order.STATUS_CHOICES)[new_status]
+            changes.append(f'Estado: {old_status_display} → {new_status_display}')
+        
+        # Actualizar estado de pago
+        if new_payment_status and new_payment_status != order.payment_status:
+            old_payment_display = order.get_payment_status_display()
+            order.payment_status = new_payment_status
+            new_payment_display = dict(Order.PAYMENT_STATUS_CHOICES)[new_payment_status]
+            changes.append(f'Estado de pago: {old_payment_display} → {new_payment_display}')
+        
+        if changes:
+            order.save()
+            messages.success(request, f'Orden #{order.order_number} actualizada: {", ".join(changes)}')
+        else:
+            messages.info(request, 'No se realizaron cambios')
+    
+    return redirect('orders:admin_order_history', order_number=order_number)
+
+
+@user_passes_test(is_superuser)
+def admin_order_history_ajax(request, order_number):
+    """Obtener historial de orden vía AJAX"""
+    order = get_object_or_404(Order, order_number=order_number)
+    
+    # Historial de estados
+    status_history = []
+    for entry in order.status_history.select_related('changed_by').order_by('-changed_at'):
+        status_history.append({
+            'type': 'status',
+            'change': entry.status_change_display,
+            'changed_by': entry.changed_by.get_full_name() if entry.changed_by else 'Sistema',
+            'changed_at': entry.changed_at.strftime('%d/%m/%Y %H:%M'),
+            'notes': entry.notes
+        })
+    
+    # Historial de pagos
+    payment_history = []
+    for entry in order.payment_status_history.select_related('changed_by').order_by('-changed_at'):
+        payment_history.append({
+            'type': 'payment',
+            'change': entry.payment_status_change_display,
+            'changed_by': entry.changed_by.get_full_name() if entry.changed_by else 'Sistema',
+            'changed_at': entry.changed_at.strftime('%d/%m/%Y %H:%M'),
+            'notes': entry.notes
+        })
+    
+    # Combinar y ordenar por fecha
+    combined_history = sorted(
+        status_history + payment_history,
+        key=lambda x: x['changed_at'],
+        reverse=True
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'history': combined_history,
+        'order_number': order.order_number
+    })

@@ -514,9 +514,12 @@
                                 <h6 class="text-muted mb-2">Método de Pago</h6>
                                 <div class="d-flex align-items-center">
                                     {% if order.payment_method == 'webpay' %}
-                                        <i class="fab fa-cc-visa fa-2x me-2 text-primary"></i>
+                                        <i class="fab fa-cc-visa fa-2x me-2 text-muted"></i>
                                         <div>
-                                            <p class="mb-0">Webpay Plus</p>
+                                            <p class="mb-0 text-muted">
+                                                Webpay Plus 
+                                                <small class="badge bg-warning text-dark ms-2">No disponible</small>
+                                            </p>
                                             <small class="text-muted">
                                                 {% if order.payment_status == 'paid' %}
                                                     Pagado el {{ order.updated_at|date:"d M Y" }}

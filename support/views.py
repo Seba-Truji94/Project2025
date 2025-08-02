@@ -550,7 +550,7 @@ def admin_update_ticket(request, ticket_id):
     ticket.updated_at = timezone.now()
     ticket.save()
     
-    return redirect('support:admin_ticket_detail', ticket_id=ticket.id)
+    return redirect('support:admin_detail', ticket_number=ticket.ticket_number)
 
 
 @superuser_required
@@ -604,7 +604,7 @@ def admin_respond_ticket(request, ticket_id):
     else:
         messages.error(request, 'Debe incluir un mensaje de respuesta')
     
-    return redirect('support:admin_ticket_detail', ticket_id=ticket.id)
+    return redirect('support:admin_detail', ticket_number=ticket.ticket_number)
 
 
 @superuser_required

@@ -454,7 +454,7 @@ def checkout(request):
             region = request.POST.get('region', '').strip()
             postal_code = request.POST.get('postal_code', '').strip()
             delivery_notes = request.POST.get('delivery_notes', '').strip()
-            payment_method = request.POST.get('payment_method', 'webpay')
+            payment_method = request.POST.get('payment_method', 'transfer')
             
             # Validar campos requeridos
             required_fields = {

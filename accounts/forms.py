@@ -1,16 +1,21 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 from .models import UserProfile, Address
+from security.utils import sanitize_input, validate_file_upload
+import re
 
 
 class UserRegistrationForm(UserCreationForm):
-    """Formulario de registro extendido"""
+    """Formulario de registro extendido con validaciones de seguridad"""
     email = forms.EmailField(
         required=True,
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'tu@email.com'
+            'placeholder': 'tu@email.com',
+            'autocomplete': 'email'
         })
     )
     first_name = forms.CharField(
@@ -18,7 +23,8 @@ class UserRegistrationForm(UserCreationForm):
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Tu nombre'
+            'placeholder': 'Tu nombre',
+            'autocomplete': 'given-name'
         })
     )
     last_name = forms.CharField(
@@ -26,8 +32,16 @@ class UserRegistrationForm(UserCreationForm):
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Tu apellido'
+            'placeholder': 'Tu apellido',
+            'autocomplete': 'family-name'
         })
+    )
+    
+    # Campo honey pot para prevenir bots
+    website = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+        help_text="No llenar este campo"
     )
 
     class Meta:
@@ -38,16 +52,74 @@ class UserRegistrationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Nombre de usuario'
+            'placeholder': 'Nombre de usuario',
+            'autocomplete': 'username',
+            'minlength': '3',
+            'maxlength': '20'
         })
         self.fields['password1'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Contraseña'
+            'placeholder': 'Contraseña',
+            'autocomplete': 'new-password',
+            'id': 'password-input'
         })
         self.fields['password2'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Confirmar contraseña'
+            'placeholder': 'Confirmar contraseña',
+            'autocomplete': 'new-password'
         })
+        
+        # Actualizar help texts de contraseña
+        self.fields['password1'].help_text = (
+            "Su contraseña debe tener al menos 12 caracteres, "
+            "incluir mayúsculas, minúsculas, números y símbolos."
+        )
+
+    def clean_website(self):
+        """Honey pot - si se llena, es un bot"""
+        website = self.cleaned_data.get('website')
+        if website:
+            raise ValidationError("Formulario inválido.")
+        return website
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        username = sanitize_input(username)
+        
+        # Validar caracteres permitidos
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise ValidationError("El nombre de usuario solo puede contener letras, números y guiones bajos.")
+        
+        # Verificar palabras prohibidas
+        prohibited_words = ['admin', 'root', 'administrator', 'superuser', 'test']
+        if username.lower() in prohibited_words:
+            raise ValidationError("Este nombre de usuario no está permitido.")
+        
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        email = sanitize_input(email)
+        
+        # Verificar que el email no esté en uso
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("Este email ya está registrado.")
+        
+        # Validar dominio (opcional)
+        domain = email.split('@')[1].lower()
+        blocked_domains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com']
+        if domain in blocked_domains:
+            raise ValidationError("Dominios de email temporales no permitidos.")
+        
+        return email
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        return sanitize_input(first_name)
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        return sanitize_input(last_name)
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -60,7 +132,7 @@ class UserRegistrationForm(UserCreationForm):
 
 
 class UserProfileForm(forms.ModelForm):
-    """Formulario para editar el perfil del usuario"""
+    """Formulario para editar el perfil del usuario con validaciones de seguridad"""
     
     class Meta:
         model = UserProfile
@@ -71,30 +143,38 @@ class UserProfileForm(forms.ModelForm):
         widgets = {
             'avatar': forms.FileInput(attrs={
                 'class': 'form-control',
-                'accept': 'image/*'
+                'accept': 'image/jpeg,image/jpg,image/png,image/gif,image/webp'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '+56 9 1234 5678'
+                'placeholder': '+56 9 1234 5678',
+                'pattern': r'[\+]?[0-9\s\-\(\)]+',
+                'maxlength': '20'
             }),
             'birth_date': forms.DateInput(attrs={
                 'class': 'form-control',
-                'type': 'date'
+                'type': 'date',
+                'min': '1900-01-01',
+                'max': '2010-12-31'  # Mínimo 13 años
             }),
             'address': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Dirección completa'
+                'placeholder': 'Dirección completa',
+                'maxlength': '200'
             }),
             'city': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Ciudad'
+                'placeholder': 'Ciudad',
+                'maxlength': '50'
             }),
             'region': forms.Select(attrs={
                 'class': 'form-select'
             }),
             'postal_code': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Código postal'
+                'placeholder': 'Código postal',
+                'pattern': r'[0-9]{5,7}',
+                'maxlength': '7'
             }),
             'newsletter_subscription': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
@@ -119,13 +199,10 @@ class UserProfileForm(forms.ModelForm):
         avatar = self.cleaned_data.get('avatar')
         
         if avatar:
-            # Validar el tamaño del archivo (5MB máximo)
-            if avatar.size > 5 * 1024 * 1024:
-                raise forms.ValidationError('El archivo es demasiado grande. El tamaño máximo es 5MB.')
-            
-            # Validar el tipo de archivo
-            if not avatar.content_type.startswith('image/'):
-                raise forms.ValidationError('El archivo debe ser una imagen.')
+            try:
+                validate_file_upload(avatar)
+            except ValueError as e:
+                raise ValidationError(str(e))
         
         return avatar
 
@@ -133,15 +210,28 @@ class UserProfileForm(forms.ModelForm):
         phone = self.cleaned_data.get('phone')
         
         if phone:
+            phone = sanitize_input(phone)
             # Eliminar espacios y caracteres especiales para validación
             clean_phone = ''.join(char for char in phone if char.isdigit() or char == '+')
             
             # Validar formato chileno básico
             if not (clean_phone.startswith('+56') or clean_phone.startswith('56') or clean_phone.startswith('9')):
                 if len(clean_phone) < 8:
-                    raise forms.ValidationError('Ingresa un número de teléfono válido.')
+                    raise ValidationError('Ingresa un número de teléfono válido.')
         
         return phone
+
+    def clean_address(self):
+        address = self.cleaned_data.get('address')
+        if address:
+            return sanitize_input(address)
+        return address
+
+    def clean_city(self):
+        city = self.cleaned_data.get('city')
+        if city:
+            return sanitize_input(city)
+        return city
 
 
 class UserForm(forms.ModelForm):

@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView, DetailView
 from django.http import JsonResponse
 from django.contrib import messages
@@ -542,5 +543,115 @@ def add_admin_message(request, ticket_number):
             notification_service.notify_new_message(ticket, message)
             
             messages.success(request, 'Mensaje enviado correctamente.')
+    
+    return redirect('support:admin_detail', ticket_number=ticket_number)
+
+
+@user_passes_test(is_superuser)
+@require_http_methods(["POST"])
+def admin_respond_ticket(request, ticket_number):
+    """Responder a un ticket desde el panel administrativo"""
+    ticket = get_object_or_404(SupportTicket, ticket_number=ticket_number)
+    
+    content = request.POST.get('content')
+    new_status = request.POST.get('status')
+    attachment = request.FILES.get('attachment')
+    
+    if content and content.strip():
+        # Crear mensaje de respuesta del staff
+        message = SupportMessage.objects.create(
+            ticket=ticket,
+            sender=request.user,
+            content=content.strip(),
+            is_ai_response=False,
+            message_type='human',
+            attachment=attachment
+        )
+        
+        # Actualizar estado si se especifica
+        if new_status and new_status != ticket.status:
+            old_status = ticket.status
+            ticket.status = new_status
+            ticket.save()
+            
+            # Notificar cambio de estado
+            NotificationService.notify_status_changed(ticket, old_status, ticket.status, request.user)
+        
+        # Notificar nueva respuesta
+        NotificationService.notify_new_message(ticket, message)
+        
+        messages.success(request, 'Respuesta enviada exitosamente')
+    else:
+        messages.error(request, 'Debe incluir un mensaje de respuesta')
+    
+    return redirect('support:admin_detail', ticket_number=ticket.ticket_number)
+
+
+@user_passes_test(is_superuser)
+@require_http_methods(["POST"])
+def update_ticket(request, ticket_number):
+    """Actualizar múltiples campos de un ticket (estado, prioridad, asignación, etc.)"""
+    ticket = get_object_or_404(SupportTicket, ticket_number=ticket_number)
+    changes = []
+    
+    # Actualizar estado
+    new_status = request.POST.get('status')
+    if new_status and new_status != ticket.status:
+        old_status = ticket.status
+        old_status_display = ticket.get_status_display()
+        ticket.status = new_status
+        new_status_display = dict(SupportTicket.STATUS_CHOICES)[new_status]
+        changes.append(f'Estado: {old_status_display} → {new_status_display}')
+        
+        # Notificar cambio de estado
+        NotificationService.notify_status_changed(ticket, old_status, new_status, request.user)
+    
+    # Actualizar prioridad  
+    new_priority = request.POST.get('priority')
+    if new_priority and new_priority != ticket.priority:
+        old_priority_display = ticket.get_priority_display()
+        ticket.priority = new_priority
+        new_priority_display = dict(SupportTicket.PRIORITY_CHOICES)[new_priority]
+        changes.append(f'Prioridad: {old_priority_display} → {new_priority_display}')
+    
+    # Actualizar asignación
+    assigned_to_id = request.POST.get('assigned_to')
+    if assigned_to_id != str(ticket.assigned_to.id if ticket.assigned_to else ''):
+        old_assigned = ticket.assigned_to.get_full_name() if ticket.assigned_to else 'Sin asignar'
+        
+        if assigned_to_id:
+            new_assigned_user = get_object_or_404(User, id=assigned_to_id)
+            ticket.assigned_to = new_assigned_user
+            new_assigned = new_assigned_user.get_full_name()
+            
+            # Notificar asignación
+            NotificationService.notify_ticket_assigned(ticket, new_assigned_user, request.user)
+        else:
+            ticket.assigned_to = None
+            new_assigned = 'Sin asignar'
+        
+        changes.append(f'Asignación: {old_assigned} → {new_assigned}')
+    
+    # Guardar cambios
+    if changes:
+        ticket.save()
+        
+        # Crear mensaje de cambio
+        message_content = 'Ticket actualizado:\n' + '\n'.join(f'• {change}' for change in changes)
+        notes = request.POST.get('notes', '')
+        if notes:
+            message_content += f'\n\nNotas: {notes}'
+        
+        SupportMessage.objects.create(
+            ticket=ticket,
+            sender=request.user,
+            content=message_content,
+            message_type='admin_update',
+            is_ai_response=False
+        )
+        
+        messages.success(request, f'Ticket actualizado: {", ".join(changes)}')
+    else:
+        messages.info(request, 'No se realizaron cambios')
     
     return redirect('support:admin_detail', ticket_number=ticket_number)

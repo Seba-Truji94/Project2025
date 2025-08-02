@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Cuenta Bloqueada{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-lock me-2"></i>
+                        {{ title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ message }}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>¿Por qué fue bloqueada mi cuenta?</h5>
+                        <p>Su cuenta ha sido bloqueada temporalmente por seguridad debido a múltiples intentos de inicio de sesión fallidos.</p>
+                        
+                        <h5>¿Qué puedo hacer?</h5>
+                        <ul>
+                            <li>Espere unos minutos antes de intentar nuevamente</li>
+                            <li>Verifique que está usando la contraseña correcta</li>
+                            <li>Si olvidó su contraseña, use la opción "¿Olvidaste tu contraseña?"</li>
+                            {% if contact_support %}
+                            <li>Si el problema persiste, contacte al soporte técnico</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-sign-in-alt me-1"></i>Intentar Nuevamente
+                        </a>
+                        <a href="{% url 'accounts:password_reset' %}" class="btn btn-secondary">
+                            <i class="fas fa-key me-1"></i>Recuperar Contraseña
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

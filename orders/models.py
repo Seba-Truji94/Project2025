@@ -31,7 +31,7 @@ class Order(models.Model):
     ]
     
     PAYMENT_METHOD_CHOICES = [
-        ('webpay', 'Webpay Plus'),
+        ('webpay', 'Webpay Plus (No disponible)'),  # Integración pendiente
         ('transfer', 'Transferencia Bancaria'),
         ('cash', 'Pago contra entrega'),
     ]
@@ -53,7 +53,7 @@ class Order(models.Model):
     postal_code = models.CharField(max_length=10, blank=True)
     
     # Información de pago
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='webpay')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='transfer')
     
     # Precios
     subtotal = models.DecimalField(max_digits=10, decimal_places=0)
@@ -82,6 +82,18 @@ class Order(models.Model):
         return f"Pedido #{self.order_number}"
     
     def save(self, *args, **kwargs):
+        # Capturar el estado anterior para el historial
+        old_status = None
+        old_payment_status = None
+        
+        if self.pk:  # Si la orden ya existe
+            try:
+                old_order = Order.objects.get(pk=self.pk)
+                old_status = old_order.status
+                old_payment_status = old_order.payment_status
+            except Order.DoesNotExist:
+                pass
+        
         if not self.order_number:
             # Generar número de pedido único
             self.order_number = self.generate_order_number()
@@ -89,7 +101,48 @@ class Order(models.Model):
         # Validar cálculos antes de guardar
         self.validate_calculations()
         
+        # Guardar la orden
         super().save(*args, **kwargs)
+        
+        # Registrar cambios de estado en el historial
+        current_user = getattr(self, '_changed_by', None)
+        notes = getattr(self, '_change_notes', '')
+        
+        # Registrar cambio de estado de orden
+        if old_status is not None and old_status != self.status:
+            OrderStatusHistory.objects.create(
+                order=self,
+                previous_status=old_status,
+                new_status=self.status,
+                changed_by=current_user,
+                notes=notes
+            )
+        elif old_status is None:  # Primera vez que se guarda
+            OrderStatusHistory.objects.create(
+                order=self,
+                previous_status=None,
+                new_status=self.status,
+                changed_by=current_user,
+                notes='Orden creada'
+            )
+        
+        # Registrar cambio de estado de pago
+        if old_payment_status is not None and old_payment_status != self.payment_status:
+            OrderPaymentStatusHistory.objects.create(
+                order=self,
+                previous_payment_status=old_payment_status,
+                new_payment_status=self.payment_status,
+                changed_by=current_user,
+                notes=notes
+            )
+        elif old_payment_status is None:  # Primera vez que se guarda
+            OrderPaymentStatusHistory.objects.create(
+                order=self,
+                previous_payment_status=None,
+                new_payment_status=self.payment_status,
+                changed_by=current_user,
+                notes='Estado de pago inicial'
+            )
     
     def validate_calculations(self):
         """Valida que los cálculos del pedido sean correctos"""
@@ -310,3 +363,59 @@ class TransferPayment(models.Model):
             self.order.save()
         
         super().save(*args, **kwargs)
+
+
+class OrderStatusHistory(models.Model):
+    """Historial de cambios de estado de órdenes"""
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_history')
+    previous_status = models.CharField(max_length=20, choices=Order.STATUS_CHOICES, null=True, blank=True)
+    new_status = models.CharField(max_length=20, choices=Order.STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, help_text="Notas adicionales sobre el cambio")
+    
+    class Meta:
+        verbose_name = "Historial de Estado"
+        verbose_name_plural = "Historial de Estados"
+        ordering = ['-changed_at']
+    
+    def __str__(self):
+        if self.previous_status:
+            return f"Orden #{self.order.order_number}: {self.get_previous_status_display()} → {self.get_new_status_display()}"
+        else:
+            return f"Orden #{self.order.order_number}: Estado inicial → {self.get_new_status_display()}"
+    
+    @property
+    def status_change_display(self):
+        """Representación amigable del cambio de estado"""
+        old_status = dict(Order.STATUS_CHOICES).get(self.previous_status, 'Sin estado') if self.previous_status else 'Estado inicial'
+        new_status = dict(Order.STATUS_CHOICES).get(self.new_status, self.new_status)
+        return f"{old_status} → {new_status}"
+
+
+class OrderPaymentStatusHistory(models.Model):
+    """Historial de cambios de estado de pago de órdenes"""
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payment_status_history')
+    previous_payment_status = models.CharField(max_length=20, choices=Order.PAYMENT_STATUS_CHOICES, null=True, blank=True)
+    new_payment_status = models.CharField(max_length=20, choices=Order.PAYMENT_STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, help_text="Notas adicionales sobre el cambio de pago")
+    
+    class Meta:
+        verbose_name = "Historial de Estado de Pago"
+        verbose_name_plural = "Historial de Estados de Pago"
+        ordering = ['-changed_at']
+    
+    def __str__(self):
+        if self.previous_payment_status:
+            return f"Orden #{self.order.order_number}: Pago {self.get_previous_payment_status_display()} → {self.get_new_payment_status_display()}"
+        else:
+            return f"Orden #{self.order.order_number}: Estado de pago inicial → {self.get_new_payment_status_display()}"
+    
+    @property
+    def payment_status_change_display(self):
+        """Representación amigable del cambio de estado de pago"""
+        old_status = dict(Order.PAYMENT_STATUS_CHOICES).get(self.previous_payment_status, 'Sin estado') if self.previous_payment_status else 'Estado inicial'
+        new_status = dict(Order.PAYMENT_STATUS_CHOICES).get(self.new_payment_status, self.new_payment_status)
+        return f"{old_status} → {new_status}"

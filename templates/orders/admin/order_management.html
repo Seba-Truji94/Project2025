@@ -26,6 +26,10 @@
                     <i class="fas fa-broom"></i>
                     Limpiar Vista
                 </button>
+                <a href="{% url 'orders:admin_dashboard' %}" class="btn btn-outline-success me-2">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard de Historial
+                </a>
                 <a href="{% url 'orders:admin_transfer_management' %}" class="btn btn-outline-info me-2">
                     <i class="fas fa-university"></i>
                     Transferencias
@@ -249,7 +253,7 @@
                                 <th>Estado Pago</th>
                                 <th>Total</th>
                                 <th>Fecha</th>
-                                <th width="150px">Acciones</th>
+                                <th width="180px">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -320,6 +324,10 @@
                                         <a href="{% url 'orders:admin_detail' order.order_number %}" 
                                            class="btn btn-sm btn-outline-primary" title="Ver Detalle">
                                             <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'orders:admin_order_history' order.order_number %}" 
+                                           class="btn btn-sm btn-outline-info" title="Ver Historial">
+                                            <i class="fas fa-history"></i>
                                         </a>
                                         <button class="btn btn-sm btn-outline-secondary quick-status-btn" 
                                                 data-order-id="{{ order.id }}" 

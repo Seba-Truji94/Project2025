@@ -57,7 +57,7 @@
             {% endif %}
             
             <p style="text-align: center;">
-                <a href="{{ request.build_absolute_uri }}{% url 'support:admin_ticket_detail' ticket.id %}" class="btn">Atender Ticket</a>
+                <a href="{{ request.build_absolute_uri }}{% url 'support:admin_detail' ticket_number=ticket.ticket_number %}" class="btn">Atender Ticket</a>
             </p>
             
             <p>Recuerda mantener al cliente informado sobre el progreso y responder de manera profesional y útil.</p>

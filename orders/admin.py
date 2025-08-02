@@ -3,7 +3,10 @@ from django.contrib.auth.models import User
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
-from .models import Order, OrderItem, OrderStatusHistory, BankAccount, TransferPayment
+from .models import (
+    Order, OrderItem, OrderStatusHistory, OrderPaymentStatusHistory,
+    BankAccount, TransferPayment
+)
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -12,8 +15,25 @@ class OrderItemInline(admin.TabularInline):
 
 class OrderStatusHistoryInline(admin.TabularInline):
     model = OrderStatusHistory
-    readonly_fields = ('changed_at',)
+    readonly_fields = ('changed_at', 'changed_by', 'status_change_display')
+    fields = ('status_change_display', 'changed_by', 'changed_at', 'notes')
     extra = 0
+    verbose_name = "Historial de Estado de Orden"
+    verbose_name_plural = "Historial de Estados de Orden"
+    
+    def has_add_permission(self, request, obj=None):
+        return False
+
+class OrderPaymentStatusHistoryInline(admin.TabularInline):
+    model = OrderPaymentStatusHistory
+    readonly_fields = ('changed_at', 'changed_by', 'payment_status_change_display')
+    fields = ('payment_status_change_display', 'changed_by', 'changed_at', 'notes')
+    extra = 0
+    verbose_name = "Historial de Estado de Pago"
+    verbose_name_plural = "Historial de Estados de Pago"
+    
+    def has_add_permission(self, request, obj=None):
+        return False
 
 class TransferPaymentInline(admin.StackedInline):
     model = TransferPayment
@@ -26,10 +46,17 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', 'payment_status', 'payment_method', 'created_at')
     search_fields = ('order_number', 'user__username', 'user__email')
     readonly_fields = ('order_number', 'created_at', 'updated_at')
-    inlines = [OrderItemInline, OrderStatusHistoryInline, TransferPaymentInline]
+    inlines = [OrderItemInline, OrderStatusHistoryInline, OrderPaymentStatusHistoryInline, TransferPaymentInline]
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user')
+    
+    def save_model(self, request, obj, form, change):
+        # Registrar quién hizo el cambio para el historial
+        obj._changed_by = request.user
+        if 'status' in form.changed_data or 'payment_status' in form.changed_data:
+            obj._change_notes = f'Cambio realizado desde el panel de administración por {request.user.get_full_name() or request.user.username}'
+        super().save_model(request, obj, form, change)
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
@@ -38,9 +65,29 @@ class OrderItemAdmin(admin.ModelAdmin):
 
 @admin.register(OrderStatusHistory)
 class OrderStatusHistoryAdmin(admin.ModelAdmin):
-    list_display = ('order', 'status', 'changed_at', 'notes')
-    list_filter = ('status', 'changed_at')
-    search_fields = ('order__order_number', 'notes')
+    list_display = ('order', 'status_change_display', 'changed_by', 'changed_at')
+    list_filter = ('new_status', 'previous_status', 'changed_at')
+    search_fields = ('order__order_number', 'notes', 'changed_by__username')
+    readonly_fields = ('changed_at',)
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+@admin.register(OrderPaymentStatusHistory)
+class OrderPaymentStatusHistoryAdmin(admin.ModelAdmin):
+    list_display = ('order', 'payment_status_change_display', 'changed_by', 'changed_at')
+    list_filter = ('new_payment_status', 'previous_payment_status', 'changed_at')
+    search_fields = ('order__order_number', 'notes', 'changed_by__username')
+    readonly_fields = ('changed_at',)
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 @admin.register(BankAccount)
 class BankAccountAdmin(admin.ModelAdmin):

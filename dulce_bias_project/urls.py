@@ -13,6 +13,7 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('orders/', include('orders.urls')),
     path('support/', include('support.urls')),
+    path('security/', include('security.urls')),
 ]
 
 # Configuración para servir archivos media en desarrollo

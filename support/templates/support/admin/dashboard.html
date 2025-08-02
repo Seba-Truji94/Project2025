@@ -253,7 +253,7 @@
                                     </div>
                                     <div>
                                         <h6 class="mb-1">
-                                            <a href="{% url 'support:admin_ticket_detail' ticket.id %}" class="text-decoration-none">
+                                            <a href="{% url 'support:admin_detail' ticket_number=ticket.ticket_number %}" class="text-decoration-none">
                                                 #{{ ticket.ticket_number }}
                                             </a>
                                         </h6>

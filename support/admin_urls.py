@@ -7,6 +7,9 @@ urlpatterns = [
     # Ruta raíz del admin de soporte
     path('', admin_views.SupportManagementView.as_view(), name='admin_management'),
     
+    # Lista de tickets (alias para admin_management)
+    path('tickets/', admin_views.SupportManagementView.as_view(), name='admin_ticket_list'),
+    
     # RUTAS ESPECÍFICAS PRIMERO
     path('statistics/', admin_views.support_statistics, name='admin_statistics'),
     path('bulk/update-status/', admin_views.bulk_update_tickets, name='admin_bulk_update_status'),
@@ -23,6 +26,8 @@ urlpatterns = [
     
     # RUTAS DINÁMICAS AL FINAL
     path('<str:ticket_number>/', admin_views.SupportTicketDetailManagementView.as_view(), name='admin_detail'),
+    path('<str:ticket_number>/respond/', admin_views.admin_respond_ticket, name='admin_respond_ticket'),
+    path('<str:ticket_number>/update/', admin_views.update_ticket, name='admin_update_ticket'),
     path('<str:ticket_number>/update-status/', admin_views.update_ticket_status, name='admin_update_status'),
     path('<str:ticket_number>/assign/', admin_views.assign_ticket, name='admin_assign_ticket'),
     path('<str:ticket_number>/resolve/', admin_views.resolve_ticket, name='admin_resolve_ticket'),

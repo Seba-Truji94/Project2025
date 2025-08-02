@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Error de Seguridad{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        {{ title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ message }}
+                    </div>
+                    
+                    {% if reason %}
+                    <p><strong>Detalles técnicos:</strong> {{ reason }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <h5>¿Qué puedo hacer?</h5>
+                        <ul>
+                            <li>Recargue la página completa (Ctrl+F5)</li>
+                            <li>Asegúrese de que su navegador acepta cookies</li>
+                            <li>Si el problema persiste, contacte al soporte técnico</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="javascript:history.back()" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i>Volver
+                        </a>
+                        <a href="{% url 'shop:home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-1"></i>Ir al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

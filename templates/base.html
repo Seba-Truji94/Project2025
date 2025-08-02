@@ -89,12 +89,30 @@
                     <div class="nav-actions">
                         {% if user.is_authenticated %}
                             <div class="dropdown">
-                                <button class="user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user"></i>
-                                    <span>{{ user.profile.display_name|default:user.username }}</span>
+                                <button class="user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="user-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">{{ user.profile.display_name|default:user.username }}</span>
+                                        <small class="user-status">En línea</small>
+                                    </div>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
                                 </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Mi Perfil</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li class="dropdown-header">
+                                        <div class="user-header">
+                                            <i class="fas fa-user-circle"></i>
+                                            <div>
+                                                <strong>{{ user.profile.display_name|default:user.username }}</strong>
+                                                <small class="d-block text-muted">{{ user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                        <i class="fas fa-user me-2"></i>Mi Perfil
+                                    </a></li>
                                     <li><a class="dropdown-item" href="{% url 'cart:my_cart' %}">
                                         <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
                                         {% if user.is_authenticated %}
@@ -105,28 +123,39 @@
                                             {% endwith %}
                                         {% endif %}
                                     </a></li>
-                                    <li><a class="dropdown-item" href="{% url 'orders:order_list' %}">Mis Pedidos</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'orders:order_list' %}">
+                                        <i class="fas fa-box me-2"></i>Mis Pedidos
+                                    </a></li>
                                     <li><a class="dropdown-item" href="{% url 'support:ticket_list' %}">
                                         <i class="fas fa-life-ring me-2"></i>Mis Tickets de Soporte
                                     </a></li>
-                                    <li><a class="dropdown-item" href="{% url 'accounts:wishlist' %}">Lista de Deseos</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'accounts:wishlist' %}">
+                                        <i class="fas fa-heart me-2"></i>Lista de Deseos
+                                    </a></li>
                                     {% if user.is_superuser %}
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-warning" href="{% url 'orders:admin_management' %}">
+                                        <li class="dropdown-header">
+                                            <small class="text-warning fw-bold">
+                                                <i class="fas fa-crown me-1"></i>Panel de Administración
+                                            </small>
+                                        </li>
+                                        <li><a class="dropdown-item admin-item" href="{% url 'orders:admin_management' %}">
                                             <i class="fas fa-cogs me-2"></i>
                                             Admin Pedidos
                                         </a></li>
-                                        <li><a class="dropdown-item text-info" href="{% url 'support:admin_management' %}">
+                                        <li><a class="dropdown-item admin-item" href="{% url 'support:admin_management' %}">
                                             <i class="fas fa-headset me-2"></i>
                                             Admin Soporte
                                         </a></li>
-                                        <li><a class="dropdown-item text-secondary" href="{% url 'admin:index' %}">
+                                        <li><a class="dropdown-item admin-item" href="{% url 'admin:index' %}">
                                             <i class="fas fa-database me-2"></i>
                                             Admin Principal
                                         </a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Cerrar Sesión</a></li>
+                                    <li><a class="dropdown-item logout-item" href="{% url 'accounts:logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                    </a></li>
                                 </ul>
                             </div>
                         {% else %}
@@ -238,9 +267,20 @@
     {% if messages %}
         <div class="messages-container">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {% if message.tags == 'error' %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% elif message.tags == 'warning' %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {% elif message.tags == 'success' %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {% elif message.tags == 'info' %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% else %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% endif %}
+                    <i class="fas fa-{% if message.tags == 'error' or message.tags == 'danger' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" aria-label="Close"></button>
                 </div>
             {% endfor %}
         </div>
@@ -477,6 +517,66 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Custom JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced User Dropdown Functionality
+            const userBtn = document.querySelector('.user-btn');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            
+            if (userBtn && dropdownMenu) {
+                // Initialize Bootstrap dropdown
+                const dropdown = new bootstrap.Dropdown(userBtn);
+                
+                // Add click animation
+                userBtn.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdown.hide();
+                    }
+                });
+                
+                // Keyboard navigation support
+                userBtn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        dropdown.toggle();
+                    }
+                });
+            }
+            
+            // Add ripple effect to dropdown items
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple');
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+    </script>
+    
     <!-- Connectivity Check -->
     <script src="{% static 'js/connectivity-check.js' %}"></script>
     
@@ -651,6 +751,47 @@
     <!-- Datos del usuario para JavaScript -->
     <script>
         document.body.dataset.userAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}';
+    </script>
+    
+    <!-- Auto-dismiss alerts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Función para cerrar alertas de forma segura
+            function dismissAlert(alert) {
+                if (!alert || !alert.parentNode) return;
+                
+                // Agregar clase para animación de salida
+                alert.classList.add('alert-dismissing');
+                
+                // Remover el elemento después de la animación
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }, 300);
+            }
+            
+            // Configurar auto-dismiss y eventos de cierre
+            const alerts = document.querySelectorAll('.messages-container .alert');
+            
+            alerts.forEach(function(alert) {
+                if (!alert) return;
+                
+                // Auto-dismiss después de 5 segundos
+                setTimeout(function() {
+                    dismissAlert(alert);
+                }, 5000);
+                
+                // Manejar cierre manual con el botón X
+                const closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        dismissAlert(alert);
+                    });
+                }
+            });
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

@@ -10,6 +10,7 @@ urlpatterns = [
     
     # RUTAS ESPECÍFICAS PRIMERO
     path('statistics/', admin_views.order_statistics, name='admin_statistics'),
+    path('dashboard/', admin_views.admin_orders_dashboard, name='admin_dashboard'),
     path('bulk/update-status/', admin_views.bulk_update_orders, name='admin_bulk_update_status'),
     path('ajax/change-status/', admin_views.ajax_change_status, name='admin_ajax_change_status'),
     path('ajax/change-payment-status/', admin_views.ajax_change_payment_status, name='admin_ajax_change_payment_status'),
@@ -20,7 +21,10 @@ urlpatterns = [
     
     # RUTAS DINÁMICAS AL FINAL
     path('<str:order_number>/', admin_views.OrderDetailManagementView.as_view(), name='admin_detail'),
+    path('<str:order_number>/history/', admin_views.admin_order_detail, name='admin_order_history'),
+    path('<str:order_number>/ajax/history/', admin_views.admin_order_history_ajax, name='admin_order_history_ajax'),
     path('<str:order_number>/update-status/', admin_views.update_order_status, name='admin_update_status'),
+    path('<str:order_number>/admin-update/', admin_views.admin_update_order_status, name='admin_update_order_status'),
     path('<str:order_number>/update-notes/', admin_views.update_order_notes, name='admin_update_notes'),
     
     # Acciones de transferencia

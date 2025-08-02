@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard de Seguridad{% endblock %}
+
+{% block extra_css %}
+<style>
+    .security-card {
+        border-left: 4px solid #dc3545;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .security-card.success {
+        border-left-color: #28a745;
+    }
+    .security-card.warning {
+        border-left-color: #ffc107;
+    }
+    .security-card.info {
+        border-left-color: #17a2b8;
+    }
+    .metric-number {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>
+                <i class="fas fa-shield-alt me-2"></i>
+                Dashboard de Seguridad
+            </h2>
+            <p class="text-muted">Monitoreo y auditoría del sistema de seguridad</p>
+        </div>
+    </div>
+    
+    <!-- Métricas de Seguridad -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card security-card {% if audit_report.weak_passwords %}warning{% else %}success{% endif %}">
+                <div class="card-body text-center">
+                    <i class="fas fa-key fa-2x text-muted mb-2"></i>
+                    <div class="metric-number">{{ audit_report.weak_passwords|length }}</div>
+                    <small class="text-muted">Contraseñas Débiles</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card security-card {% if audit_report.inactive_superusers %}warning{% else %}success{% endif %}">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-shield fa-2x text-muted mb-2"></i>
+                    <div class="metric-number">{{ audit_report.inactive_superusers|length }}</div>
+                    <small class="text-muted">Superusuarios Inactivos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card security-card {% if audit_report.duplicate_emails %}warning{% else %}success{% endif %}">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope fa-2x text-muted mb-2"></i>
+                    <div class="metric-number">{{ audit_report.duplicate_emails|length }}</div>
+                    <small class="text-muted">Emails Duplicados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card security-card info">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                    <div class="metric-number">{{ audit_report.timestamp|date:"H:i" }}</div>
+                    <small class="text-muted">Última Auditoría</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detalles de Auditoría -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Contraseñas Débiles Detectadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if audit_report.weak_passwords %}
+                        <div class="alert alert-warning">
+                            <strong>¡Atención!</strong> Se detectaron usuarios con contraseñas débiles.
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for user in audit_report.weak_passwords %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ user.username }} ({{ user.email }})</span>
+                                <span class="badge bg-warning">Débil</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check me-2"></i>
+                            No se detectaron contraseñas débiles.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-times me-2"></i>
+                        Superusuarios Inactivos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if audit_report.inactive_superusers %}
+                        <div class="alert alert-warning">
+                            <strong>¡Atención!</strong> Superusuarios inactivos por más de 90 días.
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for user in audit_report.inactive_superusers %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ user.username }}</span>
+                                <span class="badge bg-secondary">{{ user.last_login|date:"d/m/Y" }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check me-2"></i>
+                            Todos los superusuarios están activos.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Acciones de Seguridad -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        Acciones de Seguridad
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-sync me-2"></i>
+                                Ejecutar Auditoría
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-download me-2"></i>
+                                Exportar Log de Seguridad
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Ver Estadísticas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh cada 5 minutos
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+});
+</script>
+{% endblock %}

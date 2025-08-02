@@ -65,6 +65,99 @@
         max-height: 300px;
         overflow-y: auto;
     }
+    
+    /* Estilos para Modal de Acciones Masivas */
+    #bulkActionsModal .modal-dialog {
+        z-index: 1055;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+    }
+    
+    #bulkActionsModal .modal-content {
+        animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    #bulkActionsModal .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    #bulkActionsModal .btn-primary {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    #bulkActionsModal .btn-primary:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* Estilos para badges de estado y prioridad */
+    .badge.bg-open {
+        background-color: #28a745 !important;
+        color: white !important;
+    }
+    
+    .badge.bg-in_progress {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+    
+    .badge.bg-resolved {
+        background-color: #17a2b8 !important;
+        color: white !important;
+    }
+    
+    .badge.bg-closed {
+        background-color: #6c757d !important;
+        color: white !important;
+    }
+    
+    .badge.bg-outline-low {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+        border: 1px solid #28a745 !important;
+    }
+    
+    .badge.bg-outline-normal {
+        background-color: #e2e3e5 !important;
+        color: #383d41 !important;
+        border: 1px solid #6c757d !important;
+    }
+    
+    .badge.bg-outline-high {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+        border: 1px solid #ffc107 !important;
+    }
+    
+    .badge.bg-outline-urgent {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    .badge.bg-light {
+        background-color: #e9ecef !important;
+        color: #495057 !important;
+        border: 1px solid #ced4da !important;
+    }
 </style>
 {% endblock %}
 
@@ -343,17 +436,17 @@
 </div>
 
 <!-- Modal para Acciones Masivas -->
-<div class="modal fade" id="bulkActionsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Acciones Masivas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="bulkActionsModal" tabindex="-1" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="margin-top: 5rem;">
+        <div class="modal-content" style="border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-tasks me-2"></i>Acciones Masivas</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 2rem;">
                 <div class="mb-3">
-                    <label class="form-label">Acción</label>
-                    <select id="bulk-action" class="form-select">
+                    <label class="form-label fw-bold">Acción</label>
+                    <select id="bulk-action" class="form-select form-select-lg">
                         <option value="">Seleccionar acción...</option>
                         <option value="change_status">Cambiar Estado</option>
                         <option value="change_priority">Cambiar Prioridad</option>
@@ -361,8 +454,8 @@
                 </div>
                 
                 <div id="status-options" class="mb-3" style="display: none;">
-                    <label class="form-label">Nuevo Estado</label>
-                    <select id="new-status" class="form-select">
+                    <label class="form-label fw-bold">Nuevo Estado</label>
+                    <select id="new-status" class="form-select form-select-lg">
                         {% for status_code, status_name in status_choices %}
                         <option value="{{ status_code }}">{{ status_name }}</option>
                         {% endfor %}
@@ -370,17 +463,21 @@
                 </div>
                 
                 <div id="priority-options" class="mb-3" style="display: none;">
-                    <label class="form-label">Nueva Prioridad</label>
-                    <select id="new-priority" class="form-select">
+                    <label class="form-label fw-bold">Nueva Prioridad</label>
+                    <select id="new-priority" class="form-select form-select-lg">
                         {% for priority_code, priority_name in priority_choices %}
                         <option value="{{ priority_code }}">{{ priority_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="executeBulkAction()">Ejecutar</button>
+            <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 1.5rem 2rem;">
+                <button type="button" class="btn btn-secondary btn-lg me-2" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="executeBulkAction()">
+                    <i class="fas fa-play me-2"></i>Ejecutar
+                </button>
             </div>
         </div>
     </div>
@@ -419,7 +516,13 @@ function showBulkActions() {
         return;
     }
     
-    new bootstrap.Modal(document.getElementById('bulkActionsModal')).show();
+    // Inicializar modal sin backdrop y centrado
+    const modal = new bootstrap.Modal(document.getElementById('bulkActionsModal'), {
+        backdrop: false,
+        keyboard: true,
+        focus: true
+    });
+    modal.show();
 }
 
 function executeBulkAction() {

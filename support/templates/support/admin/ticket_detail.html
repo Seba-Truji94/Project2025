@@ -195,7 +195,7 @@
                 <a href="{% url 'support:admin_ticket_list' %}" class="btn btn-light me-2">
                     <i class="fas fa-arrow-left me-2"></i>Volver a lista
                 </a>
-                <a href="{% url 'support:admin_dashboard' %}" class="btn btn-outline-light">
+                <a href="{% url 'support:admin_management' %}" class="btn btn-outline-light">
                     <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                 </a>
             </div>
@@ -365,7 +365,7 @@
             <div class="response-form">
                 <h5><i class="fas fa-reply me-2"></i>Responder al Cliente</h5>
                 
-                <form method="post" action="{% url 'support:admin_respond_ticket' ticket.id %}" enctype="multipart/form-data">
+                <form method="post" action="{% url 'support:admin_respond_ticket' ticket.ticket_number %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <div class="mb-3">
@@ -419,7 +419,7 @@
                     <!-- Cambio de estado -->
                     <div class="action-card">
                         <h6><i class="fas fa-traffic-light me-2"></i>Estado del Ticket</h6>
-                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}">
+                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.ticket_number %}">
                             {% csrf_token %}
                             <div class="d-flex gap-2">
                                 <select name="status" class="form-select form-select-sm">
@@ -439,7 +439,7 @@
                     <!-- Asignación -->
                     <div class="action-card">
                         <h6><i class="fas fa-user-cog me-2"></i>Asignación</h6>
-                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}">
+                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.ticket_number %}">
                             {% csrf_token %}
                             <div class="d-flex gap-2">
                                 <select name="assigned_to" class="form-select form-select-sm">
@@ -460,7 +460,7 @@
                     <!-- Prioridad -->
                     <div class="action-card">
                         <h6><i class="fas fa-exclamation-triangle me-2"></i>Prioridad</h6>
-                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}">
+                        <form method="post" action="{% url 'support:admin_update_ticket' ticket.ticket_number %}">
                             {% csrf_token %}
                             <div class="d-flex gap-2">
                                 <select name="priority" class="form-select form-select-sm">
@@ -482,7 +482,7 @@
                         <h6><i class="fas fa-bolt me-2"></i>Acciones Especiales</h6>
                         <div class="d-grid gap-2">
                             {% if not ticket.assigned_to %}
-                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}" class="d-inline">
+                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.ticket_number %}" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="assigned_to" value="{{ request.user.id }}">
                                     <button type="submit" class="btn btn-outline-success btn-sm w-100">
@@ -492,7 +492,7 @@
                             {% endif %}
                             
                             {% if ticket.status == 'open' %}
-                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}" class="d-inline">
+                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.ticket_number %}" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="status" value="in_progress">
                                     <button type="submit" class="btn btn-outline-warning btn-sm w-100">
@@ -502,7 +502,7 @@
                             {% endif %}
                             
                             {% if ticket.status != 'resolved' %}
-                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.id %}" class="d-inline">
+                                <form method="post" action="{% url 'support:admin_update_ticket' ticket.ticket_number %}" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="status" value="resolved">
                                     <button type="submit" class="btn btn-outline-success btn-sm w-100" 

@@ -122,20 +122,22 @@
                         
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-check payment-option">
+                                <div class="form-check payment-option payment-disabled">
                                     <input class="form-check-input" type="radio" name="payment_method" 
-                                           id="payment_webpay" value="webpay" checked>
-                                    <label class="form-check-label" for="payment_webpay">
-                                        <i class="fas fa-credit-card text-primary"></i>
+                                           id="payment_webpay" value="webpay" disabled>
+                                    <label class="form-check-label disabled" for="payment_webpay">
+                                        <i class="fas fa-credit-card text-muted"></i>
                                         Webpay Plus (Tarjetas)
-                                        <small class="d-block text-muted">Pago inmediato con tarjeta</small>
+                                        <small class="d-block text-muted">
+                                            <i class="fas fa-tools me-1"></i>No disponible por ahora
+                                        </small>
                                     </label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check payment-option">
                                     <input class="form-check-input" type="radio" name="payment_method" 
-                                           id="payment_transfer" value="transfer">
+                                           id="payment_transfer" value="transfer" checked>
                                     <label class="form-check-label" for="payment_transfer">
                                         <i class="fas fa-university text-success"></i>
                                         Transferencia Bancaria
@@ -143,6 +145,13 @@
                                     </label>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Aviso sobre WebPay -->
+                        <div class="alert alert-warning mt-3" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>WebPay Plus:</strong> Estamos trabajando en la integración del pago con tarjetas. 
+                            Por ahora, usa transferencia bancaria para completar tu compra.
                         </div>
                         
                         <!-- Información adicional sobre transferencia -->
@@ -261,6 +270,27 @@
 .payment-option input[type="radio"]:checked ~ label {
     color: #007bff;
     font-weight: 600;
+}
+
+.payment-option.payment-disabled {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.payment-option.payment-disabled input[type="radio"] {
+    cursor: not-allowed;
+}
+
+.payment-option.payment-disabled label {
+    cursor: not-allowed;
+    color: #6c757d !important;
+}
+
+.payment-option.payment-disabled:hover {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
 }
 
 .order-item {
