@@ -1,0 +1,570 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Editar{% else %}Nueva{% endif %} Relación Proveedor-Producto - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e3e6f0;
+    }
+    
+    .form-header h2 {
+        color: #5a5c69;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .form-header p {
+        color: #858796;
+        margin: 0;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e3e6f0;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .help-text {
+        font-size: 0.875em;
+        color: #858796;
+        margin-top: 5px;
+    }
+    
+    .required-asterisk {
+        color: #e74a3b;
+        margin-left: 3px;
+    }
+    
+    .section-divider {
+        border: none;
+        height: 2px;
+        background: linear-gradient(to right, transparent, #e3e6f0, transparent);
+        margin: 30px 0;
+    }
+    
+    .preview-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: center;
+    }
+    
+    .preview-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    
+    .preview-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+    }
+    
+    .preview-item {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px;
+    }
+    
+    .preview-label {
+        font-size: 0.9em;
+        opacity: 0.8;
+        margin-bottom: 5px;
+    }
+    
+    .preview-value {
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    }
+    
+    .form-actions {
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid #e3e6f0;
+    }
+    
+    .validation-error {
+        color: #e74a3b;
+        font-size: 0.875em;
+        margin-top: 5px;
+        display: block;
+    }
+    
+    .form-control.is-invalid {
+        border-color: #e74a3b;
+    }
+    
+    .cost-calculator {
+        background: #f8f9fc;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .calculator-title {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .calculator-title i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+    
+    .calculator-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .calculator-item {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e3e6f0;
+    }
+    
+    .calculator-number {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #28a745;
+        margin-bottom: 5px;
+    }
+    
+    .calculator-label {
+        font-size: 0.8em;
+        color: #858796;
+    }
+    
+    .suggestions-container {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .suggestions-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .suggestions-title i {
+        margin-right: 10px;
+    }
+    
+    .suggestion-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #f6c23e;
+    }
+    
+    .suggestion-item:last-child {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} text-primary"></i>
+            {% if object %}Editar{% else %}Nueva{% endif %} Relación Proveedor-Producto
+        </h1>
+        <a href="{% url 'management:relations_management' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver a Relaciones
+        </a>
+    </div>
+
+    <div class="form-container">
+        <div class="form-header">
+            <h2>
+                {% if object %}
+                    <i class="fas fa-edit"></i> Editar Relación
+                {% else %}
+                    <i class="fas fa-plus"></i> Nueva Relación Proveedor-Producto
+                {% endif %}
+            </h2>
+            <p>
+                {% if object %}
+                    Modifica los detalles de la relación entre el proveedor y el producto
+                {% else %}
+                    Establece una nueva relación entre un proveedor y un producto
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="post" id="relation-form">
+            {% csrf_token %}
+            
+            <!-- Información Básica -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_supplier">
+                            Proveedor <span class="required-asterisk">*</span>
+                        </label>
+                        {{ form.supplier }}
+                        {% if form.supplier.errors %}
+                            <span class="validation-error">{{ form.supplier.errors.0 }}</span>
+                        {% endif %}
+                        <div class="help-text">Selecciona el proveedor para esta relación</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_product">
+                            Producto <span class="required-asterisk">*</span>
+                        </label>
+                        {{ form.product }}
+                        {% if form.product.errors %}
+                            <span class="validation-error">{{ form.product.errors.0 }}</span>
+                        {% endif %}
+                        <div class="help-text">Selecciona el producto para esta relación</div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Información de Costos -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_cost_price">
+                            Precio de Costo <span class="required-asterisk">*</span>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            {{ form.cost_price }}
+                        </div>
+                        {% if form.cost_price.errors %}
+                            <span class="validation-error">{{ form.cost_price.errors.0 }}</span>
+                        {% endif %}
+                        <div class="help-text">Precio al que el proveedor suministra este producto</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="id_is_active">Estado de la Relación</label>
+                        {{ form.is_active }}
+                        {% if form.is_active.errors %}
+                            <span class="validation-error">{{ form.is_active.errors.0 }}</span>
+                        {% endif %}
+                        <div class="help-text">Define si esta relación está activa o no</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculadora de Márgenes -->
+            <div class="cost-calculator">
+                <div class="calculator-title">
+                    <i class="fas fa-calculator"></i>
+                    Calculadora de Márgenes
+                </div>
+                <div class="calculator-grid" id="margin-calculator">
+                    <div class="calculator-item">
+                        <div class="calculator-number" id="calc-cost">$0.00</div>
+                        <div class="calculator-label">Costo</div>
+                    </div>
+                    <div class="calculator-item">
+                        <div class="calculator-number" id="calc-sale-price">$0.00</div>
+                        <div class="calculator-label">Precio Venta</div>
+                    </div>
+                    <div class="calculator-item">
+                        <div class="calculator-number" id="calc-margin">0%</div>
+                        <div class="calculator-label">Margen</div>
+                    </div>
+                    <div class="calculator-item">
+                        <div class="calculator-number" id="calc-profit">$0.00</div>
+                        <div class="calculator-label">Ganancia</div>
+                    </div>
+                </div>
+                <div class="help-text text-center">
+                    Los cálculos se actualizan automáticamente basados en el precio de costo ingresado
+                </div>
+            </div>
+
+            <!-- Notas Adicionales -->
+            <div class="form-group">
+                <label for="id_notes">Notas y Observaciones</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <span class="validation-error">{{ form.notes.errors.0 }}</span>
+                {% endif %}
+                <div class="help-text">Información adicional sobre esta relación proveedor-producto</div>
+            </div>
+
+            <!-- Sugerencias -->
+            <div class="suggestions-container">
+                <div class="suggestions-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Consejos para Gestionar Relaciones
+                </div>
+                <div class="suggestion-item">
+                    <strong>Precios Competitivos:</strong> Compara precios entre diferentes proveedores para el mismo producto
+                </div>
+                <div class="suggestion-item">
+                    <strong>Calidad del Servicio:</strong> Considera tiempos de entrega, calidad del producto y servicio al cliente
+                </div>
+                <div class="suggestion-item">
+                    <strong>Términos de Pago:</strong> Negocia términos de pago favorables que beneficien tu flujo de caja
+                </div>
+            </div>
+
+            <!-- Vista Previa -->
+            <div class="preview-card" id="relation-preview">
+                <div class="preview-title">
+                    <i class="fas fa-eye"></i> Vista Previa de la Relación
+                </div>
+                <div class="preview-details">
+                    <div class="preview-item">
+                        <div class="preview-label">Proveedor</div>
+                        <div class="preview-value" id="preview-supplier">Selecciona proveedor</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Producto</div>
+                        <div class="preview-value" id="preview-product">Selecciona producto</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Precio de Costo</div>
+                        <div class="preview-value" id="preview-cost">$0.00</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Estado</div>
+                        <div class="preview-value" id="preview-status">Activo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-custom">
+                    <i class="fas fa-save"></i>
+                    {% if object %}Actualizar{% else %}Crear{% endif %} Relación
+                </button>
+                <a href="{% url 'management:relations_management' %}" class="btn btn-secondary btn-custom ml-3">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const supplierSelect = document.getElementById('id_supplier');
+        const productSelect = document.getElementById('id_product');
+        const costPriceInput = document.getElementById('id_cost_price');
+        const isActiveSelect = document.getElementById('id_is_active');
+        const form = document.getElementById('relation-form');
+        
+        // Función para actualizar la vista previa
+        function updatePreview() {
+            // Actualizar proveedor
+            const supplierText = supplierSelect.options[supplierSelect.selectedIndex]?.text || 'Selecciona proveedor';
+            document.getElementById('preview-supplier').textContent = supplierText;
+            
+            // Actualizar producto
+            const productText = productSelect.options[productSelect.selectedIndex]?.text || 'Selecciona producto';
+            document.getElementById('preview-product').textContent = productText;
+            
+            // Actualizar precio de costo
+            const costPrice = parseFloat(costPriceInput.value) || 0;
+            document.getElementById('preview-cost').textContent = `$${costPrice.toFixed(2)}`;
+            
+            // Actualizar estado
+            const statusText = isActiveSelect.options[isActiveSelect.selectedIndex]?.text || 'Activo';
+            document.getElementById('preview-status').textContent = statusText;
+            
+            updateMarginCalculator(costPrice);
+        }
+        
+        // Función para actualizar la calculadora de márgenes
+        function updateMarginCalculator(costPrice) {
+            // Obtener precio de venta del producto (si está disponible)
+            const productId = productSelect.value;
+            let salePrice = 0;
+            
+            // Aquí normalmente haríamos una llamada AJAX para obtener el precio de venta
+            // Por ahora, estimamos un margen del 40%
+            salePrice = costPrice * 1.4;
+            
+            const margin = costPrice > 0 ? ((salePrice - costPrice) / salePrice * 100) : 0;
+            const profit = salePrice - costPrice;
+            
+            document.getElementById('calc-cost').textContent = `$${costPrice.toFixed(2)}`;
+            document.getElementById('calc-sale-price').textContent = `$${salePrice.toFixed(2)}`;
+            document.getElementById('calc-margin').textContent = `${margin.toFixed(1)}%`;
+            document.getElementById('calc-profit').textContent = `$${profit.toFixed(2)}`;
+            
+            // Cambiar colores según el margen
+            const marginElement = document.getElementById('calc-margin');
+            if (margin >= 30) {
+                marginElement.style.color = '#28a745'; // Verde
+            } else if (margin >= 15) {
+                marginElement.style.color = '#f6c23e'; // Amarillo
+            } else {
+                marginElement.style.color = '#e74a3b'; // Rojo
+            }
+        }
+        
+        // Event listeners
+        supplierSelect.addEventListener('change', updatePreview);
+        productSelect.addEventListener('change', updatePreview);
+        costPriceInput.addEventListener('input', updatePreview);
+        isActiveSelect.addEventListener('change', updatePreview);
+        
+        // Validación del formulario
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validar proveedor
+            if (!supplierSelect.value) {
+                supplierSelect.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                supplierSelect.classList.remove('is-invalid');
+            }
+            
+            // Validar producto
+            if (!productSelect.value) {
+                productSelect.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                productSelect.classList.remove('is-invalid');
+            }
+            
+            // Validar precio de costo
+            const costPrice = parseFloat(costPriceInput.value);
+            if (!costPrice || costPrice <= 0) {
+                costPriceInput.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                costPriceInput.classList.remove('is-invalid');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Error en el formulario',
+                    text: 'Por favor completa todos los campos requeridos correctamente',
+                    icon: 'error',
+                    confirmButtonColor: '#4e73df'
+                });
+            } else {
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Guardando...',
+                    text: 'Procesando la relación proveedor-producto',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+        });
+        
+        // Inicializar vista previa
+        updatePreview();
+        
+        // Animación de entrada
+        const container = document.querySelector('.form-container');
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            container.style.transition = 'all 0.6s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 100);
+        
+        // Efecto de hover en la calculadora
+        const calculatorItems = document.querySelectorAll('.calculator-item');
+        calculatorItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

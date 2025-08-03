@@ -1,0 +1,696 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Registrar Movimiento de Stock - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e3e6f0;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .section-title {
+        color: #5a5c69;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e3e6f0;
+    }
+    
+    .help-text {
+        font-size: 0.875em;
+        color: #858796;
+        margin-top: 5px;
+    }
+    
+    .preview-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .preview-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .preview-movement {
+        font-size: 3em;
+        font-weight: bold;
+        margin: 20px 0;
+    }
+    
+    .preview-details {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .movement-type-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .movement-option {
+        border: 2px solid #e3e6f0;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .movement-option:hover {
+        border-color: #4e73df;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .movement-option.active {
+        border-color: #4e73df;
+        background: #4e73df;
+        color: white;
+    }
+    
+    .movement-option i {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+    
+    .movement-option h6 {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .movement-option p {
+        font-size: 0.85em;
+        margin: 0;
+        opacity: 0.8;
+    }
+    
+    .product-search {
+        position: relative;
+    }
+    
+    .product-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e3e6f0;
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+    
+    .product-suggestion {
+        padding: 12px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fc;
+        transition: background 0.3s ease;
+    }
+    
+    .product-suggestion:hover {
+        background: #f8f9fc;
+    }
+    
+    .product-suggestion:last-child {
+        border-bottom: none;
+    }
+    
+    .stock-info {
+        background: #f8f9fc;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+    
+    .current-stock {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #28a745;
+        margin-bottom: 5px;
+    }
+    
+    .stock-label {
+        color: #858796;
+        font-weight: 500;
+    }
+    
+    .calculation-preview {
+        background: #fff3cd;
+        border-left: 4px solid #f6c23e;
+        border-radius: 0 8px 8px 0;
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 15px 0;
+    }
+    
+    .quick-btn {
+        padding: 8px 15px;
+        border: 1px solid #e3e6f0;
+        border-radius: 20px;
+        background: white;
+        color: #5a5c69;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9em;
+    }
+    
+    .quick-btn:hover {
+        background: #4e73df;
+        color: white;
+        border-color: #4e73df;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-plus text-primary"></i>
+            Registrar Movimiento de Stock
+        </h1>
+        <a href="{% url 'management:stock_management' %}" class="btn btn-secondary btn-custom">
+            <i class="fas fa-arrow-left"></i> Volver a Stock
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Formulario -->
+        <div class="col-lg-8">
+            <div class="form-container">
+                <form method="post" id="movement-form">
+                    {% csrf_token %}
+                    
+                    <!-- Tipo de Movimiento -->
+                    <h4 class="section-title">
+                        <i class="fas fa-exchange-alt"></i> Tipo de Movimiento
+                    </h4>
+                    
+                    <div class="movement-type-selector">
+                        <div class="movement-option" data-type="entrada">
+                            <i class="fas fa-arrow-up text-success"></i>
+                            <h6>Entrada</h6>
+                            <p>Recepción de mercancía, compras, devoluciones de clientes</p>
+                        </div>
+                        <div class="movement-option" data-type="salida">
+                            <i class="fas fa-arrow-down text-danger"></i>
+                            <h6>Salida</h6>
+                            <p>Ventas, envíos, devoluciones a proveedores</p>
+                        </div>
+                        <div class="movement-option" data-type="ajuste">
+                            <i class="fas fa-cog text-warning"></i>
+                            <h6>Ajuste</h6>
+                            <p>Correcciones de inventario, mermas, deterioros</p>
+                        </div>
+                        <div class="movement-option" data-type="transferencia">
+                            <i class="fas fa-exchange-alt text-info"></i>
+                            <h6>Transferencia</h6>
+                            <p>Movimientos entre ubicaciones o almacenes</p>
+                        </div>
+                    </div>
+                    
+                    {{ form.movement_type }}
+                    
+                    <!-- Producto -->
+                    <h4 class="section-title">
+                        <i class="fas fa-box"></i> Producto
+                    </h4>
+                    
+                    <div class="form-group">
+                        <label for="id_product">Producto *</label>
+                        <div class="product-search">
+                            {{ form.product }}
+                            <div class="product-suggestions" id="product-suggestions"></div>
+                        </div>
+                        <div class="help-text">Selecciona el producto para el movimiento</div>
+                    </div>
+                    
+                    <!-- Stock actual -->
+                    <div class="stock-info" id="stock-info" style="display: none;">
+                        <div class="current-stock" id="current-stock">0</div>
+                        <div class="stock-label">Stock Actual</div>
+                    </div>
+                    
+                    <!-- Cantidad y Detalles -->
+                    <h4 class="section-title">
+                        <i class="fas fa-calculator"></i> Cantidad y Detalles
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_quantity">Cantidad *</label>
+                                {{ form.quantity }}
+                                <div class="help-text">Cantidad a mover (siempre positiva)</div>
+                            </div>
+                            
+                            <!-- Botones de cantidad rápida -->
+                            <div class="quick-actions">
+                                <span class="quick-btn" onclick="setQuantity(1)">1</span>
+                                <span class="quick-btn" onclick="setQuantity(5)">5</span>
+                                <span class="quick-btn" onclick="setQuantity(10)">10</span>
+                                <span class="quick-btn" onclick="setQuantity(25)">25</span>
+                                <span class="quick-btn" onclick="setQuantity(50)">50</span>
+                                <span class="quick-btn" onclick="setQuantity(100)">100</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_reason">Motivo</label>
+                                {{ form.reason }}
+                                <div class="help-text">Razón del movimiento</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vista previa del cálculo -->
+                    <div class="calculation-preview" id="calculation-preview" style="display: none;">
+                        <strong><i class="fas fa-calculator"></i> Vista Previa:</strong>
+                        <span id="calculation-text"></span>
+                    </div>
+                    
+                    <!-- Información Adicional -->
+                    <h4 class="section-title">
+                        <i class="fas fa-info-circle"></i> Información Adicional
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_reference">Referencia</label>
+                                {{ form.reference }}
+                                <div class="help-text">Número de orden, factura, etc.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Campo para futuras expansiones -->
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_notes">Notas</label>
+                        {{ form.notes }}
+                        <div class="help-text">Observaciones adicionales sobre el movimiento</div>
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary btn-custom mr-3">
+                            <i class="fas fa-save"></i>
+                            Registrar Movimiento
+                        </button>
+                        <a href="{% url 'management:stock_management' %}" class="btn btn-secondary btn-custom">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Vista Previa y Consejos -->
+        <div class="col-lg-4">
+            <!-- Vista Previa del Movimiento -->
+            <div class="preview-card">
+                <div class="preview-title">
+                    <i class="fas fa-eye"></i> Vista Previa del Movimiento
+                </div>
+                <div id="preview-type">Selecciona un tipo</div>
+                <div class="preview-movement" id="preview-quantity">0</div>
+                <div id="preview-product">Selecciona un producto</div>
+                
+                <div class="preview-details">
+                    <div><strong>Stock resultante:</strong> <span id="preview-result">-</span></div>
+                    <div><strong>Motivo:</strong> <span id="preview-reason">General</span></div>
+                </div>
+            </div>
+            
+            <!-- Consejos -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-lightbulb"></i> Consejos para Movimientos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Entradas:</strong> Para recepción de mercancía, compras y devoluciones de clientes
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Salidas:</strong> Para ventas realizadas y envíos a clientes
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Ajustes:</strong> Para correcciones de inventario y mermas
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Referencias:</strong> Incluye números de factura o orden para trazabilidad
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Alertas de Stock -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Alertas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="stock-alerts">
+                        <p class="text-muted mb-0">Selecciona un producto para ver alertas de stock</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentStock = 0;
+    let selectedProduct = null;
+    
+    // Configurar opciones de tipo de movimiento
+    function setupMovementTypes() {
+        const options = document.querySelectorAll('.movement-option');
+        const hiddenInput = document.getElementById('id_movement_type');
+        
+        options.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remover clase active de todas las opciones
+                options.forEach(opt => opt.classList.remove('active'));
+                
+                // Añadir clase active a la opción seleccionada
+                this.classList.add('active');
+                
+                // Actualizar campo oculto
+                hiddenInput.value = this.dataset.type;
+                
+                // Actualizar vista previa
+                updatePreview();
+            });
+        });
+    }
+    
+    // Configurar búsqueda de productos
+    function setupProductSearch() {
+        const productSelect = document.getElementById('id_product');
+        
+        productSelect.addEventListener('change', function() {
+            if (this.value) {
+                // Simular obtención de datos del producto
+                loadProductData(this.value);
+            } else {
+                hideStockInfo();
+            }
+            updatePreview();
+        });
+    }
+    
+    // Cargar datos del producto
+    function loadProductData(productId) {
+        // Aquí iría una llamada AJAX real para obtener los datos del producto
+        // Por ahora simulamos los datos
+        currentStock = Math.floor(Math.random() * 100);
+        selectedProduct = {
+            id: productId,
+            name: document.querySelector(`#id_product option[value="${productId}"]`).text,
+            stock: currentStock
+        };
+        
+        showStockInfo();
+        updateStockAlerts();
+        updatePreview();
+    }
+    
+    // Mostrar información de stock
+    function showStockInfo() {
+        const stockInfo = document.getElementById('stock-info');
+        const currentStockElement = document.getElementById('current-stock');
+        
+        currentStockElement.textContent = currentStock;
+        stockInfo.style.display = 'block';
+        
+        // Cambiar color según el nivel de stock
+        if (currentStock > 20) {
+            currentStockElement.className = 'current-stock text-success';
+        } else if (currentStock > 5) {
+            currentStockElement.className = 'current-stock text-warning';
+        } else {
+            currentStockElement.className = 'current-stock text-danger';
+        }
+    }
+    
+    // Ocultar información de stock
+    function hideStockInfo() {
+        document.getElementById('stock-info').style.display = 'none';
+        currentStock = 0;
+        selectedProduct = null;
+        updatePreview();
+    }
+    
+    // Actualizar alertas de stock
+    function updateStockAlerts() {
+        const alertsContainer = document.getElementById('stock-alerts');
+        let alerts = [];
+        
+        if (currentStock <= 5) {
+            alerts.push('<div class="alert alert-danger mb-2"><i class="fas fa-exclamation-triangle"></i> Stock crítico</div>');
+        } else if (currentStock <= 10) {
+            alerts.push('<div class="alert alert-warning mb-2"><i class="fas fa-exclamation-triangle"></i> Stock bajo</div>');
+        }
+        
+        if (alerts.length === 0) {
+            alerts.push('<p class="text-success mb-0"><i class="fas fa-check"></i> Stock en niveles normales</p>');
+        }
+        
+        alertsContainer.innerHTML = alerts.join('');
+    }
+    
+    // Establecer cantidad rápida
+    function setQuantity(quantity) {
+        document.getElementById('id_quantity').value = quantity;
+        updatePreview();
+        showCalculationPreview();
+    }
+    
+    // Actualizar vista previa
+    function updatePreview() {
+        const movementType = document.getElementById('id_movement_type').value;
+        const quantity = document.getElementById('id_quantity').value || 0;
+        const reason = document.getElementById('id_reason').value;
+        
+        // Actualizar tipo de movimiento
+        const typeText = document.querySelector(`.movement-option[data-type="${movementType}"] h6`)?.textContent || 'Tipo no seleccionado';
+        document.getElementById('preview-type').textContent = typeText;
+        
+        // Actualizar cantidad con signo
+        let quantityDisplay = quantity;
+        if (movementType === 'entrada') {
+            quantityDisplay = '+' + quantity;
+        } else if (movementType === 'salida') {
+            quantityDisplay = '-' + quantity;
+        }
+        document.getElementById('preview-quantity').textContent = quantityDisplay;
+        
+        // Actualizar producto
+        const productName = selectedProduct?.name || 'Producto no seleccionado';
+        document.getElementById('preview-product').textContent = productName;
+        
+        // Calcular stock resultante
+        let resultStock = currentStock;
+        if (quantity && selectedProduct) {
+            if (movementType === 'entrada') {
+                resultStock = currentStock + parseInt(quantity);
+            } else if (movementType === 'salida') {
+                resultStock = currentStock - parseInt(quantity);
+            }
+        }
+        document.getElementById('preview-result').textContent = resultStock;
+        
+        // Actualizar motivo
+        document.getElementById('preview-reason').textContent = reason || 'General';
+        
+        // Mostrar vista previa del cálculo si hay datos suficientes
+        if (movementType && quantity && selectedProduct) {
+            showCalculationPreview();
+        }
+    }
+    
+    // Mostrar vista previa del cálculo
+    function showCalculationPreview() {
+        const movementType = document.getElementById('id_movement_type').value;
+        const quantity = parseInt(document.getElementById('id_quantity').value) || 0;
+        
+        if (!selectedProduct || !quantity) return;
+        
+        const preview = document.getElementById('calculation-preview');
+        const text = document.getElementById('calculation-text');
+        
+        let calculation = '';
+        let resultStock = currentStock;
+        
+        if (movementType === 'entrada') {
+            resultStock = currentStock + quantity;
+            calculation = `Stock actual (${currentStock}) + Entrada (${quantity}) = ${resultStock}`;
+        } else if (movementType === 'salida') {
+            resultStock = currentStock - quantity;
+            calculation = `Stock actual (${currentStock}) - Salida (${quantity}) = ${resultStock}`;
+            
+            if (resultStock < 0) {
+                calculation += ' ⚠️ STOCK NEGATIVO';
+                text.style.color = '#e74a3b';
+            } else {
+                text.style.color = '#5a5c69';
+            }
+        } else if (movementType === 'ajuste') {
+            calculation = `Ajuste de stock: ${currentStock} → ${quantity}`;
+        }
+        
+        text.textContent = calculation;
+        preview.style.display = 'block';
+    }
+    
+    // Validar formulario
+    function validateForm() {
+        const movementType = document.getElementById('id_movement_type').value;
+        const product = document.getElementById('id_product').value;
+        const quantity = document.getElementById('id_quantity').value;
+        
+        if (!movementType) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debes seleccionar un tipo de movimiento'
+            });
+            return false;
+        }
+        
+        if (!product) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debes seleccionar un producto'
+            });
+            return false;
+        }
+        
+        if (!quantity || quantity <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'La cantidad debe ser mayor a 0'
+            });
+            return false;
+        }
+        
+        // Advertir sobre stock negativo en salidas
+        if (movementType === 'salida' && parseInt(quantity) > currentStock) {
+            return Swal.fire({
+                title: '¿Stock negativo?',
+                text: 'Esta salida dejará el stock en negativo. ¿Continuar?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f6c23e',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                return result.isConfirmed;
+            });
+        }
+        
+        return true;
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        setupMovementTypes();
+        setupProductSearch();
+        
+        // Event listeners para actualizar vista previa
+        document.getElementById('id_quantity').addEventListener('input', updatePreview);
+        document.getElementById('id_reason').addEventListener('input', updatePreview);
+        document.getElementById('id_quantity').addEventListener('input', showCalculationPreview);
+        
+        // Validación del formulario
+        document.getElementById('movement-form').addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+            }
+        });
+        
+        // Animación de entrada
+        const formContainer = document.querySelector('.form-container');
+        formContainer.style.opacity = '0';
+        formContainer.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            formContainer.style.transition = 'all 0.5s ease';
+            formContainer.style.opacity = '1';
+            formContainer.style.transform = 'translateY(0)';
+        }, 100);
+    });
+</script>
+{% endblock %}

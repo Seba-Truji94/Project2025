@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión Empresarial - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .management-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .dashboard-title {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .dashboard-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+    }
+    
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .module-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .module-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .module-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        display: block;
+    }
+    
+    .module-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+    
+    .module-description {
+        color: #666;
+        text-align: center;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .alerts-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .alert-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 10px;
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+    }
+    
+    .alert-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .alert-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        color: #ffc107;
+    }
+    
+    .recent-activity {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.2rem;
+    }
+    
+    .activity-icon-success {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .activity-icon-danger {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .activity-time {
+        color: #666;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="management-dashboard">
+    <div class="container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">
+                <i class="fas fa-cogs"></i>
+                Gestión Empresarial
+            </h1>
+            <p class="dashboard-subtitle">
+                Panel de control avanzado para la administración de Galletas Kati
+            </p>
+        </div>
+
+        <!-- Estadísticas Principales -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-box stat-icon" style="color: #28a745;"></i>
+                <span class="stat-number" style="color: #28a745;">{{ total_products }}</span>
+                <span class="stat-label">Productos Total</span>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-check-circle stat-icon" style="color: #17a2b8;"></i>
+                <span class="stat-number" style="color: #17a2b8;">{{ active_products }}</span>
+                <span class="stat-label">Productos Activos</span>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-truck stat-icon" style="color: #6f42c1;"></i>
+                <span class="stat-number" style="color: #6f42c1;">{{ total_suppliers }}</span>
+                <span class="stat-label">Proveedores</span>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-ticket-alt stat-icon" style="color: #fd7e14;"></i>
+                <span class="stat-number" style="color: #fd7e14;">{{ active_coupons }}</span>
+                <span class="stat-label">Cupones Activos</span>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-percentage stat-icon" style="color: #20c997;"></i>
+                <span class="stat-number" style="color: #20c997;">{{ tax_configurations }}</span>
+                <span class="stat-label">Config. Impuestos</span>
+            </div>
+        </div>
+
+        <!-- Módulos de Gestión -->
+        <div class="modules-grid">
+            <a href="{% url 'management:tax_management' %}" class="module-card">
+                <i class="fas fa-percentage module-icon" style="color: #20c997;"></i>
+                <h3 class="module-title">Gestión de Impuestos</h3>
+                <p class="module-description">
+                    Configura y administra las tasas de IVA y otros impuestos aplicables a tus productos.
+                </p>
+            </a>
+
+            <a href="{% url 'management:coupon_management' %}" class="module-card">
+                <i class="fas fa-ticket-alt module-icon" style="color: #fd7e14;"></i>
+                <h3 class="module-title">Cupones de Descuento</h3>
+                <p class="module-description">
+                    Crea y gestiona cupones de descuento para promociones y campañas especiales.
+                </p>
+            </a>
+
+            <a href="{% url 'management:supplier_management' %}" class="module-card">
+                <i class="fas fa-truck module-icon" style="color: #6f42c1;"></i>
+                <h3 class="module-title">Gestión de Proveedores</h3>
+                <p class="module-description">
+                    Administra tu red de proveedores, contactos y evaluaciones de desempeño.
+                </p>
+            </a>
+
+            <a href="{% url 'management:stock_management' %}" class="module-card">
+                <i class="fas fa-warehouse module-icon" style="color: #dc3545;"></i>
+                <h3 class="module-title">Control de Stock</h3>
+                <p class="module-description">
+                    Monitorea inventarios, registra movimientos y gestiona alertas de stock.
+                </p>
+            </a>
+
+            <a href="{% url 'management:relations_management' %}" class="module-card">
+                <i class="fas fa-link module-icon" style="color: #007bff;"></i>
+                <h3 class="module-title">Relaciones P-P</h3>
+                <p class="module-description">
+                    Gestiona las relaciones entre productos y proveedores, costos y márgenes.
+                </p>
+            </a>
+
+            <a href="{% url 'management:reports' %}" class="module-card">
+                <i class="fas fa-chart-line module-icon" style="color: #28a745;"></i>
+                <h3 class="module-title">Reportes y Análisis</h3>
+                <p class="module-description">
+                    Genera reportes detallados de ventas, márgenes y rendimiento empresarial.
+                </p>
+            </a>
+        </div>
+
+        <!-- Alertas y Actividad Reciente -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="alerts-section">
+                    <h4 class="mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Alertas del Sistema
+                    </h4>
+
+                    {% if low_stock_products > 0 %}
+                    <div class="alert-item">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        <div>
+                            <strong>Stock Bajo:</strong>
+                            {{ low_stock_products }} producto{{ low_stock_products|pluralize }} con stock menor a 10 unidades.
+                            <a href="{% url 'management:stock_alerts' %}" class="btn btn-sm btn-outline-warning ms-2">Ver detalles</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if expiring_coupons > 0 %}
+                    <div class="alert-item">
+                        <i class="fas fa-clock alert-icon"></i>
+                        <div>
+                            <strong>Cupones por Expirar:</strong>
+                            {{ expiring_coupons }} cupón{{ expiring_coupons|pluralize:"es" }} expira{{ expiring_coupons|pluralize:"n," }} en los próximos 7 días.
+                            <a href="{% url 'management:coupon_management' %}" class="btn btn-sm btn-outline-warning ms-2">Revisar</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if products_without_supplier > 0 %}
+                    <div class="alert-item">
+                        <i class="fas fa-unlink alert-icon"></i>
+                        <div>
+                            <strong>Sin Proveedor:</strong>
+                            {{ products_without_supplier }} producto{{ products_without_supplier|pluralize }} sin proveedor asignado.
+                            <a href="{% url 'management:relations_management' %}" class="btn btn-sm btn-outline-warning ms-2">Asignar</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if not low_stock_products and not expiring_coupons and not products_without_supplier %}
+                    <div class="text-center text-success">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <p class="mb-0">¡Todo está funcionando correctamente!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="alerts-section">
+                    <h4 class="mb-4">
+                        <i class="fas fa-history"></i>
+                        Actividad Reciente
+                    </h4>
+
+                    <div class="recent-activity">
+                        {% for movement in recent_stock_movements %}
+                        <div class="activity-item">
+                            <div class="activity-icon activity-icon-{% if movement.movement_type == 'in' %}success{% else %}danger{% endif %}">
+                                <i class="fas fa-{% if movement.movement_type == 'in' %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">
+                                    {% if movement.movement_type == 'in' %}Entrada{% else %}Salida{% endif %} de Stock: {{ movement.product.name }}
+                                </div>
+                                <div class="activity-time">
+                                    Cantidad: {{ movement.quantity }} | {{ movement.created_at|timesince }} atrás
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-3"></i>
+                            <p class="mb-0">No hay movimientos recientes</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Actualizar estadísticas cada 30 segundos
+    setInterval(function() {
+        $.get('{% url "management:api_statistics" %}', function(data) {
+            // Actualizar contadores si han cambiado
+            console.log('Estadísticas actualizadas:', data);
+        });
+    }, 30000);
+    
+    // Animación de entrada para las tarjetas
+    $('.stat-card, .module-card').each(function(index) {
+        $(this).css('opacity', '0').css('transform', 'translateY(20px)');
+        setTimeout(() => {
+            $(this).animate({
+                opacity: 1,
+                transform: 'translateY(0)'
+            }, 500);
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

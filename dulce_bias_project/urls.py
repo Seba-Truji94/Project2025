@@ -14,6 +14,7 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('support/', include('support.urls')),
     path('security/', include('security.urls')),
+    path('management/', include('management.urls')),  # Módulo de gestión empresarial
 ]
 
 # Configuración para servir archivos media en desarrollo

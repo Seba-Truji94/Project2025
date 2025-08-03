@@ -1,0 +1,455 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar Proveedor - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .delete-icon {
+        font-size: 4rem;
+        color: #e74a3b;
+        margin-bottom: 20px;
+    }
+    
+    .supplier-info {
+        background: #f8f9fc;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+        border-left: 5px solid #e74a3b;
+        text-align: left;
+    }
+    
+    .supplier-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 20px;
+    }
+    
+    .supplier-name {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin: 0;
+    }
+    
+    .supplier-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        margin-left: auto;
+    }
+    
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e3e6f0;
+    }
+    
+    .contact-icon {
+        width: 25px;
+        color: #858796;
+        margin-right: 10px;
+    }
+    
+    .warning-list {
+        text-align: left;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 25px;
+        margin: 25px 0;
+    }
+    
+    .warning-list ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .warning-list li {
+        margin-bottom: 10px;
+        color: #856404;
+        font-weight: 500;
+    }
+    
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .stat-card {
+        background: white;
+        border: 2px solid #e3e6f0;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9em;
+        color: #858796;
+        font-weight: 500;
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 0 10px;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .rating-stars {
+        color: #f6c23e;
+        margin: 10px 0;
+        font-size: 1.2em;
+    }
+    
+    .alternative-section {
+        background: #d1ecf1;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 25px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-trash text-danger"></i>
+            Eliminar Proveedor
+        </h1>
+        <a href="{% url 'management:supplier_management' %}" class="btn btn-secondary btn-custom">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+    </div>
+
+    <div class="delete-container">
+        <div class="delete-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h3 class="text-danger mb-3">¿Estás seguro que deseas eliminar este proveedor?</h3>
+        
+        <p class="text-muted mb-4">
+            Esta acción eliminará permanentemente el proveedor y todas sus relaciones con productos. 
+            Esta operación no se puede deshacer.
+        </p>
+        
+        <!-- Información del proveedor -->
+        <div class="supplier-info">
+            <div class="supplier-header">
+                <div>
+                    <h5 class="supplier-name">{{ object.name }}</h5>
+                    {% if object.contact_person %}
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-user"></i> {{ object.contact_person }}
+                    </p>
+                    {% endif %}
+                </div>
+                <span class="supplier-status {% if object.is_active %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                    {% if object.is_active %}Activo{% else %}Inactivo{% endif %}
+                </span>
+            </div>
+
+            <!-- Información de contacto -->
+            <div class="contact-grid">
+                {% if object.email %}
+                <div class="contact-item">
+                    <i class="fas fa-envelope contact-icon"></i>
+                    <span>{{ object.email }}</span>
+                </div>
+                {% endif %}
+                
+                {% if object.phone %}
+                <div class="contact-item">
+                    <i class="fas fa-phone contact-icon"></i>
+                    <span>{{ object.phone }}</span>
+                </div>
+                {% endif %}
+                
+                {% if object.tax_id %}
+                <div class="contact-item">
+                    <i class="fas fa-file-invoice contact-icon"></i>
+                    <span>RUT: {{ object.tax_id }}</span>
+                </div>
+                {% endif %}
+                
+                {% if object.city %}
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt contact-icon"></i>
+                    <span>{{ object.city }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Dirección completa -->
+            {% if object.address %}
+            <div class="mt-3 p-3 bg-white rounded">
+                <strong><i class="fas fa-map-marker-alt text-muted"></i> Dirección:</strong><br>
+                {{ object.address }}{% if object.city %}, {{ object.city }}{% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Calificación -->
+            {% if object.rating %}
+            <div class="rating-stars text-center mt-3">
+                <strong>Calificación: </strong>
+                {% for i in "12345" %}
+                    {% if forloop.counter <= object.rating %}
+                        <i class="fas fa-star"></i>
+                    {% else %}
+                        <i class="far fa-star"></i>
+                    {% endif %}
+                {% endfor %}
+                <span class="ml-2 text-muted">({{ object.rating }}/5)</span>
+            </div>
+            {% endif %}
+
+            <!-- Estadísticas del proveedor -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Productos Suministrados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Relaciones Activas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ object.created_at|timesince }}</div>
+                    <div class="stat-label">Tiempo Registrado</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ object.created_at|date:"d/m/Y" }}</div>
+                    <div class="stat-label">Fecha de Registro</div>
+                </div>
+            </div>
+
+            <!-- Notas -->
+            {% if object.notes %}
+            <div class="mt-3 p-3 bg-white rounded">
+                <strong><i class="fas fa-sticky-note text-muted"></i> Notas:</strong><br>
+                {{ object.notes|truncatewords:30 }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Advertencias -->
+        <div class="warning-list">
+            <h6 class="text-warning mb-3">
+                <i class="fas fa-exclamation-triangle"></i>
+                Consecuencias de eliminar este proveedor:
+            </h6>
+            <ul>
+                <li>Se eliminarán todas las relaciones con productos</li>
+                <li>Se perderá el historial de precios y condiciones</li>
+                <li>Los productos que dependen únicamente de este proveedor quedarán sin proveedor</li>
+                <li>Se eliminará todo el historial de movimientos de stock relacionados</li>
+                <li>Esta acción es irreversible y no se puede deshacer</li>
+            </ul>
+        </div>
+        
+        <!-- Formulario de confirmación -->
+        <form method="post" id="delete-form">
+            {% csrf_token %}
+            
+            <div class="form-group mt-4">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="confirm-delete" required>
+                    <label class="custom-control-label text-danger" for="confirm-delete">
+                        <strong>Confirmo que deseo eliminar permanentemente este proveedor y todas sus relaciones</strong>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group mt-3">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="understand-consequences" required>
+                    <label class="custom-control-label text-warning" for="understand-consequences">
+                        <strong>Entiendo que esta acción no se puede deshacer</strong>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-danger btn-custom" id="delete-button" disabled>
+                    <i class="fas fa-trash"></i>
+                    Eliminar Proveedor Permanentemente
+                </button>
+                
+                <a href="{% url 'management:supplier_management' %}" class="btn btn-secondary btn-custom">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+        
+        <!-- Alternativa -->
+        <div class="alternative-section">
+            <h6 class="text-info mb-3">
+                <i class="fas fa-lightbulb"></i>
+                ¿Prefieres desactivar en lugar de eliminar?
+            </h6>
+            <p class="text-muted mb-3">
+                Puedes desactivar el proveedor para que no aparezca en las listas, 
+                pero conservar todo su historial y relaciones para futuras referencias.
+            </p>
+            <a href="{% url 'management:supplier_update' object.id %}" class="btn btn-info btn-sm">
+                <i class="fas fa-edit"></i>
+                Editar Proveedor
+            </a>
+            <button class="btn btn-warning btn-sm" onclick="toggleSupplierStatus()">
+                <i class="fas fa-{% if object.is_active %}pause{% else %}play{% endif %}"></i>
+                {% if object.is_active %}Desactivar{% else %}Activar{% endif %} Proveedor
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmDelete = document.getElementById('confirm-delete');
+        const understandConsequences = document.getElementById('understand-consequences');
+        const deleteButton = document.getElementById('delete-button');
+        const deleteForm = document.getElementById('delete-form');
+        
+        // Habilitar/deshabilitar botón según checkboxes
+        function updateDeleteButton() {
+            const canDelete = confirmDelete.checked && understandConsequences.checked;
+            deleteButton.disabled = !canDelete;
+            
+            if (canDelete) {
+                deleteButton.classList.remove('btn-secondary');
+                deleteButton.classList.add('btn-danger');
+            } else {
+                deleteButton.classList.remove('btn-danger');
+                deleteButton.classList.add('btn-secondary');
+            }
+        }
+        
+        confirmDelete.addEventListener('change', updateDeleteButton);
+        understandConsequences.addEventListener('change', updateDeleteButton);
+        
+        // Confirmación adicional antes de enviar
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¡ATENCIÓN!',
+                html: `
+                    <p>Estás a punto de eliminar el proveedor:</p>
+                    <strong style="font-size: 1.2em; color: #e74a3b;">"{{ object.name }}"</strong>
+                    <p style="margin-top: 15px;">Esta acción es <strong>irreversible</strong>.</p>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74a3b',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'SÍ, ELIMINAR DEFINITIVAMENTE',
+                cancelButtonText: 'Cancelar',
+                focusCancel: true,
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar indicador de carga
+                    Swal.fire({
+                        title: 'Eliminando proveedor...',
+                        html: 'Por favor espera mientras se elimina el proveedor y todas sus relaciones',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Enviar formulario
+                    this.submit();
+                }
+            });
+        });
+        
+        // Función para cambiar estado
+        window.toggleSupplierStatus = function() {
+            const action = {{ object.is_active|yesno:"'desactivar','activar'" }};
+            
+            Swal.fire({
+                title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} proveedor?`,
+                text: `Esto ${action === 'desactivar' ? 'ocultará' : 'mostrará'} el proveedor en las listas de selección`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: action === 'desactivar' ? '#f6c23e' : '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: `Sí, ${action}`,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Aquí iría la lógica AJAX para cambiar el estado
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Estado actualizado!',
+                        text: `El proveedor ha sido ${action === 'desactivar' ? 'desactivado' : 'activado'}.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '{% url "management:supplier_management" %}';
+                    });
+                }
+            });
+        };
+        
+        // Animación de entrada
+        const container = document.querySelector('.delete-container');
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            container.style.transition = 'all 0.6s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 100);
+    });
+</script>
+{% endblock %}

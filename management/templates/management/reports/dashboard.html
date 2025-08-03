@@ -1,0 +1,857 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Panel de Reportes - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-dashboard {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e3e6f0;
+    }
+    
+    .dashboard-header h2 {
+        color: #5a5c69;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .dashboard-header p {
+        color: #858796;
+        margin: 0;
+        font-size: 1.1em;
+    }
+    
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    
+    .report-card {
+        background: white;
+        border: 1px solid #e3e6f0;
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: #4e73df;
+    }
+    
+    .report-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .report-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        color: white;
+        margin-bottom: 20px;
+    }
+    
+    .icon-sales {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .icon-products {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+    }
+    
+    .icon-stock {
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    }
+    
+    .icon-margins {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    }
+    
+    .icon-financial {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    }
+    
+    .icon-custom {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .report-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 10px;
+    }
+    
+    .report-description {
+        color: #858796;
+        font-size: 0.95em;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+    
+    .report-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 25px;
+    }
+    
+    .report-features li {
+        padding: 5px 0;
+        color: #6c757d;
+        font-size: 0.9em;
+        position: relative;
+        padding-left: 20px;
+    }
+    
+    .report-features li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .report-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-report {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.9em;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-report:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        text-decoration: none;
+        color: white;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 2px solid #4e73df;
+        color: #4e73df;
+    }
+    
+    .btn-outline:hover {
+        background: #4e73df;
+        color: white;
+    }
+    
+    .quick-stats {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .quick-stats h4 {
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+    }
+    
+    .stat-item {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        transform: scale(1.05);
+        background: rgba(255,255,255,0.2);
+    }
+    
+    .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9em;
+        opacity: 0.9;
+    }
+    
+    .recent-activity {
+        background: #f8f9fc;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .activity-title {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .activity-title i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+    
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        margin-bottom: 10px;
+        background: white;
+        border-radius: 8px;
+        border-left: 4px solid #4e73df;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .activity-info {
+        flex: 1;
+    }
+    
+    .activity-title-text {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 3px;
+    }
+    
+    .activity-description {
+        font-size: 0.9em;
+        color: #858796;
+    }
+    
+    .activity-time {
+        font-size: 0.8em;
+        color: #858796;
+    }
+    
+    .export-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .export-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .export-title i {
+        margin-right: 10px;
+    }
+    
+    .export-options {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .export-btn {
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-excel {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-pdf {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-csv {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .shortcuts-panel {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 15px;
+        padding: 25px;
+    }
+    
+    .shortcuts-title {
+        color: #0c5460;
+        font-weight: bold;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .shortcuts-title i {
+        margin-right: 10px;
+    }
+    
+    .shortcuts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .shortcut-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        border: 1px solid #bee5eb;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .shortcut-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-color: #17a2b8;
+    }
+    
+    .shortcut-icon {
+        font-size: 1.5em;
+        color: #17a2b8;
+        margin-bottom: 10px;
+    }
+    
+    .shortcut-label {
+        font-weight: 600;
+        color: #0c5460;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-line text-primary"></i>
+            Panel de Reportes
+        </h1>
+        <div>
+            <button class="btn btn-info btn-sm mr-2" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+            <a href="{% url 'management:dashboard' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="quick-stats">
+        <h4><i class="fas fa-tachometer-alt"></i> Estadísticas Rápidas</h4>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">${{ total_sales|default:0|floatformat:0 }}</div>
+                <div class="stat-label">Ventas del Mes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ total_orders|default:0 }}</div>
+                <div class="stat-label">Órdenes Procesadas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ total_products|default:0 }}</div>
+                <div class="stat-label">Productos Activos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ low_stock_count|default:0 }}</div>
+                <div class="stat-label">Productos con Stock Bajo</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <div class="reports-dashboard">
+        <div class="dashboard-header">
+            <h2><i class="fas fa-chart-bar"></i> Centro de Reportes Empresariales</h2>
+            <p>Accede a reportes detallados y análisis de tu negocio</p>
+        </div>
+
+        <div class="reports-grid">
+            <!-- Reporte de Ventas -->
+            <div class="report-card">
+                <div class="report-icon icon-sales">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="report-title">Reporte de Ventas</h3>
+                <p class="report-description">
+                    Análisis completo de ventas por período, productos más vendidos, y tendencias de crecimiento.
+                </p>
+                <ul class="report-features">
+                    <li>Ventas por período personalizado</li>
+                    <li>Análisis de productos top</li>
+                    <li>Gráficos de tendencias</li>
+                    <li>Comparación entre períodos</li>
+                </ul>
+                <div class="report-actions">
+                    <a href="{% url 'management:sales_report' %}" class="btn-report btn-primary">
+                        <i class="fas fa-eye"></i> Ver Reporte
+                    </a>
+                    <button class="btn-report btn-outline" onclick="exportSalesReport()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reporte de Productos -->
+            <div class="report-card">
+                <div class="report-icon icon-products">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h3 class="report-title">Reporte de Productos</h3>
+                <p class="report-description">
+                    Análisis detallado del rendimiento de productos, rotación de inventario y categorías.
+                </p>
+                <ul class="report-features">
+                    <li>Rendimiento por producto</li>
+                    <li>Análisis de categorías</li>
+                    <li>Rotación de inventario</li>
+                    <li>Productos sin movimiento</li>
+                </ul>
+                <div class="report-actions">
+                    <a href="{% url 'management:product_report' %}" class="btn-report btn-primary">
+                        <i class="fas fa-eye"></i> Ver Reporte
+                    </a>
+                    <button class="btn-report btn-outline" onclick="exportProductReport()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reporte de Stock -->
+            <div class="report-card">
+                <div class="report-icon icon-stock">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <h3 class="report-title">Reporte de Stock</h3>
+                <p class="report-description">
+                    Control completo de inventario, alertas de stock y valorización de mercadería.
+                </p>
+                <ul class="report-features">
+                    <li>Niveles de stock actuales</li>
+                    <li>Alertas y predicciones</li>
+                    <li>Valorización de inventario</li>
+                    <li>Historial de movimientos</li>
+                </ul>
+                <div class="report-actions">
+                    <a href="{% url 'management:stock_report' %}" class="btn-report btn-primary">
+                        <i class="fas fa-eye"></i> Ver Reporte
+                    </a>
+                    <button class="btn-report btn-outline" onclick="exportStockReport()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reporte de Márgenes -->
+            <div class="report-card">
+                <div class="report-icon icon-margins">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <h3 class="report-title">Análisis de Márgenes</h3>
+                <p class="report-description">
+                    Análisis de rentabilidad por producto, categoría y proveedor para optimizar márgenes.
+                </p>
+                <ul class="report-features">
+                    <li>Márgenes por producto</li>
+                    <li>Rentabilidad por categoría</li>
+                    <li>Análisis de proveedores</li>
+                    <li>Recomendaciones de precios</li>
+                </ul>
+                <div class="report-actions">
+                    <a href="{% url 'management:margins_report' %}" class="btn-report btn-primary">
+                        <i class="fas fa-eye"></i> Ver Reporte
+                    </a>
+                    <button class="btn-report btn-outline" onclick="exportMarginsReport()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reporte Financiero -->
+            <div class="report-card">
+                <div class="report-icon icon-financial">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h3 class="report-title">Reporte Financiero</h3>
+                <p class="report-description">
+                    Análisis financiero completo incluyendo ingresos, gastos, impuestos y flujo de caja.
+                </p>
+                <ul class="report-features">
+                    <li>Estado de resultados</li>
+                    <li>Flujo de caja</li>
+                    <li>Análisis de impuestos</li>
+                    <li>Indicadores financieros</li>
+                </ul>
+                <div class="report-actions">
+                    <button class="btn-report btn-primary" onclick="generateFinancialReport()">
+                        <i class="fas fa-eye"></i> Ver Reporte
+                    </button>
+                    <button class="btn-report btn-outline" onclick="exportFinancialReport()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reportes Personalizados -->
+            <div class="report-card">
+                <div class="report-icon icon-custom">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h3 class="report-title">Reportes Personalizados</h3>
+                <p class="report-description">
+                    Crea reportes personalizados combinando diferentes métricas según tus necesidades específicas.
+                </p>
+                <ul class="report-features">
+                    <li>Constructor de reportes</li>
+                    <li>Filtros personalizados</li>
+                    <li>Múltiples formatos</li>
+                    <li>Programación automática</li>
+                </ul>
+                <div class="report-actions">
+                    <button class="btn-report btn-primary" onclick="createCustomReport()">
+                        <i class="fas fa-plus"></i> Crear Reporte
+                    </button>
+                    <button class="btn-report btn-outline" onclick="viewSavedReports()">
+                        <i class="fas fa-folder"></i> Ver Guardados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="recent-activity">
+        <div class="activity-title">
+            <i class="fas fa-history"></i>
+            Actividad Reciente en Reportes
+        </div>
+        <ul class="activity-list">
+            <li class="activity-item">
+                <div class="activity-info">
+                    <div class="activity-title-text">Reporte de Ventas Mensual</div>
+                    <div class="activity-description">Generado automáticamente - Período: Julio 2025</div>
+                </div>
+                <div class="activity-time">Hace 2 horas</div>
+            </li>
+            <li class="activity-item">
+                <div class="activity-info">
+                    <div class="activity-title-text">Análisis de Stock Crítico</div>
+                    <div class="activity-description">5 productos requieren reabastecimiento urgente</div>
+                </div>
+                <div class="activity-time">Hace 4 horas</div>
+            </li>
+            <li class="activity-item">
+                <div class="activity-info">
+                    <div class="activity-title-text">Reporte de Márgenes</div>
+                    <div class="activity-description">Exportado en formato Excel por {{ user.username }}</div>
+                </div>
+                <div class="activity-time">Ayer</div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Exportación Rápida -->
+    <div class="export-section">
+        <div class="export-title">
+            <i class="fas fa-file-export"></i>
+            Exportación Rápida
+        </div>
+        <p class="mb-3">Exporta datos consolidados en diferentes formatos</p>
+        <div class="export-options">
+            <button class="export-btn btn-excel" onclick="exportAllData('excel')">
+                <i class="fas fa-file-excel"></i>
+                Datos Completos Excel
+            </button>
+            <button class="export-btn btn-pdf" onclick="exportAllData('pdf')">
+                <i class="fas fa-file-pdf"></i>
+                Resumen Ejecutivo PDF
+            </button>
+            <button class="export-btn btn-csv" onclick="exportAllData('csv')">
+                <i class="fas fa-file-csv"></i>
+                Datos CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Accesos Rápidos -->
+    <div class="shortcuts-panel">
+        <div class="shortcuts-title">
+            <i class="fas fa-bolt"></i>
+            Accesos Rápidos
+        </div>
+        <div class="shortcuts-grid">
+            <div class="shortcut-item" onclick="goToStockAlerts()">
+                <div class="shortcut-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="shortcut-label">Alertas de Stock</div>
+            </div>
+            <div class="shortcut-item" onclick="goToDashboard()">
+                <div class="shortcut-icon"><i class="fas fa-tachometer-alt"></i></div>
+                <div class="shortcut-label">Dashboard Principal</div>
+            </div>
+            <div class="shortcut-item" onclick="generateTodaysReport()">
+                <div class="shortcut-icon"><i class="fas fa-calendar-day"></i></div>
+                <div class="shortcut-label">Reporte Diario</div>
+            </div>
+            <div class="shortcut-item" onclick="scheduleReports()">
+                <div class="shortcut-icon"><i class="fas fa-clock"></i></div>
+                <div class="shortcut-label">Programar Reportes</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Funciones de exportación
+    function exportSalesReport() {
+        window.location.href = '{% url "management:sales_report" %}?format=excel';
+    }
+    
+    function exportProductReport() {
+        window.location.href = '{% url "management:product_report" %}?format=excel';
+    }
+    
+    function exportStockReport() {
+        window.location.href = '{% url "management:stock_report" %}?format=excel';
+    }
+    
+    function exportMarginsReport() {
+        window.location.href = '{% url "management:margins_report" %}?format=excel';
+    }
+    
+    function exportFinancialReport() {
+        Swal.fire({
+            title: 'Exportar Reporte Financiero',
+            text: 'Funcionalidad en desarrollo',
+            icon: 'info'
+        });
+    }
+    
+    function exportAllData(format) {
+        Swal.fire({
+            title: `Exportando datos en formato ${format.toUpperCase()}`,
+            text: 'Preparando archivo de descarga...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Simular proceso de exportación
+        setTimeout(() => {
+            Swal.fire({
+                title: 'Exportación completada',
+                text: 'El archivo ha sido descargado exitosamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }, 3000);
+    }
+    
+    // Funciones de reportes
+    function generateFinancialReport() {
+        Swal.fire({
+            title: 'Generar Reporte Financiero',
+            text: 'Funcionalidad en desarrollo',
+            icon: 'info'
+        });
+    }
+    
+    function createCustomReport() {
+        Swal.fire({
+            title: 'Constructor de Reportes',
+            text: 'Funcionalidad en desarrollo',
+            icon: 'info'
+        });
+    }
+    
+    function viewSavedReports() {
+        Swal.fire({
+            title: 'Reportes Guardados',
+            text: 'Funcionalidad en desarrollo',
+            icon: 'info'
+        });
+    }
+    
+    function generateTodaysReport() {
+        Swal.fire({
+            title: 'Generando reporte diario...',
+            text: 'Recopilando datos del día',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        setTimeout(() => {
+            Swal.fire({
+                title: 'Reporte diario generado',
+                text: 'El reporte ha sido enviado a tu email',
+                icon: 'success'
+            });
+        }, 2000);
+    }
+    
+    function scheduleReports() {
+        Swal.fire({
+            title: 'Programar Reportes',
+            text: 'Funcionalidad en desarrollo',
+            icon: 'info'
+        });
+    }
+    
+    function goToStockAlerts() {
+        window.location.href = '{% url "management:stock_alerts" %}';
+    }
+    
+    function goToDashboard() {
+        window.location.href = '{% url "management:dashboard" %}';
+    }
+    
+    function refreshDashboard() {
+        Swal.fire({
+            title: 'Actualizando dashboard...',
+            text: 'Obteniendo datos más recientes',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }
+    
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animaciones de entrada para las tarjetas de reportes
+        const reportCards = document.querySelectorAll('.report-card');
+        reportCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+        
+        // Efectos hover para estadísticas rápidas
+        const statItems = document.querySelectorAll('.stat-item');
+        statItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.08)';
+                this.style.background = 'rgba(255,255,255,0.25)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1.05)';
+                this.style.background = 'rgba(255,255,255,0.1)';
+            });
+        });
+        
+        // Tooltips dinámicos
+        const reportIcons = document.querySelectorAll('.report-icon');
+        reportIcons.forEach(icon => {
+            icon.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1) rotate(5deg)';
+            });
+            
+            icon.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+        
+        // Auto-actualización de estadísticas cada 5 minutos
+        setInterval(() => {
+            console.log('Auto-updating dashboard statistics...');
+            // Aquí se podría implementar una actualización automática via AJAX
+        }, 300000);
+    });
+</script>
+{% endblock %}

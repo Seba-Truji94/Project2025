@@ -1,0 +1,496 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar Movimiento de Stock - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .warning-icon {
+        font-size: 4em;
+        color: #e74a3b;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .movement-info {
+        background: #f8f9fc;
+        border-left: 4px solid #e74a3b;
+        border-radius: 0 10px 10px 0;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .movement-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .movement-type {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #5a5c69;
+    }
+    
+    .movement-date {
+        color: #858796;
+        font-size: 0.9em;
+    }
+    
+    .movement-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .detail-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #e3e6f0;
+    }
+    
+    .detail-label {
+        font-size: 0.85em;
+        color: #858796;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    
+    .detail-value {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #5a5c69;
+    }
+    
+    .detail-value.quantity {
+        font-size: 1.3em;
+    }
+    
+    .detail-value.positive {
+        color: #28a745;
+    }
+    
+    .detail-value.negative {
+        color: #e74a3b;
+    }
+    
+    .warning-box {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 30px 0;
+    }
+    
+    .warning-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .warning-list {
+        text-align: left;
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .warning-list li {
+        margin-bottom: 8px;
+    }
+    
+    .impact-summary {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+    }
+    
+    .impact-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .impact-title i {
+        margin-right: 10px;
+    }
+    
+    .impact-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .impact-item {
+        text-align: center;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #f6c23e;
+    }
+    
+    .impact-number {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #e58e26;
+        margin-bottom: 5px;
+    }
+    
+    .impact-label {
+        font-size: 0.9em;
+        color: #856404;
+    }
+    
+    .btn-custom {
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 0 10px;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+        border: none;
+    }
+    
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+        border: none;
+    }
+    
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #545b62 0%, #3d4043 100%);
+    }
+    
+    .confirmation-checkbox {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fc;
+        border-radius: 10px;
+        border: 2px solid #e3e6f0;
+    }
+    
+    .confirmation-checkbox label {
+        font-weight: 600;
+        color: #5a5c69;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+    
+    .confirmation-checkbox input[type="checkbox"] {
+        margin-right: 10px;
+        transform: scale(1.2);
+    }
+    
+    .alternative-actions {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 25px 0;
+    }
+    
+    .alternative-title {
+        color: #0c5460;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .alternative-title i {
+        margin-right: 10px;
+    }
+    
+    .alternative-actions .btn {
+        margin: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-trash text-danger"></i>
+            Eliminar Movimiento de Stock
+        </h1>
+        <a href="{% url 'management:stock_management' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver a Stock
+        </a>
+    </div>
+
+    <div class="delete-container">
+        <!-- Icono de advertencia -->
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h2 class="mb-4 text-danger">¿Eliminar este movimiento de stock?</h2>
+        <p class="lead text-muted mb-4">
+            Esta acción <strong>no se puede deshacer</strong> y afectará el historial de inventario.
+        </p>
+        
+        <!-- Información del movimiento -->
+        <div class="movement-info">
+            <div class="movement-header">
+                <div class="movement-type">
+                    {% if movement.movement_type == 'entrada' %}
+                        <i class="fas fa-arrow-up text-success"></i> Entrada de Stock
+                    {% elif movement.movement_type == 'salida' %}
+                        <i class="fas fa-arrow-down text-danger"></i> Salida de Stock
+                    {% elif movement.movement_type == 'ajuste' %}
+                        <i class="fas fa-cog text-warning"></i> Ajuste de Stock
+                    {% else %}
+                        <i class="fas fa-exchange-alt text-info"></i> Transferencia
+                    {% endif %}
+                </div>
+                <div class="movement-date">
+                    {{ movement.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            
+            <div class="movement-details">
+                <div class="detail-item">
+                    <div class="detail-label">Producto</div>
+                    <div class="detail-value">{{ movement.product.name }}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Cantidad</div>
+                    <div class="detail-value quantity {% if movement.movement_type == 'entrada' %}positive{% elif movement.movement_type == 'salida' %}negative{% endif %}">
+                        {% if movement.movement_type == 'entrada' %}+{% elif movement.movement_type == 'salida' %}-{% endif %}{{ movement.quantity }}
+                    </div>
+                </div>
+                
+                {% if movement.reason %}
+                <div class="detail-item">
+                    <div class="detail-label">Motivo</div>
+                    <div class="detail-value">{{ movement.reason }}</div>
+                </div>
+                {% endif %}
+                
+                {% if movement.reference %}
+                <div class="detail-item">
+                    <div class="detail-label">Referencia</div>
+                    <div class="detail-value">{{ movement.reference }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="detail-item">
+                    <div class="detail-label">Usuario</div>
+                    <div class="detail-value">{{ movement.user.get_full_name|default:movement.user.username }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advertencias -->
+        <div class="warning-box">
+            <div class="warning-title">
+                <i class="fas fa-exclamation-triangle"></i> Importante
+            </div>
+            <ul class="warning-list">
+                <li>Este movimiento será eliminado permanentemente del historial</li>
+                <li>Los reportes históricos ya generados no se verán afectados</li>
+                <li>El stock actual del producto podría verse afectado</li>
+                <li>Se registrará esta acción en el log de auditoría</li>
+            </ul>
+        </div>
+        
+        <!-- Impacto en el stock -->
+        <div class="impact-summary">
+            <div class="impact-title">
+                <i class="fas fa-chart-line"></i>
+                Impacto en el Stock
+            </div>
+            <div class="impact-details">
+                <div class="impact-item">
+                    <div class="impact-number">{{ current_stock }}</div>
+                    <div class="impact-label">Stock Actual</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-number">
+                        {% if movement.movement_type == 'entrada' %}
+                            {{ movement.quantity }}
+                        {% elif movement.movement_type == 'salida' %}
+                            +{{ movement.quantity }}
+                        {% else %}
+                            ~
+                        {% endif %}
+                    </div>
+                    <div class="impact-label">Cambio</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-number">
+                        {% if movement.movement_type == 'entrada' %}
+                            {{ current_stock|add:movement.quantity|default:"-" }}
+                        {% elif movement.movement_type == 'salida' %}
+                            {{ current_stock|add:movement.quantity|default:"-" }}
+                        {% else %}
+                            {{ current_stock }}
+                        {% endif %}
+                    </div>
+                    <div class="impact-label">Stock Resultante</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acciones alternativas -->
+        <div class="alternative-actions">
+            <div class="alternative-title">
+                <i class="fas fa-lightbulb"></i>
+                Alternativas recomendadas
+            </div>
+            <p class="mb-3">Antes de eliminar, considera estas opciones:</p>
+            <a href="{% url 'management:stock_form' %}" class="btn btn-info btn-sm">
+                <i class="fas fa-plus"></i> Crear Movimiento de Corrección
+            </a>
+            <a href="{% url 'management:stock_management' %}" class="btn btn-outline-info btn-sm">
+                <i class="fas fa-list"></i> Ver Historial Completo
+            </a>
+        </div>
+        
+        <!-- Confirmación -->
+        <form method="post" id="delete-form">
+            {% csrf_token %}
+            
+            <div class="confirmation-checkbox">
+                <label>
+                    <input type="checkbox" id="confirm-delete" required>
+                    Confirmo que entiendo las consecuencias y deseo eliminar este movimiento
+                </label>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-danger btn-custom" id="delete-btn" disabled>
+                    <i class="fas fa-trash"></i>
+                    Sí, Eliminar Movimiento
+                </button>
+                <a href="{% url 'management:stock_management' %}" class="btn btn-secondary btn-custom">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmCheckbox = document.getElementById('confirm-delete');
+        const deleteBtn = document.getElementById('delete-btn');
+        const deleteForm = document.getElementById('delete-form');
+        
+        // Habilitar/deshabilitar botón de eliminar
+        confirmCheckbox.addEventListener('change', function() {
+            deleteBtn.disabled = !this.checked;
+            
+            if (this.checked) {
+                deleteBtn.classList.remove('btn-secondary');
+                deleteBtn.classList.add('btn-danger');
+            } else {
+                deleteBtn.classList.remove('btn-danger');
+                deleteBtn.classList.add('btn-secondary');
+            }
+        });
+        
+        // Confirmación adicional antes de enviar
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¿Estás completamente seguro?',
+                text: 'Esta acción eliminará permanentemente el movimiento de stock',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74a3b',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar loading
+                    Swal.fire({
+                        title: 'Eliminando...',
+                        text: 'Por favor espera mientras se procesa la eliminación',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Enviar formulario
+                    this.submit();
+                }
+            });
+        });
+        
+        // Animación de entrada
+        const container = document.querySelector('.delete-container');
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            container.style.transition = 'all 0.6s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 100);
+        
+        // Efecto de hover en las acciones alternativas
+        const alternativeButtons = document.querySelectorAll('.alternative-actions .btn');
+        alternativeButtons.forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,458 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Gestión de Cupones - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .coupon-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .coupon-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .coupon-code {
+        font-family: 'Courier New', monospace;
+        background: #f8f9fc;
+        padding: 8px 12px;
+        border-radius: 5px;
+        border: 2px dashed #d1d3e2;
+        font-weight: bold;
+        color: #5a5c69;
+    }
+    
+    .discount-badge {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    
+    .usage-progress {
+        background: #f8f9fc;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 8px;
+        margin: 10px 0;
+    }
+    
+    .usage-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #20c997);
+        transition: width 0.3s ease;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-ticket-alt text-primary"></i>
+            Gestión de Cupones
+        </h1>
+        <a href="{% url 'management:coupon_create' %}" class="btn btn-primary btn-custom">
+            <i class="fas fa-plus"></i> Nuevo Cupón
+        </a>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Cupones
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ coupons|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Cupones Activos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ coupons|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Próximos a Vencer
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Usos Totales
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-container">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="filter-status">Estado:</label>
+                <select id="filter-status" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
+                    <option value="expired">Vencidos</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filter-type">Tipo de Descuento:</label>
+                <select id="filter-type" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="percentage">Porcentaje</option>
+                    <option value="fixed">Monto Fijo</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search-code">Buscar por Código:</label>
+                <input type="text" id="search-code" class="form-control" placeholder="Ingresa el código del cupón...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-secondary btn-custom w-100" onclick="clearFilters()">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Cupones -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> Lista de Cupones de Descuento
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if coupons %}
+                <div class="row" id="coupons-container">
+                    {% for coupon in coupons %}
+                    <div class="col-lg-6 coupon-item" 
+                         data-status="{% if coupon.is_active %}active{% else %}inactive{% endif %}"
+                         data-type="{{ coupon.discount_type }}"
+                         data-code="{{ coupon.code|lower }}">
+                        <div class="coupon-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="mb-1">{{ coupon.name }}</h5>
+                                    <div class="coupon-code">{{ coupon.code }}</div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                            data-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="{% url 'management:coupon_update' coupon.id %}">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <button class="dropdown-item" onclick="toggleCoupon({{ coupon.id }})">
+                                            <i class="fas fa-{% if coupon.is_active %}pause{% else %}play{% endif %}"></i>
+                                            {% if coupon.is_active %}Desactivar{% else %}Activar{% endif %}
+                                        </button>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="{% url 'management:coupon_delete' coupon.id %}">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <span class="badge badge-{% if coupon.discount_type == 'percentage' %}primary{% else %}success{% endif %} discount-badge">
+                                        {% if coupon.discount_type == 'percentage' %}
+                                            {{ coupon.discount_value }}%
+                                        {% else %}
+                                            ${{ coupon.discount_value }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <span class="badge badge-{% if coupon.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if coupon.is_active %}Activo{% else %}Inactivo{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {% if coupon.description %}
+                            <p class="text-muted small mb-2">{{ coupon.description }}</p>
+                            {% endif %}
+
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <div class="text-xs text-muted">USOS</div>
+                                    <div class="font-weight-bold">0/{{ coupon.max_uses|default:"∞" }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-xs text-muted">MÍNIMO</div>
+                                    <div class="font-weight-bold">${{ coupon.minimum_order_amount|default:"0" }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-xs text-muted">TIPO</div>
+                                    <div class="font-weight-bold">{{ coupon.get_usage_type_display }}</div>
+                                </div>
+                            </div>
+
+                            {% if coupon.max_uses %}
+                            <div class="usage-progress">
+                                <div class="usage-bar" style="width: 0%"></div>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between text-xs text-muted">
+                                <span>
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Válido desde: {{ coupon.valid_from|date:"d/m/Y" }}
+                                </span>
+                                {% if coupon.valid_until %}
+                                <span>
+                                    <i class="fas fa-calendar-times"></i>
+                                    Hasta: {{ coupon.valid_until|date:"d/m/Y" }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-ticket-alt fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">No hay cupones registrados</h5>
+                    <p class="text-muted">Comienza creando tu primer cupón de descuento.</p>
+                    <a href="{% url 'management:coupon_create' %}" class="btn btn-primary btn-custom">
+                        <i class="fas fa-plus"></i> Crear Primer Cupón
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <nav aria-label="Paginación de cupones">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filtrado de cupones
+    function filterCoupons() {
+        const statusFilter = document.getElementById('filter-status').value;
+        const typeFilter = document.getElementById('filter-type').value;
+        const searchCode = document.getElementById('search-code').value.toLowerCase();
+        
+        const coupons = document.querySelectorAll('.coupon-item');
+        
+        coupons.forEach(coupon => {
+            let showCoupon = true;
+            
+            // Filtro por estado
+            if (statusFilter && coupon.dataset.status !== statusFilter) {
+                showCoupon = false;
+            }
+            
+            // Filtro por tipo
+            if (typeFilter && coupon.dataset.type !== typeFilter) {
+                showCoupon = false;
+            }
+            
+            // Filtro por código
+            if (searchCode && !coupon.dataset.code.includes(searchCode)) {
+                showCoupon = false;
+            }
+            
+            coupon.style.display = showCoupon ? 'block' : 'none';
+        });
+    }
+    
+    // Limpiar filtros
+    function clearFilters() {
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-type').value = '';
+        document.getElementById('search-code').value = '';
+        filterCoupons();
+    }
+    
+    // Activar/Desactivar cupón
+    function toggleCoupon(couponId) {
+        fetch(`/management/cupones/${couponId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al actualizar el cupón.'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema de conexión.'
+            });
+        });
+    }
+    
+    // Event listeners
+    document.getElementById('filter-status').addEventListener('change', filterCoupons);
+    document.getElementById('filter-type').addEventListener('change', filterCoupons);
+    document.getElementById('search-code').addEventListener('input', filterCoupons);
+    
+    // Animaciones de carga
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.coupon-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

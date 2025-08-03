@@ -24,10 +24,27 @@
                     <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-edit"></i> Editar Perfil
                     </a>
+                    
+                    <!-- Acceso directo a Gestión Empresarial para superusuarios -->
+                    {% if user.is_superuser %}
+                    <div class="mt-3 p-3 bg-gradient-primary text-white rounded">
+                        <div class="text-center">
+                            <i class="fas fa-crown fa-2x mb-2"></i>
+                            <h6 class="mb-2">Panel Empresarial</h6>
+                            <a href="{% url 'management:dashboard' %}" class="btn btn-light btn-sm fw-bold">
+                                <i class="fas fa-cogs me-1"></i> Acceder Ahora
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="list-group mt-3">
+                <!-- Navegación principal del perfil -->
+                <div class="list-group-item list-group-item-action bg-light">
+                    <small class="text-muted fw-bold">MI CUENTA</small>
+                </div>
                 <a href="#profile-info" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
                     <i class="fas fa-user me-2"></i>Información Personal
                 </a>
@@ -43,11 +60,125 @@
                 <a href="#settings" class="list-group-item list-group-item-action" data-bs-toggle="pill">
                     <i class="fas fa-cog me-2"></i>Configuración
                 </a>
+                
+                <!-- Gestión Empresarial (solo para superusuarios) -->
+                {% if user.is_superuser %}
+                <div class="list-group-item list-group-item-action bg-gradient-primary text-white mt-2">
+                    <small class="fw-bold">
+                        <i class="fas fa-crown me-1"></i>GESTIÓN EMPRESARIAL
+                    </small>
+                </div>
+                <a href="{% url 'management:dashboard' %}" class="list-group-item list-group-item-action bg-primary-subtle border-primary">
+                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                    <span class="fw-bold text-primary">Dashboard Principal</span>
+                </a>
+                <a href="{% url 'management:tax_management' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-percentage me-2"></i>Gestión de Impuestos
+                </a>
+                <a href="{% url 'management:coupon_management' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt me-2"></i>Cupones y Descuentos
+                </a>
+                <a href="{% url 'management:supplier_management' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-truck me-2"></i>Proveedores
+                </a>
+                <a href="{% url 'management:stock_management' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-boxes me-2"></i>Control de Stock
+                </a>
+                <a href="{% url 'management:relations_management' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-link me-2"></i>Relaciones Proveedor-Producto
+                </a>
+                <a href="{% url 'management:reports' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-line me-2"></i>Reportes y Análisis
+                </a>
+                
+                <!-- Divider -->
+                <div class="list-group-item list-group-item-action bg-light mt-1">
+                    <small class="text-muted fw-bold">ADMINISTRACIÓN LEGACY</small>
+                </div>
+                <a href="{% url 'orders:admin_dashboard' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-shopping-bag me-2"></i>Admin Pedidos
+                </a>
+                <a href="{% url 'support:admin_dashboard' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-headset me-2"></i>Admin Soporte
+                </a>
+                {% endif %}
             </div>
         </div>
 
         <!-- Contenido principal -->
         <div class="col-md-9">
+            <!-- Panel de Gestión Empresarial (solo para superusuarios) -->
+            {% if user.is_superuser %}
+            <div class="card shadow-sm mb-4 border-primary">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-crown me-2"></i>Panel de Gestión Empresarial
+                        </h5>
+                        <a href="{% url 'management:dashboard' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Abrir Panel Completo
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'management:dashboard' %}" class="text-decoration-none">
+                                <div class="bg-primary-subtle rounded p-3 h-100 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-tachometer-alt fa-2x text-primary mb-2"></i>
+                                    <h6 class="mb-0 text-primary">Dashboard</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'management:stock_management' %}" class="text-decoration-none">
+                                <div class="bg-warning-subtle rounded p-3 h-100 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-boxes fa-2x text-warning mb-2"></i>
+                                    <h6 class="mb-0 text-warning">Stock</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'management:supplier_management' %}" class="text-decoration-none">
+                                <div class="bg-success-subtle rounded p-3 h-100 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-truck fa-2x text-success mb-2"></i>
+                                    <h6 class="mb-0 text-success">Proveedores</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'management:coupon_management' %}" class="text-decoration-none">
+                                <div class="bg-info-subtle rounded p-3 h-100 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-ticket-alt fa-2x text-info mb-2"></i>
+                                    <h6 class="mb-0 text-info">Cupones</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'management:tax_management' %}" class="text-decoration-none">
+                                <div class="bg-secondary-subtle rounded p-3 h-100 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-percentage fa-2x text-secondary mb-2"></i>
+                                    <h6 class="mb-0 text-secondary">Impuestos</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'management:reports' %}" class="text-decoration-none">
+                                <div class="bg-danger-subtle rounded p-3 h-100 d-flex flex-column justify-content-center">
+                                    <i class="fas fa-chart-line fa-2x text-danger mb-2"></i>
+                                    <h6 class="mb-0 text-danger">Reportes</h6>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Acceso Empresarial Activado:</strong> Tienes permisos de superusuario para gestionar todos los aspectos del negocio.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
             <div class="tab-content">
                 <!-- Información Personal -->
                 <div class="tab-pane fade show active" id="profile-info">
@@ -372,5 +503,130 @@
     background-color: var(--primary-color);
     border-color: var(--primary-color);
 }
+
+/* Estilos para la gestión empresarial */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.border-primary {
+    border-color: #667eea !important;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+.bg-warning-subtle {
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+.bg-success-subtle {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.bg-info-subtle {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.bg-secondary-subtle {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.bg-danger-subtle {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* Efectos hover para las tarjetas de gestión */
+.card-body .col-md-2 a > div {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.card-body .col-md-2 a:hover > div {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.card-body .col-md-2 a:hover .bg-primary-subtle {
+    border-color: #667eea;
+}
+
+.card-body .col-md-2 a:hover .bg-warning-subtle {
+    border-color: #ff9800;
+}
+
+.card-body .col-md-2 a:hover .bg-success-subtle {
+    border-color: #4caf50;
+}
+
+.card-body .col-md-2 a:hover .bg-info-subtle {
+    border-color: #2196f3;
+}
+
+.card-body .col-md-2 a:hover .bg-secondary-subtle {
+    border-color: #6c757d;
+}
+
+.card-body .col-md-2 a:hover .bg-danger-subtle {
+    border-color: #f44336;
+}
+
+/* Panel lateral empresarial */
+.list-group-item.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.list-group-item.bg-primary-subtle.border-primary {
+    background-color: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Bootstrap pills/tabs usando JavaScript vanilla
+    const tabTriggers = document.querySelectorAll('[data-bs-toggle="pill"]');
+    
+    tabTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remover clases activas de todos los tabs
+            tabTriggers.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Agregar clase activa al tab clickeado
+            this.classList.add('active');
+            
+            // Ocultar todos los tab-panes
+            const allTabPanes = document.querySelectorAll('.tab-pane');
+            allTabPanes.forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            // Mostrar el tab-pane correspondiente
+            const targetSelector = this.getAttribute('href');
+            const targetPane = document.querySelector(targetSelector);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        });
+    });
+    
+    // Animaciones suaves para las tarjetas de gestión empresarial
+    const managementCards = document.querySelectorAll('.col-md-2 a > div');
+    managementCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
 {% endblock %}

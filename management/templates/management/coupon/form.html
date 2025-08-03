@@ -1,0 +1,401 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Editar Cupón{% else %}Crear Cupón{% endif %} - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e3e6f0;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .discount-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    
+    .preview-code {
+        font-family: 'Courier New', monospace;
+        background: rgba(255,255,255,0.2);
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 2px dashed rgba(255,255,255,0.5);
+        font-weight: bold;
+        font-size: 1.2em;
+        margin: 15px 0;
+    }
+    
+    .preview-discount {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .help-text {
+        font-size: 0.875em;
+        color: #858796;
+        margin-top: 5px;
+    }
+    
+    .section-title {
+        color: #5a5c69;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e3e6f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} text-primary"></i>
+            {% if object %}Editar Cupón: {{ object.code }}{% else %}Crear Nuevo Cupón{% endif %}
+        </h1>
+        <a href="{% url 'management:coupon_management' %}" class="btn btn-secondary btn-custom">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Formulario -->
+        <div class="col-lg-8">
+            <div class="form-container">
+                <form method="post" id="coupon-form">
+                    {% csrf_token %}
+                    
+                    <!-- Información Básica -->
+                    <h4 class="section-title">
+                        <i class="fas fa-info-circle"></i> Información Básica
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_code">Código del Cupón *</label>
+                                {{ form.code }}
+                                <div class="help-text">Código único que los clientes usarán para aplicar el descuento</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_name">Nombre del Cupón *</label>
+                                {{ form.name }}
+                                <div class="help-text">Nombre descriptivo para identificar el cupón internamente</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_description">Descripción</label>
+                        {{ form.description }}
+                        <div class="help-text">Descripción opcional que verán los clientes</div>
+                    </div>
+                    
+                    <!-- Configuración del Descuento -->
+                    <h4 class="section-title">
+                        <i class="fas fa-percentage"></i> Configuración del Descuento
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_discount_type">Tipo de Descuento *</label>
+                                {{ form.discount_type }}
+                                <div class="help-text">Porcentaje o monto fijo</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_discount_value">Valor del Descuento *</label>
+                                {{ form.discount_value }}
+                                <div class="help-text">Número sin símbolos (ej: 10 para 10% o $10)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_minimum_order_amount">Monto Mínimo de Pedido</label>
+                                {{ form.minimum_order_amount }}
+                                <div class="help-text">Monto mínimo requerido para usar el cupón</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_maximum_discount_amount">Descuento Máximo</label>
+                                {{ form.maximum_discount_amount }}
+                                <div class="help-text">Límite máximo de descuento (solo para porcentajes)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Restricciones de Uso -->
+                    <h4 class="section-title">
+                        <i class="fas fa-user-check"></i> Restricciones de Uso
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_usage_type">Tipo de Uso *</label>
+                                {{ form.usage_type }}
+                                <div class="help-text">Quién puede usar este cupón</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_max_uses">Máximo de Usos</label>
+                                {{ form.max_uses }}
+                                <div class="help-text">Límite total de usos (dejar vacío para ilimitado)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Período de Validez -->
+                    <h4 class="section-title">
+                        <i class="fas fa-calendar-alt"></i> Período de Validez
+                    </h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_valid_from">Válido Desde *</label>
+                                {{ form.valid_from }}
+                                <div class="help-text">Fecha y hora de inicio de validez</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_valid_until">Válido Hasta</label>
+                                {{ form.valid_until }}
+                                <div class="help-text">Fecha y hora de vencimiento (opcional)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Estado -->
+                    <h4 class="section-title">
+                        <i class="fas fa-toggle-on"></i> Estado
+                    </h4>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            {{ form.is_active }}
+                            <label class="custom-control-label" for="id_is_active">
+                                Cupón Activo
+                            </label>
+                        </div>
+                        <div class="help-text">Solo los cupones activos pueden ser utilizados por los clientes</div>
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary btn-custom mr-3">
+                            <i class="fas fa-save"></i>
+                            {% if object %}Actualizar Cupón{% else %}Crear Cupón{% endif %}
+                        </button>
+                        <a href="{% url 'management:coupon_management' %}" class="btn btn-secondary btn-custom">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Vista Previa -->
+        <div class="col-lg-4">
+            <div class="discount-preview">
+                <h5><i class="fas fa-eye"></i> Vista Previa</h5>
+                <div class="preview-code" id="preview-code">CODIGO</div>
+                <div class="preview-discount" id="preview-discount">0%</div>
+                <p id="preview-description">Descripción del cupón</p>
+                
+                <div class="text-left mt-4">
+                    <small>
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="preview-details">Detalles del cupón aparecerán aquí</span>
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Consejos -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-lightbulb"></i> Consejos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Usa códigos fáciles de recordar
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Define fechas de validez claras
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Establece límites de uso apropiados
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success"></i>
+                            Prueba el cupón antes de publicarlo
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updatePreview() {
+        // Obtener valores del formulario
+        const code = document.getElementById('id_code').value || 'CODIGO';
+        const discountType = document.getElementById('id_discount_type').value;
+        const discountValue = document.getElementById('id_discount_value').value || '0';
+        const description = document.getElementById('id_description').value || 'Descripción del cupón';
+        const minAmount = document.getElementById('id_minimum_order_amount').value;
+        const maxUses = document.getElementById('id_max_uses').value;
+        
+        // Actualizar vista previa
+        document.getElementById('preview-code').textContent = code.toUpperCase();
+        document.getElementById('preview-description').textContent = description;
+        
+        // Actualizar descuento
+        let discountText = discountValue;
+        if (discountType === 'percentage') {
+            discountText += '%';
+        } else {
+            discountText = '$' + discountText;
+        }
+        document.getElementById('preview-discount').textContent = discountText;
+        
+        // Actualizar detalles
+        let details = [];
+        if (minAmount) {
+            details.push(`Mínimo: $${minAmount}`);
+        }
+        if (maxUses) {
+            details.push(`Usos: ${maxUses}`);
+        }
+        
+        document.getElementById('preview-details').textContent = 
+            details.length > 0 ? details.join(' • ') : 'Sin restricciones adicionales';
+    }
+    
+    // Event listeners para actualizar vista previa
+    document.addEventListener('DOMContentLoaded', function() {
+        // Campos que afectan la vista previa
+        const fields = ['id_code', 'id_discount_type', 'id_discount_value', 'id_description', 'id_minimum_order_amount', 'id_max_uses'];
+        
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', updatePreview);
+                field.addEventListener('change', updatePreview);
+            }
+        });
+        
+        // Actualizar vista previa inicial
+        updatePreview();
+        
+        // Validación del formulario
+        document.getElementById('coupon-form').addEventListener('submit', function(e) {
+            const code = document.getElementById('id_code').value;
+            const discountValue = document.getElementById('id_discount_value').value;
+            
+            if (!code.trim()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El código del cupón es requerido'
+                });
+                return;
+            }
+            
+            if (!discountValue || parseFloat(discountValue) <= 0) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El valor del descuento debe ser mayor a 0'
+                });
+                return;
+            }
+        });
+    });
+    
+    // Generar código automático
+    function generateCode() {
+        const name = document.getElementById('id_name').value.toUpperCase();
+        if (name) {
+            const cleanName = name.replace(/[^A-Z0-9]/g, '').substring(0, 6);
+            const random = Math.floor(Math.random() * 100);
+            const code = cleanName + random.toString().padStart(2, '0');
+            document.getElementById('id_code').value = code;
+            updatePreview();
+        }
+    }
+    
+    // Agregar botón para generar código (opcional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const codeField = document.getElementById('id_code');
+        if (codeField && !codeField.value) {
+            const generateBtn = document.createElement('button');
+            generateBtn.type = 'button';
+            generateBtn.className = 'btn btn-sm btn-outline-primary mt-1';
+            generateBtn.innerHTML = '<i class="fas fa-random"></i> Generar';
+            generateBtn.onclick = generateCode;
+            codeField.parentNode.appendChild(generateBtn);
+        }
+    });
+</script>
+{% endblock %}

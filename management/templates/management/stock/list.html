@@ -1,0 +1,681 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Gestión de Stock - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .movement-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .movement-card:hover {
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    
+    .movement-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f8f9fc;
+    }
+    
+    .product-name {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin: 0;
+    }
+    
+    .movement-type {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .type-entrada {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .type-salida {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .type-ajuste {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .type-transferencia {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .movement-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin: 15px 0;
+        padding: 15px;
+        background: #f8f9fc;
+        border-radius: 10px;
+    }
+    
+    .detail-item {
+        text-align: center;
+    }
+    
+    .detail-value {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #5a5c69;
+    }
+    
+    .detail-label {
+        font-size: 0.85em;
+        color: #858796;
+        margin-top: 5px;
+    }
+    
+    .quantity-badge {
+        font-size: 1.5em;
+        font-weight: bold;
+        padding: 10px 15px;
+        border-radius: 50px;
+        margin: 10px 0;
+    }
+    
+    .quantity-positive {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .quantity-negative {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .quantity-neutral {
+        background: #e2e3e5;
+        color: #495057;
+    }
+    
+    .filter-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border-left: 5px solid #4e73df;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-icon {
+        font-size: 3em;
+        margin-bottom: 15px;
+        color: #4e73df;
+    }
+    
+    .stat-value {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #4e73df;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #858796;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.9em;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 0.875em;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box input {
+        padding-left: 45px;
+        border-radius: 25px;
+        border: 2px solid #e3e6f0;
+    }
+    
+    .search-box .fas {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #858796;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #858796;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .date-badge {
+        background: #e3e6f0;
+        color: #5a5c69;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+    
+    .reference-info {
+        background: #f8f9fc;
+        border-left: 4px solid #4e73df;
+        padding: 10px 15px;
+        border-radius: 0 8px 8px 0;
+        margin: 10px 0;
+    }
+    
+    .notes-section {
+        background: #fff3cd;
+        border-left: 4px solid #f6c23e;
+        padding: 10px 15px;
+        border-radius: 0 8px 8px 0;
+        margin: 10px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-warehouse text-primary"></i>
+            Gestión de Stock
+        </h1>
+        <div>
+            <a href="{% url 'management:stock_movement_create' %}" class="btn btn-primary btn-custom mr-2">
+                <i class="fas fa-plus"></i> Nuevo Movimiento
+            </a>
+            <a href="{% url 'management:stock_report' %}" class="btn btn-info btn-custom mr-2">
+                <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+            <a href="{% url 'management:stock_alerts' %}" class="btn btn-warning btn-custom">
+                <i class="fas fa-exclamation-triangle"></i> Alertas
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-value">{{ stock_movements|length }}</div>
+            <div class="stat-label">Total Movimientos</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-arrow-up text-success"></i>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">Entradas Hoy</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-arrow-down text-danger"></i>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">Salidas Hoy</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">Stock Bajo</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-container">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-movements" class="form-control" 
+                           placeholder="Buscar por producto...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select id="filter-type" class="form-control">
+                    <option value="">Todos los tipos</option>
+                    <option value="entrada">Entradas</option>
+                    <option value="salida">Salidas</option>
+                    <option value="ajuste">Ajustes</option>
+                    <option value="transferencia">Transferencias</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="filter-period" class="form-control">
+                    <option value="">Todo el período</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Esta semana</option>
+                    <option value="month">Este mes</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="sort-movements" class="form-control">
+                    <option value="recent">Más recientes</option>
+                    <option value="oldest">Más antiguos</option>
+                    <option value="quantity">Por cantidad</option>
+                    <option value="product">Por producto</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-outline-secondary btn-custom w-100" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-success btn-custom w-100" onclick="exportMovements()">
+                    <i class="fas fa-download"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Movimientos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> Movimientos de Stock Recientes
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if stock_movements %}
+                <div id="movements-container">
+                    {% for movement in stock_movements %}
+                    <div class="movement-card movement-item" 
+                         data-type="{{ movement.movement_type }}"
+                         data-product="{{ movement.product.name|lower }}"
+                         data-date="{{ movement.created_at|date:'Y-m-d' }}">
+                        
+                        <!-- Header del movimiento -->
+                        <div class="movement-header">
+                            <div>
+                                <h6 class="product-name">{{ movement.product.name }}</h6>
+                                <span class="date-badge">{{ movement.created_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="movement-type type-{{ movement.movement_type }}">
+                                    {{ movement.get_movement_type_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Detalles del movimiento -->
+                        <div class="movement-details">
+                            <div class="detail-item">
+                                <div class="detail-value">
+                                    <span class="quantity-badge {% if movement.movement_type == 'entrada' %}quantity-positive{% elif movement.movement_type == 'salida' %}quantity-negative{% else %}quantity-neutral{% endif %}">
+                                        {% if movement.movement_type == 'entrada' %}+{% elif movement.movement_type == 'salida' %}-{% endif %}{{ movement.quantity }}
+                                    </span>
+                                </div>
+                                <div class="detail-label">Cantidad</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-value">{{ movement.product.stock }}</div>
+                                <div class="detail-label">Stock Actual</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-value">{{ movement.get_reason_display|default:"General" }}</div>
+                                <div class="detail-label">Motivo</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-value">
+                                    {% if movement.product.category %}
+                                        {{ movement.product.category.name }}
+                                    {% else %}
+                                        Sin categoría
+                                    {% endif %}
+                                </div>
+                                <div class="detail-label">Categoría</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información adicional -->
+                        {% if movement.reference %}
+                        <div class="reference-info">
+                            <strong><i class="fas fa-tag"></i> Referencia:</strong> {{ movement.reference }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if movement.notes %}
+                        <div class="notes-section">
+                            <strong><i class="fas fa-sticky-note"></i> Notas:</strong> {{ movement.notes }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Información del usuario -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i>
+                                Registrado por: <strong>{{ movement.created_by|default:"Sistema" }}</strong>
+                            </small>
+                            
+                            <!-- Botones de acción -->
+                            <div class="action-buttons">
+                                <button class="btn btn-info btn-custom btn-sm" onclick="viewMovementDetails({{ movement.id }})">
+                                    <i class="fas fa-eye"></i> Detalles
+                                </button>
+                                <a href="#" class="btn btn-primary btn-custom btn-sm">
+                                    <i class="fas fa-box"></i> Ver Producto
+                                </a>
+                                {% if movement.movement_type == 'ajuste' %}
+                                <button class="btn btn-warning btn-custom btn-sm" onclick="revertMovement({{ movement.id }})">
+                                    <i class="fas fa-undo"></i> Revertir
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Paginación -->
+                {% if is_paginated %}
+                <nav aria-label="Paginación de movimientos" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo; Primera</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-warehouse"></i>
+                    <h5 class="text-gray-600">No hay movimientos de stock registrados</h5>
+                    <p class="text-muted">Los movimientos de entrada, salida y ajustes aparecerán aquí.</p>
+                    <a href="{% url 'management:stock_movement_create' %}" class="btn btn-primary btn-custom">
+                        <i class="fas fa-plus"></i> Registrar Primer Movimiento
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filtrado y búsqueda
+    function filterMovements() {
+        const searchTerm = document.getElementById('search-movements').value.toLowerCase();
+        const typeFilter = document.getElementById('filter-type').value;
+        const periodFilter = document.getElementById('filter-period').value;
+        
+        const movements = document.querySelectorAll('.movement-item');
+        
+        movements.forEach(movement => {
+            let showMovement = true;
+            
+            // Filtro por búsqueda de producto
+            if (searchTerm && !movement.dataset.product.includes(searchTerm)) {
+                showMovement = false;
+            }
+            
+            // Filtro por tipo de movimiento
+            if (typeFilter && movement.dataset.type !== typeFilter) {
+                showMovement = false;
+            }
+            
+            // Filtro por período
+            if (periodFilter) {
+                const movementDate = new Date(movement.dataset.date);
+                const today = new Date();
+                
+                switch(periodFilter) {
+                    case 'today':
+                        if (movementDate.toDateString() !== today.toDateString()) {
+                            showMovement = false;
+                        }
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        if (movementDate < weekAgo) {
+                            showMovement = false;
+                        }
+                        break;
+                    case 'month':
+                        const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                        if (movementDate < monthAgo) {
+                            showMovement = false;
+                        }
+                        break;
+                }
+            }
+            
+            movement.style.display = showMovement ? 'block' : 'none';
+        });
+    }
+    
+    // Ordenamiento
+    function sortMovements() {
+        const sortBy = document.getElementById('sort-movements').value;
+        const container = document.getElementById('movements-container');
+        const movements = Array.from(container.children);
+        
+        movements.sort((a, b) => {
+            switch(sortBy) {
+                case 'recent':
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+                case 'oldest':
+                    return new Date(a.dataset.date) - new Date(b.dataset.date);
+                case 'product':
+                    return a.dataset.product.localeCompare(b.dataset.product);
+                case 'quantity':
+                    // Requeriría datos adicionales en el dataset
+                    return 0;
+                default:
+                    return 0;
+            }
+        });
+        
+        movements.forEach(movement => container.appendChild(movement));
+    }
+    
+    // Limpiar filtros
+    function clearFilters() {
+        document.getElementById('search-movements').value = '';
+        document.getElementById('filter-type').value = '';
+        document.getElementById('filter-period').value = '';
+        document.getElementById('sort-movements').value = 'recent';
+        filterMovements();
+    }
+    
+    // Ver detalles del movimiento
+    function viewMovementDetails(movementId) {
+        Swal.fire({
+            title: 'Detalles del Movimiento',
+            html: `
+                <div class="text-left">
+                    <p><strong>ID:</strong> ${movementId}</p>
+                    <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+                    <p>Cargando detalles completos...</p>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Cerrar'
+        });
+    }
+    
+    // Revertir movimiento
+    function revertMovement(movementId) {
+        Swal.fire({
+            title: '¿Revertir movimiento?',
+            text: 'Esto creará un movimiento inverso para cancelar el efecto',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f6c23e',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, revertir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí iría la lógica AJAX para revertir
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Movimiento revertido!',
+                    text: 'Se ha creado un movimiento inverso.',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    }
+    
+    // Exportar movimientos
+    function exportMovements() {
+        Swal.fire({
+            title: 'Exportar Movimientos',
+            text: 'Selecciona el formato de exportación',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-file-excel"></i> Excel',
+            cancelButtonText: '<i class="fas fa-file-pdf"></i> PDF',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#dc3545'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Exportar a Excel
+                window.location.href = '/management/stock/export/excel/';
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // Exportar a PDF
+                window.location.href = '/management/stock/export/pdf/';
+            }
+        });
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('search-movements').addEventListener('input', filterMovements);
+        document.getElementById('filter-type').addEventListener('change', filterMovements);
+        document.getElementById('filter-period').addEventListener('change', filterMovements);
+        document.getElementById('sort-movements').addEventListener('change', sortMovements);
+        
+        // Animaciones de entrada
+        const cards = document.querySelectorAll('.movement-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+        
+        // Actualizar estadísticas cada 30 segundos
+        setInterval(updateStats, 30000);
+    });
+    
+    // Actualizar estadísticas
+    function updateStats() {
+        // Aquí iría una llamada AJAX para actualizar las estadísticas
+        console.log('Actualizando estadísticas...');
+    }
+</script>
+{% endblock %}

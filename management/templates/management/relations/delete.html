@@ -1,0 +1,673 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar Relación Proveedor-Producto - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .warning-icon {
+        font-size: 4em;
+        color: #e74a3b;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .relation-info {
+        background: #f8f9fc;
+        border-left: 4px solid #e74a3b;
+        border-radius: 0 15px 15px 0;
+        padding: 30px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .relation-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .supplier-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .supplier-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5em;
+        margin-right: 20px;
+    }
+    
+    .supplier-details h4 {
+        margin: 0;
+        color: #5a5c69;
+        font-weight: bold;
+    }
+    
+    .supplier-details p {
+        margin: 5px 0 0 0;
+        color: #858796;
+        font-size: 0.9em;
+    }
+    
+    .relation-badge {
+        background: #e74a3b;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+    }
+    
+    .relation-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #e3e6f0;
+        text-align: center;
+    }
+    
+    .detail-icon {
+        font-size: 2em;
+        color: #4e73df;
+        margin-bottom: 10px;
+    }
+    
+    .detail-title {
+        font-size: 0.9em;
+        color: #858796;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    
+    .detail-value {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #5a5c69;
+    }
+    
+    .detail-value.cost {
+        color: #28a745;
+        font-size: 1.4em;
+    }
+    
+    .warning-box {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 30px 0;
+    }
+    
+    .warning-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .warning-title i {
+        margin-right: 10px;
+    }
+    
+    .warning-list {
+        text-align: left;
+        margin: 0;
+        padding-left: 20px;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .warning-list li {
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+    
+    .impact-analysis {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+    }
+    
+    .impact-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .impact-title i {
+        margin-right: 10px;
+    }
+    
+    .impact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .impact-item {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #f6c23e;
+    }
+    
+    .impact-number {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #e58e26;
+        margin-bottom: 8px;
+    }
+    
+    .impact-label {
+        font-size: 0.9em;
+        color: #856404;
+        font-weight: 500;
+    }
+    
+    .alternative-actions {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+    }
+    
+    .alternative-title {
+        color: #0c5460;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .alternative-title i {
+        margin-right: 10px;
+    }
+    
+    .alternative-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-custom {
+        border-radius: 25px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        margin: 5px;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+    }
+    
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    }
+    
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #545b62 0%, #3d4043 100%);
+    }
+    
+    .confirmation-section {
+        margin: 30px 0;
+        padding: 25px;
+        background: #f8f9fc;
+        border-radius: 15px;
+        border: 2px solid #e3e6f0;
+    }
+    
+    .confirmation-checkbox {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    
+    .confirmation-checkbox input[type="checkbox"] {
+        margin-right: 12px;
+        transform: scale(1.3);
+    }
+    
+    .confirmation-checkbox label {
+        font-weight: 600;
+        color: #5a5c69;
+        cursor: pointer;
+        margin: 0;
+    }
+    
+    .relation-timeline {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid #e3e6f0;
+    }
+    
+    .timeline-title {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .timeline-title i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+    
+    .timeline-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+        color: #858796;
+    }
+    
+    .timeline-item i {
+        margin-right: 10px;
+        width: 20px;
+        color: #4e73df;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-trash text-danger"></i>
+            Eliminar Relación Proveedor-Producto
+        </h1>
+        <a href="{% url 'management:relations_management' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver a Relaciones
+        </a>
+    </div>
+
+    <div class="delete-container">
+        <!-- Icono de advertencia -->
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h2 class="mb-4 text-danger">¿Eliminar esta relación proveedor-producto?</h2>
+        <p class="lead text-muted mb-4">
+            Esta acción <strong>no se puede deshacer</strong> y puede afectar tu gestión de inventario.
+        </p>
+        
+        <!-- Información de la relación -->
+        <div class="relation-info">
+            <div class="relation-header">
+                <div class="supplier-info">
+                    <div class="supplier-avatar">
+                        {{ relation.supplier.name|first|upper }}
+                    </div>
+                    <div class="supplier-details">
+                        <h4>{{ relation.supplier.name }}</h4>
+                        <p>
+                            <i class="fas fa-envelope"></i> {{ relation.supplier.email }}
+                            {% if relation.supplier.phone %}
+                                | <i class="fas fa-phone"></i> {{ relation.supplier.phone }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="relation-badge">
+                    <i class="fas fa-link"></i> Relación Activa
+                </div>
+            </div>
+            
+            <div class="relation-details">
+                <div class="detail-card">
+                    <div class="detail-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="detail-title">Producto</div>
+                    <div class="detail-value">{{ relation.product.name }}</div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="detail-title">Precio de Costo</div>
+                    <div class="detail-value cost">${{ relation.cost_price|floatformat:2 }}</div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="detail-title">Creada</div>
+                    <div class="detail-value">{{ relation.created_at|date:"d/m/Y" }}</div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">
+                        <i class="fas fa-{% if relation.is_active %}check-circle text-success{% else %}times-circle text-danger{% endif %}"></i>
+                    </div>
+                    <div class="detail-title">Estado</div>
+                    <div class="detail-value">
+                        {% if relation.is_active %}Activa{% else %}Inactiva{% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline de la relación -->
+            <div class="relation-timeline">
+                <div class="timeline-title">
+                    <i class="fas fa-history"></i>
+                    Historial de la Relación
+                </div>
+                <div class="timeline-item">
+                    <i class="fas fa-plus"></i>
+                    <span>Relación creada el {{ relation.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% if relation.updated_at != relation.created_at %}
+                    <div class="timeline-item">
+                        <i class="fas fa-edit"></i>
+                        <span>Última modificación el {{ relation.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                {% endif %}
+                <div class="timeline-item">
+                    <i class="fas fa-user"></i>
+                    <span>Gestionada por: {{ relation.supplier.contact_person|default:"No especificado" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advertencias -->
+        <div class="warning-box">
+            <div class="warning-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                Consecuencias de la Eliminación
+            </div>
+            <ul class="warning-list">
+                <li>Se perderá el historial de precios de costo con este proveedor</li>
+                <li>Los reportes que dependan de esta relación mostrarán datos incompletos</li>
+                <li>No se podrán generar órdenes de compra automáticas para este producto</li>
+                <li>Se perderán las referencias de costos para cálculos de márgenes</li>
+                <li>Esta acción se registrará permanentemente en el log de auditoría</li>
+            </ul>
+        </div>
+        
+        <!-- Análisis de Impacto -->
+        <div class="impact-analysis">
+            <div class="impact-title">
+                <i class="fas fa-chart-line"></i>
+                Análisis de Impacto
+            </div>
+            <div class="impact-grid">
+                <div class="impact-item">
+                    <div class="impact-number">{{ stock_movements|default:0 }}</div>
+                    <div class="impact-label">Movimientos de Stock</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-number">{{ purchase_orders|default:0 }}</div>
+                    <div class="impact-label">Órdenes de Compra</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-number">{{ cost_updates|default:0 }}</div>
+                    <div class="impact-label">Actualizaciones de Costo</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-number">{{ alternative_suppliers|default:0 }}</div>
+                    <div class="impact-label">Proveedores Alternativos</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acciones Alternativas -->
+        <div class="alternative-actions">
+            <div class="alternative-title">
+                <i class="fas fa-lightbulb"></i>
+                Alternativas Recomendadas
+            </div>
+            <p class="mb-3">Antes de eliminar, considera estas opciones:</p>
+            <div class="alternative-buttons">
+                <a href="{% url 'management:relation_update' relation.pk %}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Editar Relación
+                </a>
+                <button class="btn btn-info btn-sm" onclick="deactivateRelation()">
+                    <i class="fas fa-pause"></i> Desactivar Temporalmente
+                </button>
+                <a href="{% url 'management:supplier_management' %}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-search"></i> Buscar Proveedor Alternativo
+                </a>
+            </div>
+        </div>
+        
+        <!-- Confirmación -->
+        <div class="confirmation-section">
+            <form method="post" id="delete-form">
+                {% csrf_token %}
+                
+                <div class="confirmation-checkbox">
+                    <input type="checkbox" id="confirm-delete" required>
+                    <label for="confirm-delete">
+                        Confirmo que entiendo las consecuencias y deseo eliminar esta relación proveedor-producto
+                    </label>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger btn-custom" id="delete-btn" disabled>
+                        <i class="fas fa-trash"></i>
+                        Sí, Eliminar Relación
+                    </button>
+                    <a href="{% url 'management:relations_management' %}" class="btn btn-secondary btn-custom">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmCheckbox = document.getElementById('confirm-delete');
+        const deleteBtn = document.getElementById('delete-btn');
+        const deleteForm = document.getElementById('delete-form');
+        
+        // Habilitar/deshabilitar botón de eliminar
+        confirmCheckbox.addEventListener('change', function() {
+            deleteBtn.disabled = !this.checked;
+            
+            if (this.checked) {
+                deleteBtn.classList.remove('btn-secondary');
+                deleteBtn.classList.add('btn-danger');
+            } else {
+                deleteBtn.classList.remove('btn-danger');
+                deleteBtn.classList.add('btn-secondary');
+            }
+        });
+        
+        // Confirmación adicional antes de enviar
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¿Eliminar relación definitivamente?',
+                text: 'Esta acción no se puede deshacer y afectará la gestión de este producto',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74a3b',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar relación',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar loading
+                    Swal.fire({
+                        title: 'Eliminando relación...',
+                        text: 'Por favor espera mientras se procesa la eliminación',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Enviar formulario
+                    this.submit();
+                }
+            });
+        });
+        
+        // Animación de entrada
+        const container = document.querySelector('.delete-container');
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            container.style.transition = 'all 0.6s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 100);
+        
+        // Efectos hover en las acciones alternativas
+        const alternativeButtons = document.querySelectorAll('.alternative-buttons .btn');
+        alternativeButtons.forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+        
+        // Efectos hover en las tarjetas de detalle
+        const detailCards = document.querySelectorAll('.detail-card');
+        detailCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+    });
+    
+    // Función para desactivar la relación en lugar de eliminarla
+    function deactivateRelation() {
+        Swal.fire({
+            title: '¿Desactivar relación?',
+            text: 'La relación se mantendrá en el sistema pero estará inactiva',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#f6c23e',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, desactivar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí iría la lógica para desactivar la relación
+                fetch(`/management/relations/{{ relation.pk }}/toggle/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Relación desactivada',
+                            text: 'La relación ha sido desactivada exitosamente',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '{% url "management:relations_management" %}';
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'No se pudo desactivar la relación',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al procesar la solicitud',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

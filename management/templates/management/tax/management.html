@@ -1,0 +1,474 @@
+{% extends 'management/base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Impuestos - Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tax-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tax-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .tax-rate {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .tax-type-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.75rem;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+    }
+    
+    .btn-action {
+        border-radius: 20px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.85rem;
+    }
+    
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-percentage text-primary"></i>
+                        Gestión de Impuestos
+                    </h2>
+                    <p class="text-muted mb-0">Configura las tasas de IVA y otros impuestos</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addTaxModal">
+                    <i class="fas fa-plus"></i>
+                    Nueva Configuración
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card tax-card text-center">
+                <div class="card-body">
+                    <i class="fas fa-list-alt fa-2x text-primary mb-3"></i>
+                    <h5 class="card-title">Total Configuraciones</h5>
+                    <span class="tax-rate">{{ total_configurations }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card tax-card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                    <h5 class="card-title">Activos</h5>
+                    <span class="tax-rate text-success">{{ active_configurations }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card tax-card text-center">
+                <div class="card-body">
+                    <i class="fas fa-percentage fa-2x text-info mb-3"></i>
+                    <h5 class="card-title">Tasa Promedio</h5>
+                    <span class="tax-rate text-info">{{ average_rate|floatformat:1 }}%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card tax-card text-center">
+                <div class="card-body">
+                    <i class="fas fa-globe fa-2x text-warning mb-3"></i>
+                    <h5 class="card-title">Países</h5>
+                    <span class="tax-rate text-warning">{{ unique_countries }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Configuraciones -->
+    <div class="card">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs"></i>
+                        Configuraciones de Impuestos
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar..." id="searchInput">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="taxTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tasa (%)</th>
+                            <th>Envío</th>
+                            <th>Estado</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tax in tax_configurations %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-percentage fa-lg text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ tax.name }}</h6>
+                                        <small class="text-muted">Configuración de impuesto</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-bold fs-5 text-primary">{{ tax.rate }}%</span>
+                            </td>
+                            <td>
+                                {% if tax.applies_to_shipping %}
+                                    <span class="badge bg-info">Incluye envío</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Solo productos</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tax.is_active %}
+                                    <span class="badge badge-status bg-success">
+                                        <i class="fas fa-check"></i> Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-status bg-secondary">
+                                        <i class="fas fa-times"></i> Inactivo
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ tax.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            data-tax-id="{{ tax.id }}" onclick="editTax(this)" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            data-tax-id="{{ tax.id }}" onclick="deleteTax(this)" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% if tax.is_active %}
+                                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                data-tax-id="{{ tax.id }}" data-active="false" onclick="toggleTax(this)" title="Desactivar">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                data-tax-id="{{ tax.id }}" data-active="true" onclick="toggleTax(this)" title="Activar">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No hay configuraciones de impuestos</h5>
+                                <p class="text-muted">Comienza creando tu primera configuración de impuestos.</p>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaxModal">
+                                    <i class="fas fa-plus"></i> Crear Primera Configuración
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if tax_configurations.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if tax_configurations.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tax_configurations.previous_page_number }}">Anterior</a>
+                </li>
+            {% endif %}
+
+            {% for num in tax_configurations.paginator.page_range %}
+                {% if tax_configurations.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > tax_configurations.number|add:'-3' and num < tax_configurations.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if tax_configurations.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tax_configurations.next_page_number }}">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tax_configurations.paginator.num_pages }}">Última &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal Agregar/Editar Impuesto -->
+<div class="modal fade" id="addTaxModal" tabindex="-1" aria-labelledby="addTaxModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTaxModalLabel">
+                    <i class="fas fa-plus"></i>
+                    Agregar Configuración de Impuesto
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="taxForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="id_name" name="name" required>
+                                <label for="id_name">Nombre de la configuración</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="id_rate" name="rate" 
+                                       step="0.01" min="0" max="100" required>
+                                <label for="id_rate">Tasa (%)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" type="checkbox" id="id_applies_to_shipping" name="applies_to_shipping">
+                                <label class="form-check-label" for="id_applies_to_shipping">
+                                    Aplicar al costo de envío
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" type="checkbox" id="id_is_active" name="is_active" checked>
+                                <label class="form-check-label" for="id_is_active">
+                                    Configuración activa
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Guardar Configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Búsqueda en tiempo real
+    $('#searchInput').on('keyup', function() {
+        let value = $(this).val().toLowerCase();
+        $('#taxTable tbody tr').filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+    
+    // Reset del formulario al abrir modal para crear
+    $('[data-bs-target="#addTaxModal"]').on('click', function() {
+        $('#addTaxModalLabel').text('Agregar Configuración de Impuesto');
+        $('#taxForm')[0].reset();
+        $('#taxForm').attr('action', '{% url "management:tax_create" %}');
+        $('#id_is_active').prop('checked', true);
+    });
+
+    // Envío del formulario
+    $('#taxForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Configuración de impuesto guardada correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.error || 'Error al guardar la configuración',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión. Inténtalo de nuevo.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    });
+});
+
+function editTax(button) {
+    const taxId = button.getAttribute('data-tax-id');
+    $.get(`/management/impuestos/${taxId}/`, function(data) {
+        $('#addTaxModalLabel').text('Editar Configuración de Impuesto');
+        $('#id_name').val(data.name);
+        $('#id_rate').val(data.rate);
+        $('#id_applies_to_shipping').prop('checked', data.applies_to_shipping);
+        $('#id_is_active').prop('checked', data.is_active);
+        
+        $('#taxForm').attr('action', `/management/impuestos/${taxId}/editar/`);
+        $('#addTaxModal').modal('show');
+    });
+}
+
+function deleteTax(button) {
+    const taxId = button.getAttribute('data-tax-id');
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/management/impuestos/${taxId}/eliminar/`,
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: '¡Eliminado!',
+                            text: 'La configuración ha sido eliminada',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }
+                }
+            });
+        }
+    });
+}
+
+function toggleTax(button) {
+    const taxId = button.getAttribute('data-tax-id');
+    const activate = button.getAttribute('data-active') === 'true';
+    const action = activate ? 'activar' : 'desactivar';
+    
+    Swal.fire({
+        title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} configuración?`,
+        text: `Se va a ${action} esta configuración de impuesto`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: `Sí, ${action}`,
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/management/impuestos/${taxId}/toggle/`,
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
+                    'is_active': activate
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    }
+                }
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,610 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Gestión de Proveedores - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .supplier-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .supplier-card:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+    }
+    
+    .supplier-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f8f9fc;
+    }
+    
+    .supplier-name {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin: 0;
+    }
+    
+    .supplier-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+    }
+    
+    .status-active {
+        background: #d1edff;
+        color: #0056b3;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .contact-info {
+        background: #f8f9fc;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .contact-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .contact-icon {
+        width: 20px;
+        color: #858796;
+        margin-right: 10px;
+    }
+    
+    .rating-stars {
+        color: #f6c23e;
+        margin: 10px 0;
+    }
+    
+    .supplier-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+    }
+    
+    .stat-value {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.8em;
+        opacity: 0.9;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 0.875em;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .filter-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box input {
+        padding-left: 45px;
+        border-radius: 25px;
+        border: 2px solid #e3e6f0;
+    }
+    
+    .search-box .fas {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #858796;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #858796;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-truck text-primary"></i>
+            Gestión de Proveedores
+        </h1>
+        <a href="{% url 'management:supplier_create' %}" class="btn btn-primary btn-custom">
+            <i class="fas fa-plus"></i> Nuevo Proveedor
+        </a>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Proveedores
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ suppliers|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Proveedores Activos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for supplier in suppliers %}{% if supplier.is_active %}{{ forloop.counter }}{% endif %}{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Productos Suministrados
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Calificación Promedio
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <i class="fas fa-star text-warning"></i> 4.5
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="filter-container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-suppliers" class="form-control" 
+                           placeholder="Buscar proveedores...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select id="filter-status" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="filter-rating" class="form-control">
+                    <option value="">Todas las calificaciones</option>
+                    <option value="5">5 estrellas</option>
+                    <option value="4">4+ estrellas</option>
+                    <option value="3">3+ estrellas</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="sort-suppliers" class="form-control">
+                    <option value="name">Ordenar por nombre</option>
+                    <option value="rating">Ordenar por calificación</option>
+                    <option value="created">Más recientes</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-secondary btn-custom w-100" onclick="clearFilters()">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Proveedores -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> Lista de Proveedores
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if suppliers %}
+                <div class="row" id="suppliers-container">
+                    {% for supplier in suppliers %}
+                    <div class="col-lg-6 supplier-item" 
+                         data-status="{% if supplier.is_active %}active{% else %}inactive{% endif %}"
+                         data-rating="{{ supplier.rating|default:'0' }}"
+                         data-name="{{ supplier.name|lower }}">
+                        <div class="supplier-card">
+                            <!-- Header con nombre y estado -->
+                            <div class="supplier-header">
+                                <div>
+                                    <h5 class="supplier-name">{{ supplier.name }}</h5>
+                                    {% if supplier.contact_person %}
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-user"></i> {{ supplier.contact_person }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <span class="supplier-status {% if supplier.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if supplier.is_active %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Información de contacto -->
+                            <div class="contact-info">
+                                {% if supplier.email %}
+                                <div class="contact-item">
+                                    <i class="fas fa-envelope contact-icon"></i>
+                                    <a href="mailto:{{ supplier.email }}" class="text-decoration-none">
+                                        {{ supplier.email }}
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                                {% if supplier.phone %}
+                                <div class="contact-item">
+                                    <i class="fas fa-phone contact-icon"></i>
+                                    <a href="tel:{{ supplier.phone }}" class="text-decoration-none">
+                                        {{ supplier.phone }}
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                                {% if supplier.address %}
+                                <div class="contact-item">
+                                    <i class="fas fa-map-marker-alt contact-icon"></i>
+                                    <span>{{ supplier.address }}{% if supplier.city %}, {{ supplier.city }}{% endif %}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if supplier.tax_id %}
+                                <div class="contact-item">
+                                    <i class="fas fa-file-invoice contact-icon"></i>
+                                    <span>RUT: {{ supplier.tax_id }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Calificación -->
+                            {% if supplier.rating %}
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= supplier.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ml-2 text-muted">({{ supplier.rating }}/5)</span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Estadísticas del proveedor -->
+                            <div class="supplier-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Productos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Pedidos</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Días Lead</div>
+                                </div>
+                            </div>
+
+                            <!-- Notas -->
+                            {% if supplier.notes %}
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-sticky-note"></i>
+                                    {{ supplier.notes|truncatewords:15 }}
+                                </small>
+                            </div>
+                            {% endif %}
+
+                            <!-- Botones de acción -->
+                            <div class="action-buttons">
+                                <a href="{% url 'management:supplier_products' supplier.id %}" 
+                                   class="btn btn-info btn-custom btn-sm">
+                                    <i class="fas fa-boxes"></i> Productos
+                                </a>
+                                <a href="{% url 'management:supplier_update' supplier.id %}" 
+                                   class="btn btn-primary btn-custom btn-sm">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <button class="btn btn-warning btn-custom btn-sm" 
+                                        onclick="toggleSupplier({{ supplier.id }})">
+                                    <i class="fas fa-{% if supplier.is_active %}pause{% else %}play{% endif %}"></i>
+                                    {% if supplier.is_active %}Desactivar{% else %}Activar{% endif %}
+                                </button>
+                                <a href="{% url 'management:supplier_delete' supplier.id %}" 
+                                   class="btn btn-danger btn-custom btn-sm">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </a>
+                            </div>
+
+                            <!-- Fecha de creación -->
+                            <div class="text-right mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i>
+                                    Registrado: {{ supplier.created_at|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-truck"></i>
+                    <h5 class="text-gray-600">No hay proveedores registrados</h5>
+                    <p class="text-muted">Comienza añadiendo tu primer proveedor para gestionar el inventario.</p>
+                    <a href="{% url 'management:supplier_create' %}" class="btn btn-primary btn-custom">
+                        <i class="fas fa-plus"></i> Registrar Primer Proveedor
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <nav aria-label="Paginación de proveedores">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filtrado y búsqueda
+    function filterSuppliers() {
+        const searchTerm = document.getElementById('search-suppliers').value.toLowerCase();
+        const statusFilter = document.getElementById('filter-status').value;
+        const ratingFilter = document.getElementById('filter-rating').value;
+        
+        const suppliers = document.querySelectorAll('.supplier-item');
+        
+        suppliers.forEach(supplier => {
+            let showSupplier = true;
+            
+            // Filtro por búsqueda
+            if (searchTerm && !supplier.dataset.name.includes(searchTerm)) {
+                showSupplier = false;
+            }
+            
+            // Filtro por estado
+            if (statusFilter && supplier.dataset.status !== statusFilter) {
+                showSupplier = false;
+            }
+            
+            // Filtro por calificación
+            if (ratingFilter) {
+                const rating = parseInt(supplier.dataset.rating);
+                const minRating = parseInt(ratingFilter);
+                if (rating < minRating) {
+                    showSupplier = false;
+                }
+            }
+            
+            supplier.style.display = showSupplier ? 'block' : 'none';
+        });
+    }
+    
+    // Ordenamiento
+    function sortSuppliers() {
+        const sortBy = document.getElementById('sort-suppliers').value;
+        const container = document.getElementById('suppliers-container');
+        const suppliers = Array.from(container.children);
+        
+        suppliers.sort((a, b) => {
+            switch(sortBy) {
+                case 'name':
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                case 'rating':
+                    return parseInt(b.dataset.rating) - parseInt(a.dataset.rating);
+                case 'created':
+                    // Para esto necesitaríamos un data-created en cada elemento
+                    return 0;
+                default:
+                    return 0;
+            }
+        });
+        
+        suppliers.forEach(supplier => container.appendChild(supplier));
+    }
+    
+    // Limpiar filtros
+    function clearFilters() {
+        document.getElementById('search-suppliers').value = '';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-rating').value = '';
+        document.getElementById('sort-suppliers').value = 'name';
+        filterSuppliers();
+    }
+    
+    // Activar/Desactivar proveedor
+    function toggleSupplier(supplierId) {
+        Swal.fire({
+            title: '¿Cambiar estado del proveedor?',
+            text: 'Esto afectará la disponibilidad de sus productos',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, cambiar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí iría la lógica AJAX para cambiar el estado
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Estado actualizado!',
+                    text: 'El estado del proveedor ha sido cambiado.',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('search-suppliers').addEventListener('input', filterSuppliers);
+        document.getElementById('filter-status').addEventListener('change', filterSuppliers);
+        document.getElementById('filter-rating').addEventListener('change', filterSuppliers);
+        document.getElementById('sort-suppliers').addEventListener('change', sortSuppliers);
+        
+        // Animaciones de entrada
+        const cards = document.querySelectorAll('.supplier-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

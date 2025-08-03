@@ -1,0 +1,726 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Alertas de Stock - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alerts-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .alert-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .summary-card {
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        color: white;
+        transition: transform 0.3s ease;
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .summary-critical {
+        background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+    }
+    
+    .summary-low {
+        background: linear-gradient(135deg, #f6c23e 0%, #e58e26 100%);
+    }
+    
+    .summary-out {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    }
+    
+    .summary-total {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    }
+    
+    .summary-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .summary-label {
+        font-size: 0.9em;
+        opacity: 0.9;
+    }
+    
+    .alert-filters {
+        background: #f8f9fc;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .alert-item {
+        background: white;
+        border-left: 5px solid;
+        border-radius: 0 10px 10px 0;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .alert-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .alert-critical {
+        border-left-color: #e74a3b;
+    }
+    
+    .alert-low {
+        border-left-color: #f6c23e;
+    }
+    
+    .alert-out {
+        border-left-color: #6c757d;
+    }
+    
+    .alert-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .alert-product {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .product-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+    
+    .product-placeholder {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background: #f8f9fc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #858796;
+    }
+    
+    .product-info h5 {
+        margin: 0;
+        color: #5a5c69;
+        font-weight: bold;
+    }
+    
+    .product-info p {
+        margin: 5px 0 0 0;
+        color: #858796;
+        font-size: 0.9em;
+    }
+    
+    .alert-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .badge-critical {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    .badge-low {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .badge-out {
+        background: #f5f5f5;
+        color: #6c757d;
+    }
+    
+    .alert-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .detail-item {
+        background: #f8f9fc;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .detail-number {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 5px;
+    }
+    
+    .detail-label {
+        font-size: 0.8em;
+        color: #858796;
+        text-transform: uppercase;
+    }
+    
+    .alert-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .action-btn {
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 0.9em;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .btn-restock {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-edit {
+        background: #ffc107;
+        color: white;
+    }
+    
+    .btn-history {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .btn-supplier {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #858796;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    
+    .priority-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    
+    .priority-high {
+        background: #e74a3b;
+    }
+    
+    .priority-medium {
+        background: #f6c23e;
+    }
+    
+    .priority-low {
+        background: #28a745;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    
+    .bulk-actions {
+        background: #e7f3ff;
+        border: 1px solid #b8daff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .bulk-actions h6 {
+        color: #004085;
+        margin-bottom: 15px;
+    }
+    
+    .bulk-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .notification-settings {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .notification-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .notification-title i {
+        margin-right: 10px;
+    }
+    
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .setting-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #f6c23e;
+    }
+    
+    .setting-label {
+        font-size: 0.9em;
+        color: #856404;
+        margin-bottom: 5px;
+    }
+    
+    .setting-value {
+        font-weight: bold;
+        color: #5a5c69;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-exclamation-triangle text-warning"></i>
+            Alertas de Stock
+        </h1>
+        <div>
+            <button class="btn btn-warning btn-sm mr-2" onclick="refreshAlerts()">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+            <a href="{% url 'management:stock_management' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Resumen de Alertas -->
+    <div class="alert-summary">
+        <div class="summary-card summary-critical">
+            <div class="summary-number">{{ critical_alerts|default:0 }}</div>
+            <div class="summary-label">Stock Crítico</div>
+        </div>
+        <div class="summary-card summary-low">
+            <div class="summary-number">{{ low_stock_alerts|default:0 }}</div>
+            <div class="summary-label">Stock Bajo</div>
+        </div>
+        <div class="summary-card summary-out">
+            <div class="summary-number">{{ out_of_stock|default:0 }}</div>
+            <div class="summary-label">Sin Stock</div>
+        </div>
+        <div class="summary-card summary-total">
+            <div class="summary-number">{{ total_alerts|default:0 }}</div>
+            <div class="summary-label">Total Alertas</div>
+        </div>
+    </div>
+
+    <!-- Configuración de Notificaciones -->
+    <div class="notification-settings">
+        <div class="notification-title">
+            <i class="fas fa-cog"></i>
+            Configuración de Alertas
+        </div>
+        <div class="settings-grid">
+            <div class="setting-item">
+                <div class="setting-label">Nivel Crítico</div>
+                <div class="setting-value">≤ 5 unidades</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Stock Bajo</div>
+                <div class="setting-value">≤ 20 unidades</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Frecuencia</div>
+                <div class="setting-value">Tiempo real</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Notificaciones</div>
+                <div class="setting-value">Email + Dashboard</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="alerts-container">
+        <h5><i class="fas fa-filter"></i> Filtros</h5>
+        <form method="get" class="alert-filters">
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label for="alert_type">Tipo de Alerta</label>
+                    <select name="alert_type" id="alert_type" class="form-control">
+                        <option value="">Todas las alertas</option>
+                        <option value="critical" {% if request.GET.alert_type == 'critical' %}selected{% endif %}>Stock Crítico</option>
+                        <option value="low" {% if request.GET.alert_type == 'low' %}selected{% endif %}>Stock Bajo</option>
+                        <option value="out" {% if request.GET.alert_type == 'out' %}selected{% endif %}>Sin Stock</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Categoría</label>
+                    <select name="category" id="category" class="form-control">
+                        <option value="">Todas las categorías</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="priority">Prioridad</label>
+                    <select name="priority" id="priority" class="form-control">
+                        <option value="">Todas las prioridades</option>
+                        <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>Alta</option>
+                        <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Media</option>
+                        <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Baja</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'management:stock_alerts' %}" class="btn btn-outline-secondary ml-2">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Acciones Masivas -->
+    {% if alerts %}
+        <div class="bulk-actions">
+            <h6><i class="fas fa-tasks"></i> Acciones Masivas</h6>
+            <div class="bulk-buttons">
+                <button class="btn btn-success btn-sm" onclick="bulkCreateOrders()">
+                    <i class="fas fa-shopping-cart"></i> Crear Órdenes de Compra
+                </button>
+                <button class="btn btn-info btn-sm" onclick="bulkNotifySuppliers()">
+                    <i class="fas fa-envelope"></i> Notificar Proveedores
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="exportAlerts()">
+                    <i class="fas fa-file-export"></i> Exportar Alertas
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Lista de Alertas -->
+    <div class="alerts-container">
+        {% if alerts %}
+            <h5><i class="fas fa-bell"></i> Alertas Activas ({{ alerts|length }})</h5>
+            {% for alert in alerts %}
+                <div class="alert-item alert-{{ alert.type }} position-relative">
+                    <!-- Indicador de prioridad -->
+                    <div class="priority-indicator priority-{{ alert.priority }}"></div>
+                    
+                    <div class="alert-header">
+                        <div class="alert-product">
+                            {% if alert.product.image %}
+                                <img src="{{ alert.product.image.url }}" alt="{{ alert.product.name }}" class="product-image">
+                            {% else %}
+                                <div class="product-placeholder">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            {% endif %}
+                            <div class="product-info">
+                                <h5>{{ alert.product.name }}</h5>
+                                <p>
+                                    SKU: {{ alert.product.sku|default:"N/A" }} | 
+                                    Categoría: {{ alert.product.category.name|default:"Sin categoría" }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="alert-badge badge-{{ alert.type }}">
+                            {% if alert.type == 'critical' %}
+                                <i class="fas fa-exclamation-triangle"></i> Crítico
+                            {% elif alert.type == 'low' %}
+                                <i class="fas fa-exclamation-circle"></i> Stock Bajo
+                            {% else %}
+                                <i class="fas fa-times-circle"></i> Sin Stock
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert-details">
+                        <div class="detail-item">
+                            <div class="detail-number">{{ alert.current_stock|default:0 }}</div>
+                            <div class="detail-label">Stock Actual</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-number">{{ alert.minimum_stock|default:20 }}</div>
+                            <div class="detail-label">Stock Mínimo</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-number">{{ alert.recommended_order|default:50 }}</div>
+                            <div class="detail-label">Orden Sugerida</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-number">{{ alert.days_out|default:0 }}</div>
+                            <div class="detail-label">Días Agotado</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-actions">
+                        <button class="action-btn btn-restock" onclick="createRestockOrder({{ alert.product.id }})">
+                            <i class="fas fa-plus"></i> Reabastecer
+                        </button>
+                        <button class="action-btn btn-edit" onclick="editStock({{ alert.product.id }})">
+                            <i class="fas fa-edit"></i> Ajustar Stock
+                        </button>
+                        <button class="action-btn btn-history" onclick="viewHistory({{ alert.product.id }})">
+                            <i class="fas fa-history"></i> Historial
+                        </button>
+                        <button class="action-btn btn-supplier" onclick="contactSupplier({{ alert.product.id }})">
+                            <i class="fas fa-phone"></i> Contactar Proveedor
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h4>¡Excelente! No hay alertas de stock</h4>
+                <p>Todos los productos tienen niveles de stock adecuados.</p>
+                <button class="btn btn-primary mt-3" onclick="refreshAlerts()">
+                    <i class="fas fa-sync-alt"></i> Verificar Nuevamente
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Funciones de acción individual
+    function createRestockOrder(productId) {
+        Swal.fire({
+            title: 'Crear Orden de Reabastecimiento',
+            text: '¿Deseas crear una orden de compra para este producto?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, crear orden',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/management/purchase-orders/create/?product=${productId}`;
+            }
+        });
+    }
+    
+    function editStock(productId) {
+        window.location.href = `/management/stock/movement/?product=${productId}`;
+    }
+    
+    function viewHistory(productId) {
+        window.location.href = `/management/stock/history/${productId}/`;
+    }
+    
+    function contactSupplier(productId) {
+        // Implementar funcionalidad para contactar proveedor
+        Swal.fire({
+            title: 'Contactar Proveedor',
+            text: 'Funcionalidad en desarrollo',
+            icon: 'info'
+        });
+    }
+    
+    // Funciones de acciones masivas
+    function bulkCreateOrders() {
+        Swal.fire({
+            title: 'Crear Órdenes Masivas',
+            text: '¿Crear órdenes de compra para todos los productos con stock bajo?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, crear órdenes',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Implementar lógica de órdenes masivas
+                Swal.fire({
+                    title: 'Creando órdenes...',
+                    text: 'Procesando órdenes de compra',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Simular proceso
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'Órdenes creadas',
+                        text: 'Se han creado las órdenes de compra exitosamente',
+                        icon: 'success'
+                    });
+                }, 3000);
+            }
+        });
+    }
+    
+    function bulkNotifySuppliers() {
+        Swal.fire({
+            title: 'Notificar Proveedores',
+            text: '¿Enviar notificaciones a todos los proveedores sobre productos con stock bajo?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#17a2b8',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, notificar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Enviando notificaciones...',
+                    text: 'Contactando proveedores',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'Notificaciones enviadas',
+                        text: 'Se han enviado las notificaciones a los proveedores',
+                        icon: 'success'
+                    });
+                }, 2000);
+            }
+        });
+    }
+    
+    function exportAlerts() {
+        window.location.href = '{% url "management:stock_alerts" %}?format=excel';
+    }
+    
+    function refreshAlerts() {
+        Swal.fire({
+            title: 'Actualizando alertas...',
+            text: 'Verificando niveles de stock',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }
+    
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animaciones de entrada para las alertas
+        const alertItems = document.querySelectorAll('.alert-item');
+        alertItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                item.style.transition = 'all 0.5s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateX(0)';
+            }, index * 100);
+        });
+        
+        // Efectos hover para tarjetas de resumen
+        const summaryCards = document.querySelectorAll('.summary-card');
+        summaryCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+        });
+        
+        // Auto-refresh cada 5 minutos
+        setInterval(() => {
+            console.log('Auto-refreshing stock alerts...');
+            // Aquí se podría implementar una actualización automática via AJAX
+        }, 300000); // 5 minutos
+    });
+</script>
+{% endblock %}
