@@ -1,0 +1,1127 @@
+{% extends "management/base.html" %}
+{% load static %}
+
+{% block title %}Reporte de Ventas - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .sales-report-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .report-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e3e6f0;
+    }
+    
+    .report-header h2 {
+        color: #5a5c69;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .report-header p {
+        color: #858796;
+        margin: 0;
+        font-size: 1.1em;
+    }
+    
+    .filters-section {
+        background: #f8f9fc;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid #e3e6f0;
+    }
+    
+    .filters-title {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .filters-title i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 8px;
+        font-size: 0.9em;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #d1d3e2;
+        padding: 10px 15px;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-filter {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(78, 115, 223, 0.4);
+        color: white;
+    }
+    
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        border: 1px solid #e3e6f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    
+    .stat-card.sales::before {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .stat-card.orders::before {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+    }
+    
+    .stat-card.customers::before {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    }
+    
+    .stat-card.average::before {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        color: white;
+        margin: 0 auto 15px;
+    }
+    
+    .icon-sales {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .icon-orders {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+    }
+    
+    .icon-customers {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    }
+    
+    .icon-average {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    }
+    
+    .stat-value {
+        font-size: 2.2em;
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #858796;
+        font-size: 0.95em;
+        margin-bottom: 10px;
+    }
+    
+    .stat-change {
+        font-size: 0.8em;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 15px;
+        display: inline-block;
+    }
+    
+    .stat-change.positive {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .stat-change.negative {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .charts-section {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        margin-bottom: 40px;
+        min-height: 500px;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid #e3e6f0;
+        position: relative;
+        min-height: 450px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        flex: 1;
+        min-height: 350px;
+        width: 100%;
+    }
+    
+    .chart-wrapper canvas {
+        max-width: 100%;
+        height: auto !important;
+        display: block;
+        margin: 0 auto;
+    }
+    
+    /* Estilos específicos para Chart.js */
+    .chartjs-render-monitor {
+        animation: chartjs-render-animation 0.001s;
+    }
+    
+    @keyframes chartjs-render-animation {
+        from { opacity: 0.99; }
+        to { opacity: 1; }
+    }
+    
+    /* Mejoras para los botones de control de gráficos */
+    .chart-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .chart-title {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .chart-title i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+    
+    .chart-controls {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chart-btn {
+        padding: 6px 12px;
+        border: 1px solid #d1d3e2;
+        border-radius: 6px;
+        background: white;
+        color: #5a5c69;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .chart-btn.active,
+    .chart-btn:hover {
+        background: #4e73df;
+        color: white;
+        border-color: #4e73df;
+    }
+    
+    .top-products-table {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid #e3e6f0;
+        margin-bottom: 30px;
+    }
+    
+    .table-title {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .table-title i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+    
+    .products-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .products-table th {
+        background: #f8f9fc;
+        color: #5a5c69;
+        font-weight: 600;
+        padding: 15px;
+        text-align: left;
+        border-bottom: 2px solid #e3e6f0;
+        font-size: 0.9em;
+    }
+    
+    .products-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e3e6f0;
+        color: #858796;
+        font-size: 0.9em;
+    }
+    
+    .products-table tr:hover {
+        background: #f8f9fc;
+    }
+    
+    .product-name {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    
+    .product-category {
+        font-size: 0.8em;
+        color: #858796;
+        background: #e3e6f0;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: inline-block;
+    }
+    
+    .sales-amount {
+        font-weight: 600;
+        color: #28a745;
+    }
+    
+    .export-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .export-title {
+        color: #856404;
+        font-weight: bold;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .export-title i {
+        margin-right: 10px;
+    }
+    
+    .export-options {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .export-btn {
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        text-decoration: none;
+    }
+    
+    .btn-excel {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-pdf {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-csv {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .btn-print {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    
+    .loading-content {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #4e73df;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+        .charts-section {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .chart-container {
+            min-height: 350px;
+            padding: 20px;
+        }
+        
+        .chart-wrapper {
+            min-height: 250px;
+        }
+        
+        .filter-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-overview {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-controls {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .chart-btn {
+            font-size: 0.7em;
+            padding: 4px 8px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .chart-container {
+            min-height: 300px;
+            padding: 15px;
+        }
+        
+        .chart-wrapper {
+            min-height: 200px;
+        }
+        
+        .export-options {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .export-btn {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-line text-primary"></i>
+            Reporte de Ventas
+        </h1>
+        <div>
+            <button class="btn btn-info btn-sm mr-2" onclick="refreshReport()">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+            <a href="{% url 'management:reports' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filters-title">
+            <i class="fas fa-filter"></i>
+            Filtros de Reporte
+        </div>
+        <form id="filterForm" method="get">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Fecha Inicio</label>
+                    <input type="text" id="start_date" name="start_date" class="form-control" 
+                           placeholder="Seleccionar fecha" value="{{ request.GET.start_date }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Fecha Fin</label>
+                    <input type="text" id="end_date" name="end_date" class="form-control" 
+                           placeholder="Seleccionar fecha" value="{{ request.GET.end_date }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Categoría</label>
+                    <select name="category" class="form-control">
+                        <option value="">Todas las categorías</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" 
+                                {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Período Rápido</label>
+                    <select id="quick_period" class="form-control">
+                        <option value="">Seleccionar período</option>
+                        <option value="today">Hoy</option>
+                        <option value="yesterday">Ayer</option>
+                        <option value="this_week">Esta semana</option>
+                        <option value="last_week">Semana pasada</option>
+                        <option value="this_month">Este mes</option>
+                        <option value="last_month">Mes pasado</option>
+                        <option value="this_year">Este año</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i>
+                    Aplicar Filtros
+                </button>
+                <button type="button" class="btn btn-outline-secondary ml-2" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                    Limpiar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="stats-overview">
+        <div class="stat-card sales">
+            <div class="stat-icon icon-sales">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-value">${{ total_sales|default:0|floatformat:2 }}</div>
+            <div class="stat-label">Ventas Totales</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> +12.5%
+            </div>
+        </div>
+        
+        <div class="stat-card orders">
+            <div class="stat-icon icon-orders">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-value">{{ total_orders|default:0 }}</div>
+            <div class="stat-label">Órdenes</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> +8.3%
+            </div>
+        </div>
+        
+        <div class="stat-card customers">
+            <div class="stat-icon icon-customers">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ unique_customers|default:0 }}</div>
+            <div class="stat-label">Clientes Únicos</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> +15.7%
+            </div>
+        </div>
+        
+        <div class="stat-card average">
+            <div class="stat-icon icon-average">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="stat-value">${{ average_order|default:0|floatformat:2 }}</div>
+            <div class="stat-label">Ticket Promedio</div>
+            <div class="stat-change negative">
+                <i class="fas fa-arrow-down"></i> -2.1%
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section">
+        <div class="chart-container">
+            <div class="chart-title">
+                <span><i class="fas fa-chart-line"></i>Tendencia de Ventas</span>
+                <div class="chart-controls">
+                    <button class="chart-btn active" onclick="changeChartPeriod('daily')">Diario</button>
+                    <button class="chart-btn" onclick="changeChartPeriod('weekly')">Semanal</button>
+                    <button class="chart-btn" onclick="changeChartPeriod('monthly')">Mensual</button>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">
+                <span><i class="fas fa-chart-pie"></i>Ventas por Categoría</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Productos Más Vendidos -->
+    <div class="top-products-table">
+        <div class="table-title">
+            <i class="fas fa-star"></i>
+            Productos Más Vendidos
+        </div>
+        <div class="table-responsive">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Cantidad Vendida</th>
+                        <th>Ingresos</th>
+                        <th>% del Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in top_products %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="product-name">{{ product.name }}</td>
+                        <td><span class="product-category">{{ product.category.name }}</span></td>
+                        <td>{{ product.quantity_sold|default:0 }}</td>
+                        <td class="sales-amount">${{ product.revenue|default:0|floatformat:2 }}</td>
+                        <td>{{ product.percentage|default:0|floatformat:1 }}%</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="fas fa-inbox"></i>
+                            No hay datos de productos para el período seleccionado
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Exportación -->
+    <div class="export-section">
+        <div class="export-title">
+            <i class="fas fa-file-export"></i>
+            Exportar Reporte
+        </div>
+        <p class="mb-3">Descarga el reporte en diferentes formatos</p>
+        <div class="export-options">
+            <a href="?format=excel&{{ request.GET.urlencode }}" class="export-btn btn-excel">
+                <i class="fas fa-file-excel"></i>
+                Excel
+            </a>
+            <a href="?format=pdf&{{ request.GET.urlencode }}" class="export-btn btn-pdf">
+                <i class="fas fa-file-pdf"></i>
+                PDF
+            </a>
+            <a href="?format=csv&{{ request.GET.urlencode }}" class="export-btn btn-csv">
+                <i class="fas fa-file-csv"></i>
+                CSV
+            </a>
+            <button class="export-btn btn-print" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                Imprimir
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p>Generando reporte...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Configuración de Flatpickr para fechas
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#start_date", {
+            locale: "es",
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+        
+        flatpickr("#end_date", {
+            locale: "es",
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+        
+        // Configurar períodos rápidos
+        setupQuickPeriods();
+        
+        // Esperar a que los contenedores estén completamente renderizados
+        setTimeout(() => {
+            initCharts();
+        }, 100);
+    });
+
+    // Inicializar gráficos
+    function initCharts() {
+        // Datos para los gráficos (en una implementación real vendrían del backend)
+        const salesChartLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'];
+        const salesChartData = [12000, 15000, 18000, 14000, 20000, 25000, 22000];
+        const categoryChartLabels = ['Galletas', 'Pasteles', 'Brownies', 'Cupcakes', 'Otros'];
+        const categoryChartData = [35, 25, 20, 15, 5];
+        
+        // Gráfico de tendencia de ventas
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        window.salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: salesChartLabels,
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: salesChartData,
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#4e73df',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Ventas: $' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        border: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        border: {
+                            display: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            },
+                            maxTicksLimit: 6
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverRadius: 8
+                    }
+                }
+            }
+        });
+
+        // Gráfico de categorías
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        window.categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryChartLabels,
+                datasets: [{
+                    data: categoryChartData,
+                    backgroundColor: [
+                        '#4e73df',
+                        '#1cc88a',
+                        '#36b9cc',
+                        '#f6c23e',
+                        '#e74a3b',
+                        '#858796'
+                    ],
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverBorderWidth: 4,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#4e73df',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                return context.label + ': ' + percentage + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1000
+                }
+            }
+        });
+        
+        // Redimensionar gráficos cuando cambie el tamaño de ventana
+        window.addEventListener('resize', function() {
+            if (window.salesChart) {
+                window.salesChart.resize();
+            }
+            if (window.categoryChart) {
+                window.categoryChart.resize();
+            }
+        });
+    }
+
+    // Configurar períodos rápidos
+    function setupQuickPeriods() {
+        const quickPeriodSelect = document.getElementById('quick_period');
+        quickPeriodSelect.addEventListener('change', function() {
+            const period = this.value;
+            if (period) {
+                const dates = getQuickPeriodDates(period);
+                document.getElementById('start_date').value = dates.start;
+                document.getElementById('end_date').value = dates.end;
+            }
+        });
+    }
+
+    // Obtener fechas para períodos rápidos
+    function getQuickPeriodDates(period) {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        let start, end;
+        
+        switch(period) {
+            case 'today':
+                start = end = today;
+                break;
+            case 'yesterday':
+                start = end = yesterday;
+                break;
+            case 'this_week':
+                start = new Date(today);
+                start.setDate(today.getDate() - today.getDay());
+                end = today;
+                break;
+            case 'last_week':
+                end = new Date(today);
+                end.setDate(today.getDate() - today.getDay() - 1);
+                start = new Date(end);
+                start.setDate(end.getDate() - 6);
+                break;
+            case 'this_month':
+                start = new Date(today.getFullYear(), today.getMonth(), 1);
+                end = today;
+                break;
+            case 'last_month':
+                start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                end = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case 'this_year':
+                start = new Date(today.getFullYear(), 0, 1);
+                end = today;
+                break;
+            default:
+                return { start: '', end: '' };
+        }
+        
+        return {
+            start: start.toISOString().split('T')[0],
+            end: end.toISOString().split('T')[0]
+        };
+    }
+
+    // Cambiar período del gráfico
+    function changeChartPeriod(period) {
+        // Actualizar botones activos
+        document.querySelectorAll('.chart-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Simular actualización de datos (en implementación real vendría del backend)
+        showLoading();
+        
+        setTimeout(() => {
+            // Actualizar datos del gráfico según el período
+            updateChartData(period);
+            hideLoading();
+            
+            Swal.fire({
+                title: 'Gráfico actualizado',
+                text: `Vista cambiada a período ${period}`,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }, 1000);
+    }
+    
+    // Actualizar datos del gráfico
+    function updateChartData(period) {
+        if (!window.salesChart) return;
+        
+        // Datos simulados según el período
+        let newLabels, newData;
+        
+        switch(period) {
+            case 'daily':
+                newLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                newData = [8000, 12000, 15000, 9000, 18000, 22000, 16000];
+                break;
+            case 'weekly':
+                newLabels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
+                newData = [45000, 52000, 38000, 61000];
+                break;
+            case 'monthly':
+                newLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+                newData = [120000, 150000, 180000, 140000, 200000, 250000];
+                break;
+            default:
+                return;
+        }
+        
+        // Actualizar gráfico con animación
+        window.salesChart.data.labels = newLabels;
+        window.salesChart.data.datasets[0].data = newData;
+        window.salesChart.update('active');
+    }
+    
+    // Función para reinicializar gráficos si es necesario
+    function reinitializeCharts() {
+        if (window.salesChart) {
+            window.salesChart.destroy();
+        }
+        if (window.categoryChart) {
+            window.categoryChart.destroy();
+        }
+        
+        setTimeout(() => {
+            initCharts();
+        }, 100);
+    }
+
+    // Limpiar filtros
+    function clearFilters() {
+        document.getElementById('filterForm').reset();
+        document.getElementById('start_date').value = '';
+        document.getElementById('end_date').value = '';
+        document.getElementById('quick_period').value = '';
+    }
+
+    // Actualizar reporte
+    function refreshReport() {
+        showLoading();
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }
+
+    // Mostrar loading
+    function showLoading() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    // Ocultar loading
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // Animaciones de entrada
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animar estadísticas
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+
+        // Efectos hover para iconos
+        const statIcons = document.querySelectorAll('.stat-icon');
+        statIcons.forEach(icon => {
+            icon.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1) rotate(5deg)';
+            });
+            
+            icon.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+    });
+</script>
+{% endblock %}
