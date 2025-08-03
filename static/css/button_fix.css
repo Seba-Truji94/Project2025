@@ -1,0 +1,163 @@
+/* 🔧 CSS FIX - Corrección de Animaciones de Botones */
+
+/* Agregar variables CSS faltantes que estaban causando botones blancos */
+:root {
+    /* Variables faltantes que causaban el problema */
+    --primary-color: var(--primary-blue); /* #4A90E2 */
+    --primary-dark: var(--primary-blue-dark); /* #357ABD */
+    --accent-color: #FFD700; /* Dorado para acentos */
+}
+
+/* Corrección específica para botones de carrito */
+.cart-btn:hover {
+    background: var(--primary-blue-dark) !important;
+    color: var(--white) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Corrección para botón de usuario/iniciar sesión */
+.user-btn:hover {
+    background: linear-gradient(145deg, var(--primary-blue), var(--primary-blue-dark)) !important;
+    color: var(--white) !important;
+    border-color: var(--primary-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+}
+
+/* Corrección para botones de agregar al carrito */
+.add-to-cart:hover {
+    background: var(--primary-blue-dark) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Corrección para botones de "Quick View" */
+.quick-view:hover {
+    background: var(--primary-blue) !important;
+    color: var(--white) !important;
+}
+
+/* Corrección para botones de filtro */
+.filter-btn.active,
+.filter-btn:hover {
+    background: var(--primary-blue) !important;
+    color: var(--white) !important;
+    border-color: var(--primary-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Corrección para botones CTA */
+.cta-secondary:hover {
+    background: var(--primary-blue) !important;
+    color: var(--white) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Corrección para botón de "Load More" */
+.load-more-btn:hover {
+    background: var(--primary-blue) !important;
+    color: var(--white) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Corrección para enlaces de navegación */
+.nav-menu a:hover {
+    color: var(--primary-blue) !important;
+}
+
+/* Corrección para botones de búsqueda */
+.search-btn:hover,
+.wishlist-btn:hover {
+    color: var(--primary-blue) !important;
+    background: var(--background-light);
+}
+
+/* Corrección específica para evitar texto blanco ilegible */
+.cart-btn,
+.user-btn,
+.add-to-cart,
+.quick-view,
+.filter-btn,
+.cta-secondary,
+.load-more-btn {
+    transition: all 0.3s ease !important;
+}
+
+/* Asegurar que todos los botones tengan texto visible en hover */
+.cart-btn:hover,
+.user-btn:hover,
+.add-to-cart:hover,
+.quick-view:hover,
+.filter-btn:hover,
+.cta-secondary:hover,
+.load-more-btn:hover {
+    opacity: 1 !important;
+}
+
+/* Corrección para el botón flotante de carrito */
+.floating-cart-link:hover {
+    background: var(--primary-blue-dark) !important;
+    color: white !important;
+    box-shadow: 0 6px 25px rgba(74, 144, 226, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Corrección para enlace móvil del carrito */
+.mobile-cart-link:hover {
+    background: var(--primary-blue-dark) !important;
+    color: white !important;
+}
+
+/* Corrección para botones de búsqueda móvil */
+.mobile-search-btn:hover {
+    background-color: #23272b !important;
+    color: white !important;
+}
+
+/* Corrección para botón de envío de búsqueda del header */
+.search-submit-btn-header:hover {
+    background-color: #23272b !important;
+    color: white !important;
+    transform: translateX(-2px);
+}
+
+/* Corrección adicional para asegurar contraste */
+*[class*="btn"]:hover,
+*[class*="button"]:hover {
+    text-shadow: none !important;
+    -webkit-text-fill-color: initial !important;
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+    .cart-btn:hover,
+    .user-btn:hover,
+    .add-to-cart:hover {
+        transform: none; /* Evitar problemas de touch en móvil */
+    }
+}
+
+/* Corrección específica para el contador de carrito */
+.cart-count {
+    background: var(--accent-pink) !important;
+    color: var(--white) !important;
+}
+
+/* Corrección para asegurar que el botón de wishlist funcione */
+.product-wishlist:hover {
+    background: var(--error) !important;
+    color: var(--white) !important;
+    transform: scale(1.1);
+}
+
+/* DEBUG: Añadir outline temporal para verificar botones (remover en producción) */
+/*
+.cart-btn, .user-btn, .add-to-cart {
+    outline: 2px solid red !important;
+}
+*/

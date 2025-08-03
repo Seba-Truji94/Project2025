@@ -129,17 +129,19 @@ INSTALLED_APPS = [
     'cart',
     'orders',
     'support',
+    'management',  # Nuevo módulo de gestión empresarial
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'axes.middleware.AxesMiddleware',  # Protección contra ataques de fuerza bruta
-    'security.middleware.SecurityLogMiddleware',  # Logging de seguridad personalizado
-    'security.middleware.RateLimitMiddleware',  # Rate limiting personalizado
+    'security.middleware.RateLimitMiddleware',  # Rate limiting personalizado (antes de auth)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'security.middleware.AdminModulesAccessMiddleware',  # Control de acceso a módulos admin
+    'security.middleware.SecurityLogMiddleware',  # Logging de seguridad (después de auth)
     'csp.middleware.CSPMiddleware',  # Content Security Policy middleware
     'security.middleware.SecurityHeadersMiddleware',  # Headers de seguridad adicionales
     'django.contrib.messages.middleware.MessageMiddleware',
