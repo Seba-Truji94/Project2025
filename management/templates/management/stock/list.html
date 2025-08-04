@@ -585,17 +585,253 @@
     
     // Ver detalles del movimiento
     function viewMovementDetails(movementId) {
+        console.log('🔍 Intentando cargar detalles para movimiento ID:', movementId);
+        
+        // Verificar que Swal esté disponible
+        if (typeof Swal === 'undefined') {
+            alert('SweetAlert2 no está cargado. Usando alert nativo.');
+            alert(`Detalles del movimiento ${movementId} - Función en desarrollo`);
+            return;
+        }
+        
+        // Mostrar modal de carga
         Swal.fire({
-            title: 'Detalles del Movimiento',
-            html: `
-                <div class="text-left">
-                    <p><strong>ID:</strong> ${movementId}</p>
-                    <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
-                    <p>Cargando detalles completos...</p>
-                </div>
-            `,
+            title: 'Cargando detalles...',
+            html: 'Obteniendo información del movimiento',
             icon: 'info',
-            confirmButtonText: 'Cerrar'
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Construir URL
+        const url = `/management/stock/movimiento/${movementId}/`;
+        console.log('📡 Haciendo petición a:', url);
+        
+        // Hacer llamada AJAX para obtener detalles
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('📊 Respuesta recibida:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('✅ Datos JSON recibidos:', data);
+            
+            if (data.success) {
+                const movement = data.data;
+                
+                // Determinar el icono según el tipo de movimiento
+                let typeIcon = '📦';
+                let typeColor = '#6c757d';
+                switch(movement.movement_type_code) {
+                    case 'sale':
+                        typeIcon = '🛒';
+                        typeColor = '#dc3545';
+                        break;
+                    case 'entry':
+                        typeIcon = '📥';
+                        typeColor = '#28a745';
+                        break;
+                    case 'return':
+                        typeIcon = '↩️';
+                        typeColor = '#17a2b8';
+                        break;
+                    case 'adjustment':
+                        typeIcon = '⚙️';
+                        typeColor = '#ffc107';
+                        break;
+                }
+                
+                // Determinar el color del impacto
+                let impactColor = '#6c757d';
+                let impactIcon = '➡️';
+                if (movement.impact.direction === 'increase') {
+                    impactColor = '#28a745';
+                    impactIcon = '📈';
+                } else if (movement.impact.direction === 'decrease') {
+                    impactColor = '#dc3545';
+                    impactIcon = '📉';
+                }
+                
+                Swal.fire({
+                    title: `${typeIcon} Detalles del Movimiento #${movement.id}`,
+                    html: `
+                        <div class="movement-details-modal">
+                            <div class="detail-section">
+                                <h5><i class="fas fa-box" style="color: #4e73df;"></i> Producto</h5>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <strong>Nombre:</strong>
+                                        <span>${movement.product.name}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Categoría:</strong>
+                                        <span>${movement.product.category}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Stock Actual:</strong>
+                                        <span class="badge badge-info">${movement.product.current_stock} unidades</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h5><i class="fas fa-exchange-alt" style="color: ${typeColor};"></i> Movimiento</h5>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <strong>Tipo:</strong>
+                                        <span class="badge" style="background-color: ${typeColor}; color: white;">${movement.movement_type}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Cantidad:</strong>
+                                        <span class="quantity-change ${movement.impact.direction}">
+                                            ${movement.quantity > 0 ? '+' : ''}${movement.quantity} unidades
+                                        </span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Cambio:</strong>
+                                        <span>${movement.previous_stock} → ${movement.new_stock}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h5><i class="fas fa-chart-line" style="color: ${impactColor};"></i> Impacto</h5>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <strong>Dirección:</strong>
+                                        <span>${impactIcon} ${movement.impact.direction === 'increase' ? 'Incremento' : movement.impact.direction === 'decrease' ? 'Reducción' : 'Sin cambio'}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Porcentaje:</strong>
+                                        <span>${movement.impact.percentage}% del stock anterior</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h5><i class="fas fa-info-circle" style="color: #17a2b8;"></i> Información Adicional</h5>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <strong>Motivo:</strong>
+                                        <span>${movement.reason}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Referencia:</strong>
+                                        <span>${movement.reference}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Usuario:</strong>
+                                        <span><i class="fas fa-user"></i> ${movement.user_full_name}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Fecha:</strong>
+                                        <span><i class="fas fa-clock"></i> ${movement.created_at}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <style>
+                            .movement-details-modal {
+                                text-align: left;
+                                max-width: 600px;
+                                margin: 0 auto;
+                            }
+                            .detail-section {
+                                margin-bottom: 20px;
+                                padding: 15px;
+                                background: #f8f9fc;
+                                border-radius: 8px;
+                                border-left: 4px solid #4e73df;
+                            }
+                            .detail-section h5 {
+                                margin-bottom: 15px;
+                                color: #5a5c69;
+                                font-weight: 600;
+                            }
+                            .detail-grid {
+                                display: grid;
+                                grid-template-columns: 1fr 1fr;
+                                gap: 10px;
+                            }
+                            .detail-item {
+                                padding: 8px 0;
+                                border-bottom: 1px solid #e3e6f0;
+                            }
+                            .detail-item strong {
+                                display: block;
+                                color: #5a5c69;
+                                font-size: 0.9em;
+                                margin-bottom: 3px;
+                            }
+                            .detail-item span {
+                                color: #858796;
+                            }
+                            .quantity-change.increase {
+                                color: #28a745;
+                                font-weight: bold;
+                            }
+                            .quantity-change.decrease {
+                                color: #dc3545;
+                                font-weight: bold;
+                            }
+                            .quantity-change.neutral {
+                                color: #6c757d;
+                                font-weight: bold;
+                            }
+                            .badge {
+                                padding: 4px 8px;
+                                border-radius: 12px;
+                                font-size: 0.8em;
+                                font-weight: 500;
+                            }
+                            @media (max-width: 768px) {
+                                .detail-grid {
+                                    grid-template-columns: 1fr;
+                                }
+                            }
+                        </style>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: '#4e73df',
+                    width: '800px',
+                    customClass: {
+                        popup: 'movement-detail-popup'
+                    }
+                });
+            } else {
+                console.error('❌ Error en respuesta:', data.error);
+                Swal.fire({
+                    title: 'Error',
+                    text: data.error || 'No se pudieron cargar los detalles del movimiento',
+                    icon: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error en petición:', error);
+            Swal.fire({
+                title: 'Error de conexión',
+                text: `No se pudo conectar con el servidor: ${error.message}`,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+            });
         });
     }
     

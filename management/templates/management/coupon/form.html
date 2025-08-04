@@ -81,6 +81,21 @@
         padding-bottom: 10px;
         border-bottom: 2px solid #e3e6f0;
     }
+    
+    .form-control.is-invalid {
+        border-color: #e74a3b;
+    }
+    
+    .invalid-feedback {
+        color: #e74a3b;
+        font-size: 0.875em;
+        margin-top: 5px;
+    }
+    
+    .alert {
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
 </style>
 {% endblock %}
 
@@ -104,6 +119,28 @@
                 <form method="post" id="coupon-form">
                     {% csrf_token %}
                     
+                    <!-- Mostrar errores del formulario -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Por favor corrige los siguientes errores:</h6>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>
+                                            {% if field != '__all__' %}
+                                                <strong>{{ form|yesno:field.label,field }}:</strong> 
+                                            {% endif %}
+                                            {{ error }}
+                                        </li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endif %}
+                    
                     <!-- Información Básica -->
                     <h4 class="section-title">
                         <i class="fas fa-info-circle"></i> Información Básica
@@ -114,6 +151,13 @@
                             <div class="form-group">
                                 <label for="id_code">Código del Cupón *</label>
                                 {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="help-text">Código único que los clientes usarán para aplicar el descuento</div>
                             </div>
                         </div>
@@ -121,6 +165,13 @@
                             <div class="form-group">
                                 <label for="id_name">Nombre del Cupón *</label>
                                 {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="help-text">Nombre descriptivo para identificar el cupón internamente</div>
                             </div>
                         </div>

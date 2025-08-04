@@ -492,7 +492,10 @@ def checkout(request):
                 region=region,
                 postal_code=postal_code,
                 notes=delivery_notes,
+                coupon=cart.coupon,
+                coupon_code=cart.coupon.code if cart.coupon else '',
                 subtotal=cart.total_price,
+                discount_amount=cart.discount_amount,
                 shipping_cost=cart.shipping_cost,
                 total=cart.final_total,
                 payment_method=payment_method,
@@ -508,8 +511,15 @@ def checkout(request):
                     price=cart_item.product.price
                 )
             
-            # Vaciar el carrito
+            # Actualizar uso del cupón si existe
+            if cart.coupon:
+                cart.coupon.current_uses += 1
+                cart.coupon.save()
+            
+            # Vaciar el carrito (incluyendo el cupón)
+            cart.coupon = None
             cart.items.all().delete()
+            cart.save()
             
             # Redirigir según método de pago
             if payment_method == 'transfer':
@@ -658,3 +668,124 @@ def cart_summary(request):
             'final_total': f"${int(final_total):,}".replace(',', '.'),
             'has_more': len(session_cart) > 5
         })
+
+
+@login_required
+@require_POST
+def apply_coupon(request):
+    """Aplicar cupón de descuento al carrito"""
+    coupon_code = request.POST.get('coupon_code', '').strip()
+    
+    if not coupon_code:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'Por favor ingresa un código de cupón'
+            })
+        messages.error(request, 'Por favor ingresa un código de cupón')
+        return redirect('cart:cart_detail')
+    
+    try:
+        cart = Cart.objects.get(user=request.user)
+        
+        if not cart.items.exists():
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Tu carrito está vacío'
+                })
+            messages.error(request, 'Tu carrito está vacío')
+            return redirect('cart:cart_detail')
+        
+        # Aplicar cupón usando el método del modelo
+        success, message = cart.apply_coupon(coupon_code)
+        
+        if success:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': message,
+                    'coupon': {
+                        'code': cart.coupon.code,
+                        'name': cart.coupon.name,
+                        'description': cart.coupon.description,
+                        'discount_type': cart.coupon.get_discount_type_display(),
+                        'discount_value': str(cart.coupon.discount_value),
+                        'discount_amount': cart.formatted_discount_amount,
+                    },
+                    'cart_totals': {
+                        'subtotal': cart.formatted_total_price,
+                        'discount': cart.formatted_discount_amount,
+                        'subtotal_after_discount': f"${int(cart.subtotal_after_discount):,}".replace(',', '.'),
+                        'shipping': cart.formatted_shipping_cost,
+                        'final_total': cart.formatted_final_total
+                    }
+                })
+            messages.success(request, message)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': message
+                })
+            messages.error(request, message)
+        
+    except Cart.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'No tienes un carrito activo'
+            })
+        messages.error(request, 'No tienes un carrito activo')
+    
+    return redirect('cart:cart_detail')
+
+
+@login_required
+@require_POST
+def remove_coupon(request):
+    """Remover cupón de descuento del carrito"""
+    try:
+        cart = Cart.objects.get(user=request.user)
+        
+        if not cart.coupon:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No hay cupón aplicado'
+                })
+            messages.error(request, 'No hay cupón aplicado')
+            return redirect('cart:cart_detail')
+        
+        # Remover cupón usando el método del modelo
+        success, message = cart.remove_coupon()
+        
+        if success:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': message,
+                    'cart_totals': {
+                        'subtotal': cart.formatted_total_price,
+                        'shipping': cart.formatted_shipping_cost,
+                        'final_total': cart.formatted_final_total
+                    }
+                })
+            messages.success(request, message)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': message
+                })
+            messages.error(request, message)
+        
+    except Cart.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'No tienes un carrito activo'
+            })
+        messages.error(request, 'No tienes un carrito activo')
+    
+    return redirect('cart:cart_detail')

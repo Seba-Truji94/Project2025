@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galletas Kati - Acceso Directo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 50px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn.alt {
+            background: #28a745;
+        }
+        .btn.alt:hover {
+            background: #1e7e34;
+        }
+        .note {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #666;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍪 Galletas Kati</h1>
+        
+        <div class="status">
+            ✅ Servidor Django funcionando correctamente
+        </div>
+        
+        <div>
+            <a href="http://127.0.0.1:8000/" class="btn" target="_blank">
+                🌐 Sitio Principal (Puerto 8000)
+            </a>
+        </div>
+        
+        <div>
+            <a href="http://127.0.0.1:8001/" class="btn alt" target="_blank">
+                🔄 Sitio Alternativo (Puerto 8001)
+            </a>
+        </div>
+        
+        <div>
+            <a href="http://127.0.0.1:8000/management/" class="btn" target="_blank">
+                ⚙️ Panel de Gestión
+            </a>
+        </div>
+        
+        <div>
+            <a href="http://127.0.0.1:8000/admin/" class="btn" target="_blank">
+                👨‍💼 Admin Django
+            </a>
+        </div>
+        
+        <div class="note">
+            <strong>💡 Nota Importante:</strong><br>
+            Si ves errores SSL, asegúrate de usar <strong>HTTP</strong> (no HTTPS).<br>
+            Los enlaces de arriba ya están configurados correctamente.
+            
+            <br><br>
+            
+            <strong>🔐 Credenciales de Admin:</strong><br>
+            Usuario: <code>admin</code><br>
+            Contraseña: <code>Admin123!@#</code>
+        </div>
+    </div>
+</body>
+</html>

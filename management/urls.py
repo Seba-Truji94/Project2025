@@ -40,6 +40,7 @@ urlpatterns = [
     path('stock/movimiento/', views.StockMovementCreateView.as_view(), name='stock_movement_create'),
     path('stock/reporte/', views.StockReportView.as_view(), name='stock_report'),
     path('stock/alertas/', views.StockAlertsView.as_view(), name='stock_alerts'),
+    path('stock/movimiento/<int:movement_id>/', views.StockMovementDetailView.as_view(), name='stock_movement_detail'),
     
     # Relaciones producto-proveedor
     path('relaciones/', views.ProductSupplierManagementView.as_view(), name='relations_management'),

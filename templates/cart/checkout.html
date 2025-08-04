@@ -222,6 +222,33 @@
                         <span>Subtotal:</span>
                         <span>{{ cart.formatted_total_price }}</span>
                     </div>
+                    
+                    <!-- Cupón aplicado -->
+                    {% if cart.coupon %}
+                        <div class="coupon-info mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success">
+                                    <i class="fas fa-tag"></i> {{ cart.coupon.code }}
+                                    {% if cart.coupon.description %}
+                                        <br><span class="text-muted">{{ cart.coupon.description }}</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        {% if cart.discount_amount > 0 %}
+                        <div class="summary-row d-flex justify-content-between mb-2 text-success">
+                            <span><i class="fas fa-tag"></i> Descuento:</span>
+                            <span>{{ cart.formatted_discount_amount }}</span>
+                        </div>
+                        
+                        <div class="summary-row d-flex justify-content-between mb-2">
+                            <span>Subtotal con descuento:</span>
+                            <span>${{ cart.subtotal_after_discount|floatformat:0 }}</span>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
                     <div class="summary-row d-flex justify-content-between mb-2">
                         <span>Envío:</span>
                         <span class="{% if cart.shipping_cost == 0 %}text-success{% endif %}">

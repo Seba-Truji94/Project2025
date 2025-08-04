@@ -1086,3 +1086,43 @@ function removeFromCart(productId) {
 function updateQuantity(productId, change) {
     app.updateQuantity(productId, change);
 }
+
+function toggleWishlist(productId) {
+    app.toggleWishlist(productId);
+}
+
+// Ensure proper CSS animations
+const animationStyles = document.createElement('style');
+animationStyles.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes cart-bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+        60% {
+            transform: translateY(-5px);
+        }
+    }
+    
+    .cart-bounce {
+        animation: cart-bounce 0.6s ease;
+    }
+    
+    .product-card {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+`;
+document.head.appendChild(animationStyles);

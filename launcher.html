@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galletas Kati - Launcher</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 50px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 15px 25px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 1.1em;
+            min-width: 200px;
+            justify-content: center;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        .btn.https {
+            background: #28a745;
+        }
+        .btn.https:hover {
+            background: #1e7e34;
+        }
+        .btn.admin {
+            background: #dc3545;
+        }
+        .btn.admin:hover {
+            background: #c82333;
+        }
+        .btn.management {
+            background: #6f42c1;
+        }
+        .btn.management:hover {
+            background: #5a2d91;
+        }
+        .note {
+            margin-top: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #666;
+            border-left: 5px solid #007bff;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            color: #856404;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        .protocol-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            gap: 20px;
+        }
+        .protocol-card {
+            flex: 1;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .http-card {
+            background: #e7f3ff;
+            border-color: #007bff;
+        }
+        .https-card {
+            background: #e8f5e8;
+            border-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍪 Galletas Kati</h1>
+        <div class="subtitle">Sistema de Gestión Empresarial</div>
+        
+        <div class="status">
+            ✅ Servidor Django configurado y listo
+        </div>
+        
+        <div class="protocol-info">
+            <div class="protocol-card http-card">
+                <h3>🌐 HTTP (Estándar)</h3>
+                <p>Para uso normal en desarrollo</p>
+                <strong>Puerto: 8000</strong>
+            </div>
+            <div class="protocol-card https-card">
+                <h3>🔒 HTTPS (Seguro)</h3>
+                <p>Con certificado auto-firmado</p>
+                <strong>Puerto: 8001</strong>
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <a href="http://127.0.0.1:8000/" class="btn" target="_blank" onclick="openWithMessage('HTTP')">
+                🌐 Sitio HTTP (Puerto 8000)
+            </a>
+            
+            <a href="https://127.0.0.1:8001/" class="btn https" target="_blank" onclick="openWithMessage('HTTPS')">
+                🔒 Sitio HTTPS (Puerto 8001)
+            </a>
+        </div>
+        
+        <div class="btn-group">
+            <a href="http://127.0.0.1:8000/management/" class="btn management" target="_blank">
+                ⚙️ Panel de Gestión (HTTP)
+            </a>
+            
+            <a href="http://127.0.0.1:8000/admin/" class="btn admin" target="_blank">
+                👨‍💼 Admin Django (HTTP)
+            </a>
+        </div>
+        
+        <div class="note warning">
+            <strong>⚠️ Si tu navegador fuerza HTTPS:</strong><br>
+            1. Usa los enlaces HTTPS (Puerto 8001)<br>
+            2. Acepta el certificado auto-firmado<br>
+            3. O borra el caché del navegador
+        </div>
+        
+        <div class="note">
+            <strong>🚀 Para iniciar el servidor:</strong><br>
+            - Doble clic en <code>iniciar_servidor.bat</code><br>
+            - Selecciona HTTP (1) o HTTPS (2)<br><br>
+            
+            <strong>🔐 Credenciales de Admin:</strong><br>
+            Usuario: <code>admin</code><br>
+            Contraseña: <code>Admin123!@#</code>
+        </div>
+    </div>
+    
+    <script>
+        function openWithMessage(protocol) {
+            if (protocol === 'HTTPS') {
+                alert('Nota: Vas a acceder por HTTPS con certificado auto-firmado.\n\nSi ves una advertencia de seguridad, selecciona "Avanzado" > "Continuar de todos modos"');
+            }
+        }
+        
+        // Auto-refresh status
+        setInterval(() => {
+            fetch('http://127.0.0.1:8000/', {mode: 'no-cors'})
+                .then(() => {
+                    document.querySelector('.status').innerHTML = '✅ Servidor HTTP activo en puerto 8000';
+                })
+                .catch(() => {
+                    document.querySelector('.status').innerHTML = '❌ Servidor HTTP no detectado en puerto 8000';
+                });
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -6,6 +6,13 @@ from decimal import Decimal
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    coupon = models.ForeignKey(
+        'shop.DiscountCoupon', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='carts'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -21,13 +28,58 @@ class Cart(models.Model):
         return sum(item.get_total_price() for item in self.items.all())
     
     @property
+    def discount_amount(self):
+        """Calcula el monto de descuento aplicado por el cupón"""
+        if not self.coupon or not self.coupon.is_valid:
+            return Decimal('0')
+        
+        subtotal = self.total_price
+        
+        # Verificar monto mínimo
+        if subtotal < self.coupon.minimum_order_amount:
+            return Decimal('0')
+        
+        # Calcular descuento según el tipo
+        if self.coupon.discount_type == 'percentage':
+            discount = subtotal * (self.coupon.discount_value / Decimal('100'))
+            # Aplicar límite máximo si existe
+            if self.coupon.maximum_discount_amount:
+                discount = min(discount, self.coupon.maximum_discount_amount)
+        elif self.coupon.discount_type == 'fixed_amount':
+            discount = self.coupon.discount_value
+        else:  # free_shipping
+            discount = Decimal('0')  # El descuento se aplica al envío
+        
+        # No puede ser mayor al subtotal
+        return min(discount, subtotal)
+    
+    @property
+    def subtotal_after_discount(self):
+        """Subtotal después de aplicar el descuento del cupón"""
+        return self.total_price - self.discount_amount
+    
+    @property
+    def formatted_discount_amount(self):
+        discount = self.discount_amount
+        if discount > 0:
+            return f"-${int(discount):,}".replace(',', '.')
+        return "$0"
+    
+    @property
     def formatted_total_price(self):
         total = self.total_price
         return f"${int(total):,}".replace(',', '.')
     
     @property
     def shipping_cost(self):
-        """Envío gratis para compras mayores a $15,000"""
+        """Envío gratis para compras mayores a $15,000 o con cupón de envío gratis"""
+        # Si hay cupón de envío gratis
+        if self.coupon and self.coupon.is_valid and self.coupon.discount_type == 'free_shipping':
+            # Verificar monto mínimo del cupón
+            if self.total_price >= self.coupon.minimum_order_amount:
+                return 0
+        
+        # Envío gratis para compras mayores a $15,000
         if self.total_price >= 15000:
             return 0
         return 3000  # Costo de envío estándar
@@ -40,12 +92,46 @@ class Cart(models.Model):
     
     @property
     def final_total(self):
-        return self.total_price + self.shipping_cost
+        return self.subtotal_after_discount + self.shipping_cost
     
     @property
     def formatted_final_total(self):
         total = self.final_total
         return f"${int(total):,}".replace(',', '.')
+    
+    def apply_coupon(self, coupon_code):
+        """Aplica un cupón al carrito"""
+        from shop.models import DiscountCoupon
+        
+        try:
+            coupon = DiscountCoupon.objects.get(code=coupon_code.upper(), is_active=True)
+            
+            # Verificar validez del cupón
+            if not coupon.is_valid:
+                return False, "El cupón ha expirado o no está disponible"
+            
+            # Verificar monto mínimo
+            if self.total_price < coupon.minimum_order_amount:
+                return False, f"El monto mínimo para este cupón es ${int(coupon.minimum_order_amount):,}"
+            
+            # Verificar si ya se alcanzó el límite de usos
+            if coupon.max_uses and coupon.current_uses >= coupon.max_uses:
+                return False, "Este cupón ya no está disponible"
+            
+            # Aplicar cupón
+            self.coupon = coupon
+            self.save()
+            
+            return True, f"Cupón '{coupon.code}' aplicado exitosamente"
+            
+        except DiscountCoupon.DoesNotExist:
+            return False, "El código de cupón no es válido"
+    
+    def remove_coupon(self):
+        """Remueve el cupón del carrito"""
+        self.coupon = None
+        self.save()
+        return True, "Cupón removido exitosamente"
 
 
 class CartItem(models.Model):

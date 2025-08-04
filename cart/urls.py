@@ -13,4 +13,7 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('migrate/', views.migrate_session_cart, name='migrate_session_cart'),
     path('summary/', views.cart_summary, name='cart_summary'),
+    # URLs para cupones
+    path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
+    path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
 ]

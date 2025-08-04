@@ -222,6 +222,58 @@
                                     {% endif %}
                                 </span>
                             </div>
+                            
+                            <!-- Sección de Cupones (solo para usuarios autenticados) -->
+                            {% if is_authenticated_cart %}
+                                {% if cart.coupon %}
+                                    <!-- Cupón aplicado -->
+                                    <div class="coupon-applied" id="coupon-applied">
+                                        <div class="alert alert-success p-2 mb-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <small><i class="fas fa-tag"></i> <strong>{{ cart.coupon.code }}</strong></small>
+                                                    {% if cart.coupon.description %}
+                                                        <br><small class="text-muted">{{ cart.coupon.description }}</small>
+                                                    {% endif %}
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" id="remove-coupon-btn">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Mostrar descuento -->
+                                    <div class="summary-row text-success" id="discount-row">
+                                        <span>
+                                            <i class="fas fa-tag"></i> Descuento:
+                                        </span>
+                                        <span id="discount-amount">{{ cart.formatted_discount_amount }}</span>
+                                    </div>
+                                    
+                                    <!-- Subtotal después del descuento -->
+                                    {% if cart.discount_amount > 0 %}
+                                    <div class="summary-row" id="subtotal-after-discount-row">
+                                        <span>Subtotal con descuento:</span>
+                                        <span id="subtotal-after-discount">${{ cart.subtotal_after_discount|floatformat:0 }}</span>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Formulario para aplicar cupón -->
+                                    <div class="coupon-form" id="coupon-form">
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="coupon-code" 
+                                                   placeholder="Código de cupón"
+                                                   maxlength="50">
+                                            <button class="btn btn-outline-primary btn-sm" type="button" id="apply-coupon-btn">
+                                                <i class="fas fa-tag"></i> Aplicar
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">¿Tienes un cupón de descuento?</small>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
                             <div class="summary-row">
                                 <span>Envío:</span>
                                 <span id="shipping" class="{% if is_authenticated_cart and cart.shipping_cost == 0 or not is_authenticated_cart and cart_totals.shipping_cost == 0 %}text-success{% endif %}">
@@ -501,8 +553,308 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Funcionalidad del carrito aquí...
-    console.log('Cart page loaded');
+    // Funcionalidad de cantidad
+    const quantityControls = document.querySelectorAll('.quantity-controls');
+    
+    quantityControls.forEach(control => {
+        const input = control.querySelector('.quantity-input');
+        const decreaseBtn = control.querySelector('[data-action="decrease"]');
+        const increaseBtn = control.querySelector('[data-action="increase"]');
+        
+        decreaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+                updateCartItem(input.dataset.productId, input.value);
+            }
+        });
+        
+        increaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(input.value);
+            if (currentValue < 99) {
+                input.value = currentValue + 1;
+                updateCartItem(input.dataset.productId, input.value);
+            }
+        });
+        
+        input.addEventListener('change', function() {
+            const value = parseInt(this.value);
+            if (value >= 1 && value <= 99) {
+                updateCartItem(this.dataset.productId, value);
+            } else {
+                this.value = 1;
+                updateCartItem(this.dataset.productId, 1);
+            }
+        });
+    });
+    
+    // Funcionalidad de cupones
+    const applyCouponBtn = document.getElementById('apply-coupon-btn');
+    const removeCouponBtn = document.getElementById('remove-coupon-btn');
+    const couponCodeInput = document.getElementById('coupon-code');
+    
+    if (applyCouponBtn) {
+        applyCouponBtn.addEventListener('click', function() {
+            applyCoupon();
+        });
+    }
+    
+    if (couponCodeInput) {
+        couponCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyCoupon();
+            }
+        });
+    }
+    
+    if (removeCouponBtn) {
+        removeCouponBtn.addEventListener('click', function() {
+            removeCoupon();
+        });
+    }
+    
+    function updateCartItem(productId, quantity) {
+        const formData = new FormData();
+        formData.append('quantity', quantity);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/cart/update/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Actualizar totales
+                updateCartTotals(data);
+                
+                // Actualizar total del item
+                const cartItem = document.querySelector(`[data-product-id="${productId}"]`);
+                if (cartItem) {
+                    const totalPrice = cartItem.querySelector('.total-price');
+                    if (totalPrice) {
+                        totalPrice.textContent = data.item_total;
+                    }
+                }
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error al actualizar el carrito', 'error');
+        });
+    }
+    
+    function applyCoupon() {
+        const couponCode = couponCodeInput.value.trim();
+        
+        if (!couponCode) {
+            showMessage('Por favor ingresa un código de cupón', 'error');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('coupon_code', couponCode);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        // Deshabilitar botón
+        applyCouponBtn.disabled = true;
+        applyCouponBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aplicando...';
+        
+        fetch('/cart/apply-coupon/', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                
+                // Actualizar la interfaz para mostrar el cupón aplicado
+                updateCouponUI(data.coupon, data.cart_totals);
+                
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error al aplicar el cupón', 'error');
+        })
+        .finally(() => {
+            // Rehabilitar botón
+            applyCouponBtn.disabled = false;
+            applyCouponBtn.innerHTML = '<i class="fas fa-tag"></i> Aplicar';
+        });
+    }
+    
+    function removeCoupon() {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch('/cart/remove-coupon/', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                
+                // Actualizar la interfaz para remover el cupón
+                removeCouponUI(data.cart_totals);
+                
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error al remover el cupón', 'error');
+        });
+    }
+    
+    function updateCouponUI(coupon, cartTotals) {
+        // Ocultar formulario de cupón
+        const couponForm = document.getElementById('coupon-form');
+        if (couponForm) {
+            couponForm.style.display = 'none';
+        }
+        
+        // Crear y mostrar cupón aplicado
+        const couponApplied = document.createElement('div');
+        couponApplied.className = 'coupon-applied';
+        couponApplied.id = 'coupon-applied';
+        couponApplied.innerHTML = `
+            <div class="alert alert-success p-2 mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small><i class="fas fa-tag"></i> <strong>${coupon.code}</strong></small>
+                        ${coupon.description ? `<br><small class="text-muted">${coupon.description}</small>` : ''}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="remove-coupon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Insertar después del subtotal
+        const subtotalRow = document.querySelector('#subtotal').closest('.summary-row');
+        subtotalRow.insertAdjacentElement('afterend', couponApplied);
+        
+        // Agregar fila de descuento
+        const discountRow = document.createElement('div');
+        discountRow.className = 'summary-row text-success';
+        discountRow.id = 'discount-row';
+        discountRow.innerHTML = `
+            <span><i class="fas fa-tag"></i> Descuento:</span>
+            <span id="discount-amount">${coupon.discount_amount}</span>
+        `;
+        couponApplied.insertAdjacentElement('afterend', discountRow);
+        
+        // Agregar subtotal después del descuento si hay descuento
+        if (coupon.discount_amount !== '$0') {
+            const subtotalAfterDiscountRow = document.createElement('div');
+            subtotalAfterDiscountRow.className = 'summary-row';
+            subtotalAfterDiscountRow.id = 'subtotal-after-discount-row';
+            subtotalAfterDiscountRow.innerHTML = `
+                <span>Subtotal con descuento:</span>
+                <span id="subtotal-after-discount">${cartTotals.subtotal_after_discount}</span>
+            `;
+            discountRow.insertAdjacentElement('afterend', subtotalAfterDiscountRow);
+        }
+        
+        // Actualizar totales
+        updateCartTotals(cartTotals);
+        
+        // Agregar evento al nuevo botón de remover
+        const newRemoveBtn = document.getElementById('remove-coupon-btn');
+        if (newRemoveBtn) {
+            newRemoveBtn.addEventListener('click', removeCoupon);
+        }
+    }
+    
+    function removeCouponUI(cartTotals) {
+        // Remover elementos del cupón
+        const couponApplied = document.getElementById('coupon-applied');
+        const discountRow = document.getElementById('discount-row');
+        const subtotalAfterDiscountRow = document.getElementById('subtotal-after-discount-row');
+        
+        if (couponApplied) couponApplied.remove();
+        if (discountRow) discountRow.remove();
+        if (subtotalAfterDiscountRow) subtotalAfterDiscountRow.remove();
+        
+        // Mostrar formulario de cupón
+        const couponForm = document.getElementById('coupon-form');
+        if (couponForm) {
+            couponForm.style.display = 'block';
+            // Limpiar input
+            const couponCodeInput = document.getElementById('coupon-code');
+            if (couponCodeInput) {
+                couponCodeInput.value = '';
+            }
+        }
+        
+        // Actualizar totales
+        updateCartTotals(cartTotals);
+    }
+    
+    function updateCartTotals(data) {
+        if (data.cart_totals) {
+            const shipping = document.getElementById('shipping');
+            const finalTotal = document.getElementById('final-total');
+            
+            if (shipping) shipping.textContent = data.cart_totals.shipping;
+            if (finalTotal) finalTotal.textContent = data.cart_totals.final_total;
+        } else {
+            const shipping = document.getElementById('shipping');
+            const finalTotal = document.getElementById('final-total');
+            
+            if (data.cart_shipping_cost && shipping) shipping.textContent = data.cart_shipping_cost;
+            if (data.cart_final_total && finalTotal) finalTotal.textContent = data.cart_final_total;
+        }
+    }
+    
+    function showMessage(message, type) {
+        // Crear elemento de mensaje
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insertar al inicio del contenedor
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+    
+    // Agregar token CSRF si no existe
+    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        document.body.appendChild(csrfToken);
+    }
 });
 </script>
 {% endblock %}

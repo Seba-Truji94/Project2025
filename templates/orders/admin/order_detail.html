@@ -1024,6 +1024,20 @@ function showVerificationModal(action) {
     const alert = document.getElementById('verificationAlert');
     const message = document.getElementById('verificationMessage');
     
+    // Verificar que todos los elementos existen antes de continuar
+    if (!modalElement || !form || !title || !actionText || !submitBtn || !alert || !message) {
+        console.error('Elementos del modal de verificación no encontrados:', {
+            modalElement: !!modalElement,
+            form: !!form,
+            title: !!title,
+            actionText: !!actionText,
+            submitBtn: !!submitBtn,
+            alert: !!alert,
+            message: !!message
+        });
+        return;
+    }
+    
     // Configurar según la acción
     switch(action) {
         case 'verify':

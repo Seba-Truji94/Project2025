@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 120
+target-version = ['py38']
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | scripts
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_glob = "scripts/*"
+
+[tool.flake8]
+max-line-length = 120
+exclude = scripts,migrations,__pycache__,.git,venv,env
+ignore = E203,E501,W503
+
+[tool.pylint]
+ignore = scripts
+ignore-patterns = test_.*\.py,debug_.*\.py

@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 from .decorators import SuperuserRequiredMixin
+from .forms import CouponForm
 from shop.models import (
     Product, Category, TaxConfiguration, DiscountCoupon, CouponUsage,
     ProductStock, Supplier, ProductSupplier
@@ -244,12 +245,8 @@ class CouponManagementView(SuperuserRequiredMixin, ListView):
 class CouponCreateView(SuperuserRequiredMixin, CreateView):
     """Crear nuevo cupón de descuento"""
     model = DiscountCoupon
+    form_class = CouponForm
     template_name = 'management/coupon/form.html'
-    fields = [
-        'code', 'name', 'description', 'discount_type', 'discount_value',
-        'minimum_order_amount', 'maximum_discount_amount', 'usage_type',
-        'max_uses', 'valid_from', 'valid_until', 'is_active'
-    ]
     success_url = reverse_lazy('management:coupon_management')
     
     def form_valid(self, form):
@@ -257,21 +254,33 @@ class CouponCreateView(SuperuserRequiredMixin, CreateView):
         messages.success(self.request, f'Cupón "{form.instance.code}" creado exitosamente.')
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        """Manejar errores de validación"""
+        messages.error(
+            self.request,
+            'Por favor corrige los errores en el formulario.'
+        )
+        return super().form_invalid(form)
+
 
 class CouponUpdateView(SuperuserRequiredMixin, UpdateView):
     """Editar cupón de descuento"""
     model = DiscountCoupon
+    form_class = CouponForm
     template_name = 'management/coupon/form.html'
-    fields = [
-        'code', 'name', 'description', 'discount_type', 'discount_value',
-        'minimum_order_amount', 'maximum_discount_amount', 'usage_type',
-        'max_uses', 'valid_from', 'valid_until', 'is_active'
-    ]
     success_url = reverse_lazy('management:coupon_management')
     
     def form_valid(self, form):
         messages.success(self.request, f'Cupón "{form.instance.code}" actualizado exitosamente.')
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        """Manejar errores de validación"""
+        messages.error(
+            self.request,
+            'Por favor corrige los errores en el formulario.'
+        )
+        return super().form_invalid(form)
 
 
 class CouponDeleteView(SuperuserRequiredMixin, DeleteView):
@@ -620,3 +629,52 @@ class StatisticsAPIView(SuperuserRequiredMixin, View):
         }
         
         return JsonResponse(stats)
+
+
+class StockMovementDetailView(SuperuserRequiredMixin, View):
+    """API para obtener detalles de un movimiento de stock"""
+    
+    def get(self, request, movement_id):
+        try:
+            movement = ProductStock.objects.select_related('product', 'user').get(id=movement_id)
+            
+            data = {
+                'id': movement.id,
+                'product': {
+                    'id': movement.product.id,
+                    'name': movement.product.name,
+                    'current_stock': movement.product.stock,
+                    'category': movement.product.category.name if movement.product.category else 'Sin categoría'
+                },
+                'movement_type': movement.get_movement_type_display(),
+                'movement_type_code': movement.movement_type,
+                'quantity': movement.quantity,
+                'previous_stock': movement.previous_stock,
+                'new_stock': movement.new_stock,
+                'reason': movement.reason or 'Sin motivo especificado',
+                'reference': movement.reference or 'Sin referencia',
+                'created_at': movement.created_at.strftime('%d/%m/%Y %H:%M:%S'),
+                'user': movement.user.username if movement.user else 'Sistema',
+                'user_full_name': movement.user.get_full_name() if movement.user and movement.user.get_full_name() else (movement.user.username if movement.user else 'Sistema'),
+                'impact': {
+                    'change': movement.quantity,
+                    'percentage': round((abs(movement.quantity) / movement.previous_stock * 100), 2) if movement.previous_stock > 0 else 0,
+                    'direction': 'increase' if movement.quantity > 0 else 'decrease' if movement.quantity < 0 else 'neutral'
+                }
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'data': data
+            })
+            
+        except ProductStock.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Movimiento no encontrado'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)

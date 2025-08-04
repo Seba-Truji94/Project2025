@@ -860,6 +860,12 @@ header {
     border: 1px solid rgba(74, 144, 226, 0.08);
     min-width: 280px;
     animation: slideDown 0.3s ease;
+    /* Fix scroll propagation issue */
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
 }
 
 @keyframes slideDown {
@@ -871,6 +877,32 @@ header {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Custom scrollbar for dropdown menu */
+.dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(74, 144, 226, 0.3);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(74, 144, 226, 0.5);
+}
+
+/* Firefox scrollbar styling */
+.dropdown-menu {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(74, 144, 226, 0.3) transparent;
 }
 
 .dropdown-header {

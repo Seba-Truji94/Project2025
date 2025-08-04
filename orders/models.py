@@ -55,6 +55,17 @@ class Order(models.Model):
     # Información de pago
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='transfer')
     
+    # Información de cupón aplicado
+    coupon = models.ForeignKey(
+        'shop.DiscountCoupon', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='orders'
+    )
+    coupon_code = models.CharField(max_length=50, blank=True, help_text="Código del cupón aplicado")
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    
     # Precios
     subtotal = models.DecimalField(max_digits=10, decimal_places=0)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=0, default=0)
@@ -246,21 +257,6 @@ class OrderItem(models.Model):
     def formatted_total_price(self):
         total = self.get_total_price()
         return f"${int(total):,}".replace(',', '.')
-
-
-class OrderStatusHistory(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_history')
-    status = models.CharField(max_length=20, choices=Order.STATUS_CHOICES)
-    changed_at = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True)
-    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    class Meta:
-        ordering = ['-changed_at']
-        verbose_name_plural = 'Order Status Histories'
-    
-    def __str__(self):
-        return f"{self.order.order_number} - {self.get_status_display()}"
 
 
 class BankAccount(models.Model):
