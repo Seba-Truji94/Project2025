@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15
+    container_name: dulce_bias_db
+    environment:
+      POSTGRES_DB: dulce_bias_db
+      POSTGRES_USER: dulce_bias_user
+      POSTGRES_PASSWORD: dulce_bias_pass_2025
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dulce_bias_user -d dulce_bias_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis para cache y sessions (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: dulce_bias_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Aplicación Django con Gunicorn
+  web:
+    build: .
+    container_name: dulce_bias_web
+    command: gunicorn dulce_bias_project.wsgi:application -c gunicorn.conf.py
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://dulce_bias_user:dulce_bias_pass_2025@db:5432/dulce_bias_db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx como proxy reverso
+  nginx:
+    image: nginx:alpine
+    container_name: dulce_bias_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./staticfiles:/var/www/static:ro
+      - ./media:/var/www/media:ro
+      - ./ssl:/etc/nginx/ssl:ro  # Para certificados SSL
+    depends_on:
+      - web
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio de backup automático
+  backup:
+    image: postgres:15
+    container_name: dulce_bias_backup
+    environment:
+      PGPASSWORD: dulce_bias_pass_2025
+    volumes:
+      - ./backups:/backups
+      - ./backup_script.sh:/backup_script.sh:ro
+    depends_on:
+      - db
+    restart: "no"
+    profiles:
+      - backup  # Solo se ejecuta cuando se especifica este perfil
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: dulce_bias_network

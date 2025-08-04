@@ -183,6 +183,17 @@ DATABASES = {
     }
 }
 
+# Configuración para Railway con PostgreSQL
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+
 # Cache Configuration para Rate Limiting
 CACHES = {
     'default': {
@@ -265,6 +276,11 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise para servir archivos estáticos en Railway
+if os.environ.get('USE_WHITENOISE', 'False').lower() == 'true':
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'

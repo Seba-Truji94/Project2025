@@ -1,0 +1,21 @@
+# Configuración de Nixpacks para Railway
+# Este archivo le dice a Railway cómo construir y ejecutar tu aplicación
+
+[start]
+cmd = "chmod +x start.sh && ./start.sh"
+
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.11"
+PYTHONPATH = "/app"
+PORT = "8000"
+
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+    "python manage.py collectstatic --noinput"
+]
+
+[phases.install]
+cmds = [
+    "pip install -r requirements.txt"
+]

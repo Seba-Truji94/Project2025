@@ -6,6 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from .health import health_check
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,6 +19,9 @@ urlpatterns = [
     path('management/', include('management.urls')),  # Módulo de gestión empresarial
     path('notifications/', include('notifications.urls')),  # Sistema de notificaciones
     path('notifications/', include('notifications.admin_urls')),  # Admin de notificaciones
+    
+    # Health check para Railway
+    path('health/', health_check, name='health_check'),
     
     # Favicon
     path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.ico', permanent=True)),

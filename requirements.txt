@@ -1,8 +1,22 @@
+# Core Django and Web Framework
 Django==4.2.20
 Pillow==11.3.0
 django-crispy-forms==2.4
 crispy-bootstrap5==2025.6
 python-decouple==3.8
+
+# Production Server
+gunicorn==21.2.0
+whitenoise==6.5.0
+
+# Database
+psycopg2-binary==2.9.7
+dj-database-url==2.1.0
+
+# Security
+django-axes==6.1.1
+django-csp==3.7
+django-ratelimit==4.1.0
 
 # Notification System Dependencies
 celery==5.3.4
@@ -19,3 +33,9 @@ sendgrid==6.10.0
 # Development and Testing
 factory-boy==3.3.0
 django-extensions==3.2.3
+
+# Monitoring and Logging
+sentry-sdk==1.32.0
+
+# Performance
+django-cache-tree==1.1.0
