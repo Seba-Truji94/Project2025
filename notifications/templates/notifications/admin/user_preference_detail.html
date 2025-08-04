@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Preferencias de Usuario{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-user-cog me-3"></i>Preferencias de {{ user.get_full_name|default:user.username }}
+                </h2>
+                <a href="{% url 'notifications_admin:user_management' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Usuarios
+                </a>
+            </div>
+            
+            <div class="row">
+                <!-- Información del Usuario -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-user me-2"></i>Información del Usuario
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="avatar-circle bg-primary text-white mx-auto mb-2" style="width: 80px; height: 80px; line-height: 80px; border-radius: 50%; font-size: 24px;">
+                                    {{ user.first_name.0|default:user.username.0|upper }}
+                                </div>
+                                <h6 class="mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                                <p class="text-muted small mb-0">{{ user.email }}</p>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="row g-2 text-center">
+                                <div class="col-6">
+                                    <div class="bg-light rounded p-2">
+                                        <div class="h4 mb-0 text-primary">{{ user.notifications_sent.count }}</div>
+                                        <small class="text-muted">Notificaciones<br>Recibidas</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-light rounded p-2">
+                                        <div class="h4 mb-0 text-success">{{ user.date_joined|timesince }}</div>
+                                        <small class="text-muted">Miembro<br>desde</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Estado:</small>
+                                <span class="badge bg-{{ user.is_active|yesno:'success,danger' }}">
+                                    {{ user.is_active|yesno:'Activo,Inactivo' }}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Último acceso:</small>
+                                <div>{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</div>
+                            </div>
+                            <div class="mb-0">
+                                <small class="text-muted">Registrado:</small>
+                                <div>{{ user.date_joined|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preferencias de Notificación -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-bell me-2"></i>Preferencias de Notificación
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if preferences %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    
+                                    <!-- Canales de Notificación -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-3">Canales Habilitados</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="email_enabled" name="email_enabled"
+                                                               {% if preferences.email_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="email_enabled">
+                                                            <i class="fas fa-envelope me-2 text-primary"></i>Email
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="sms_enabled" name="sms_enabled"
+                                                               {% if preferences.sms_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="sms_enabled">
+                                                            <i class="fas fa-sms me-2 text-success"></i>SMS
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="whatsapp_enabled" name="whatsapp_enabled"
+                                                               {% if preferences.whatsapp_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="whatsapp_enabled">
+                                                            <i class="fab fa-whatsapp me-2 text-success"></i>WhatsApp
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Tipos de Notificación -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-3">Tipos de Notificación</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="info_enabled" name="info_enabled"
+                                                               {% if preferences.info_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="info_enabled">
+                                                            <i class="fas fa-info-circle me-2 text-info"></i>Información
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="warning_enabled" name="warning_enabled"
+                                                               {% if preferences.warning_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="warning_enabled">
+                                                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Advertencias
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="error_enabled" name="error_enabled"
+                                                               {% if preferences.error_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="error_enabled">
+                                                            <i class="fas fa-times-circle me-2 text-danger"></i>Errores
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="success_enabled" name="success_enabled"
+                                                               {% if preferences.success_enabled %}checked{% endif %}>
+                                                        <label class="form-check-label" for="success_enabled">
+                                                            <i class="fas fa-check-circle me-2 text-success"></i>Éxito
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Configuración de Horarios -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-3">Horarios de Notificación</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Horario de inicio</label>
+                                                    <input type="time" class="form-control" 
+                                                           name="start_time" 
+                                                           value="{{ preferences.start_time|time:'H:i'|default:'08:00' }}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Horario de fin</label>
+                                                    <input type="time" class="form-control" 
+                                                           name="end_time" 
+                                                           value="{{ preferences.end_time|time:'H:i'|default:'22:00' }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botones de Acción -->
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Guardar Cambios
+                                        </button>
+                                        <button type="button" class="btn btn-success" onclick="testNotification()">
+                                            <i class="fas fa-paper-plane me-2"></i>Enviar Prueba
+                                        </button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <!-- No hay preferencias -->
+                                <div class="text-center py-5">
+                                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Sin Preferencias Configuradas</h5>
+                                    <p class="text-muted">Este usuario no ha configurado sus preferencias de notificación.</p>
+                                    <button class="btn btn-primary" onclick="createDefaultPreferences()">
+                                        <i class="fas fa-plus me-2"></i>Crear Preferencias Predeterminadas
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Historial de Notificaciones -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Historial Reciente
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_notifications %}
+                                <div class="timeline">
+                                    {% for notification in recent_notifications %}
+                                        <div class="timeline-item d-flex mb-3">
+                                            <div class="timeline-icon me-3">
+                                                <i class="fas fa-{{ notification.get_icon }} text-{{ notification.get_color }}"></i>
+                                            </div>
+                                            <div class="timeline-content flex-grow-1">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="mb-1">{{ notification.message|truncatechars:50 }}</h6>
+                                                    <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                                </div>
+                                                <p class="text-muted mb-1">
+                                                    <span class="badge bg-{{ notification.get_color }} me-1">{{ notification.get_notification_type_display }}</span>
+                                                    <span class="badge bg-secondary">{{ notification.get_channel_display }}</span>
+                                                </p>
+                                                <div class="status-indicator">
+                                                    <span class="badge bg-{{ notification.status|yesno:'success,danger' }}">
+                                                        {{ notification.get_status_display }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'notifications_admin:user_notifications' user.id %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-list me-1"></i>Ver Historial Completo
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-3">
+                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">No hay notificaciones recientes</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testNotification() {
+    if (confirm('¿Enviar una notificación de prueba a este usuario?')) {
+        fetch('{% url "notifications_admin:test_notification" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                'user_id': {{ user.id }},
+                'message': 'Esta es una notificación de prueba enviada desde el panel administrativo.'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Notificación de prueba enviada correctamente');
+                location.reload();
+            } else {
+                alert('Error al enviar notificación: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error de conexión: ' + error);
+        });
+    }
+}
+
+function createDefaultPreferences() {
+    if (confirm('¿Crear preferencias predeterminadas para este usuario?')) {
+        fetch('{% url "notifications_admin:user_preference_detail" user.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                'action': 'create_default'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Preferencias predeterminadas creadas correctamente');
+                location.reload();
+            } else {
+                alert('Error al crear preferencias: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error de conexión: ' + error);
+        });
+    }
+}
+</script>
+
+<style>
+.timeline-item {
+    border-left: 2px solid #e9ecef;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: -8px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+}
+
+.avatar-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

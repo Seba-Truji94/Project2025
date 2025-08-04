@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Preferencias de Notificación - Dulce Bias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-card {
+        transition: transform 0.3s ease;
+        border-left: 4px solid #007bff;
+    }
+    
+    .notification-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .channel-toggle {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .channel-toggle.active {
+        background: #e3f2fd;
+        border: 2px solid #2196f3;
+    }
+    
+    .channel-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .recent-notification {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #007bff;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .status-sent { background: #d4edda; color: #155724; }
+    .status-failed { background: #f8d7da; color: #721c24; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-delivered { background: #d1ecf1; color: #0c5460; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'accounts:profile' %}">Mi Perfil</a></li>
+            <li class="breadcrumb-item active">Preferencias de Notificación</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-bell me-3"></i>Preferencias de Notificación</h2>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Perfil
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{{ message.tags == 'success' and 'check-circle' or 'exclamation-triangle' }} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if has_notifications %}
+        <!-- Estadísticas del usuario -->
+        {% if user_stats %}
+        <div class="stats-card">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <i class="fas fa-envelope fa-2x mb-2"></i>
+                        <h3 class="mb-1">{{ user_stats.total_received|default:0 }}</h3>
+                        <p class="mb-0">Notificaciones Recibidas</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <h3 class="mb-1">{{ user_stats.total_sent|default:0 }}</h3>
+                        <p class="mb-0">Entregadas Exitosamente</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <i class="fas fa-percentage fa-2x mb-2"></i>
+                        <h3 class="mb-1">
+                            {% if user_stats.total_received > 0 %}
+                                {{ user_stats.total_sent|floatformat:0 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </h3>
+                        <p class="mb-0">Tasa de Entrega</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Formulario de preferencias -->
+            <div class="col-lg-8 mb-4">
+                <div class="card notification-card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>Configurar Preferencias
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Canales de notificación -->
+                            <h6 class="mb-3">Canales de Notificación</h6>
+                            
+                            <div class="row">
+                                <!-- Email -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="channel-toggle" id="email-toggle">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="fas fa-envelope channel-icon text-primary"></i>
+                                                <h6 class="mb-1">Email</h6>
+                                                <small class="text-muted">Notificaciones por correo electrónico</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                {{ form.email_enabled }}
+                                            </div>
+                                        </div>
+                                        <div class="mt-3" id="email-config">
+                                            <label for="{{ form.email_address.id_for_label }}" class="form-label">Dirección de Email</label>
+                                            {{ form.email_address }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- SMS -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="channel-toggle" id="sms-toggle">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="fas fa-sms channel-icon text-success"></i>
+                                                <h6 class="mb-1">SMS</h6>
+                                                <small class="text-muted">Mensajes de texto al móvil</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                {{ form.sms_enabled }}
+                                            </div>
+                                        </div>
+                                        <div class="mt-3" id="sms-config">
+                                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">Número de Teléfono</label>
+                                            {{ form.phone_number }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- WhatsApp -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="channel-toggle" id="whatsapp-toggle">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="fab fa-whatsapp channel-icon text-success"></i>
+                                                <h6 class="mb-1">WhatsApp</h6>
+                                                <small class="text-muted">Mensajes por WhatsApp</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                {{ form.whatsapp_enabled }}
+                                            </div>
+                                        </div>
+                                        <div class="mt-3" id="whatsapp-config">
+                                            <label for="{{ form.whatsapp_number.id_for_label }}" class="form-label">Número de WhatsApp</label>
+                                            {{ form.whatsapp_number }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Push Notifications -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="channel-toggle" id="push-toggle">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="fas fa-bell channel-icon text-info"></i>
+                                                <h6 class="mb-1">Notificaciones Push</h6>
+                                                <small class="text-muted">Notificaciones en el navegador</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                {{ form.push_enabled }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tipos de notificación -->
+                            <hr class="my-4">
+                            <h6 class="mb-3">Tipos de Notificación</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        {{ form.order_notifications }}
+                                        <label class="form-check-label" for="{{ form.order_notifications.id_for_label }}">
+                                            <i class="fas fa-shopping-bag me-2 text-primary"></i>
+                                            <strong>Notificaciones de Pedidos</strong>
+                                            <br><small class="text-muted">Confirmaciones, actualizaciones de estado, entregas</small>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        {{ form.shipping_notifications }}
+                                        <label class="form-check-label" for="{{ form.shipping_notifications.id_for_label }}">
+                                            <i class="fas fa-truck me-2 text-success"></i>
+                                            <strong>Notificaciones de Envío</strong>
+                                            <br><small class="text-muted">Tracking, entrega, devoluciones</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        {{ form.promotional_notifications }}
+                                        <label class="form-check-label" for="{{ form.promotional_notifications.id_for_label }}">
+                                            <i class="fas fa-tag me-2 text-warning"></i>
+                                            <strong>Notificaciones Promocionales</strong>
+                                            <br><small class="text-muted">Ofertas, descuentos, nuevos productos</small>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        {{ form.support_notifications }}
+                                        <label class="form-check-label" for="{{ form.support_notifications.id_for_label }}">
+                                            <i class="fas fa-headset me-2 text-info"></i>
+                                            <strong>Notificaciones de Soporte</strong>
+                                            <br><small class="text-muted">Respuestas a tickets, actualizaciones de soporte</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Configuración adicional -->
+                            <hr class="my-4">
+                            <div class="row">
+                                <div class="col-12">
+                                    <label for="{{ form.notification_types.id_for_label }}" class="form-label">Configuración Adicional (JSON)</label>
+                                    {{ form.notification_types }}
+                                    <small class="form-text text-muted">
+                                        Configuración avanzada en formato JSON. Dejar vacío para usar configuración por defecto.
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-3 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Guardar Preferencias
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetToDefault()">
+                                    <i class="fas fa-undo me-2"></i>Restablecer Valores por Defecto
+                                </button>
+                                <button type="button" class="btn btn-outline-info" onclick="testNotifications()">
+                                    <i class="fas fa-flask me-2"></i>Probar Notificaciones
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel lateral con información -->
+            <div class="col-lg-4">
+                <!-- Notificaciones recientes -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Actividad Reciente
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if user_stats.recent_notifications %}
+                            {% for notification in user_stats.recent_notifications %}
+                            <div class="recent-notification">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if notification.channel == 'email' %}
+                                            <i class="fas fa-envelope text-primary me-2"></i>
+                                        {% elif notification.channel == 'sms' %}
+                                            <i class="fas fa-sms text-success me-2"></i>
+                                        {% elif notification.channel == 'whatsapp' %}
+                                            <i class="fab fa-whatsapp text-success me-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-bell text-info me-2"></i>
+                                        {% endif %}
+                                        <strong>{{ notification.subject|default:"Sin asunto"|truncatechars:30 }}</strong>
+                                    </div>
+                                    <span class="status-badge status-{{ notification.status }}">
+                                        {{ notification.get_status_display }}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    {{ notification.notification_type|title }} • {{ notification.created_at|timesince }} ago
+                                </small>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p class="mb-0">No hay notificaciones recientes</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Información sobre canales -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Información de Canales
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6><i class="fas fa-envelope text-primary me-2"></i>Email</h6>
+                            <p class="small text-muted mb-0">
+                                Ideal para confirmaciones de pedidos, facturas y contenido detallado.
+                                Siempre disponible y confiable.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6><i class="fas fa-sms text-success me-2"></i>SMS</h6>
+                            <p class="small text-muted mb-0">
+                                Perfecto para notificaciones urgentes y actualizaciones de estado.
+                                Entrega inmediata garantizada.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6><i class="fab fa-whatsapp text-success me-2"></i>WhatsApp</h6>
+                            <p class="small text-muted mb-0">
+                                Comunicación rica con imágenes y enlaces.
+                                Ideal para promociones y soporte personalizado.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-0">
+                            <h6><i class="fas fa-bell text-info me-2"></i>Push</h6>
+                            <p class="small text-muted mb-0">
+                                Notificaciones instantáneas en tu navegador.
+                                Perfectas para actualizaciones en tiempo real.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <!-- Sistema no disponible -->
+        <div class="card border-warning">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                <h4>Sistema de Notificaciones No Disponible</h4>
+                <p class="text-muted">
+                    {{ error_message|default:"El sistema de notificaciones no está configurado en este momento." }}
+                </p>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Perfil
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar toggles de canales
+    const channels = ['email', 'sms', 'whatsapp', 'push'];
+    
+    channels.forEach(channel => {
+        const toggle = document.getElementById(`id_${channel}_enabled`);
+        const container = document.getElementById(`${channel}-toggle`);
+        const config = document.getElementById(`${channel}-config`);
+        
+        if (toggle && container) {
+            function updateChannelState() {
+                if (toggle.checked) {
+                    container.classList.add('active');
+                    if (config) config.style.display = 'block';
+                } else {
+                    container.classList.remove('active');
+                    if (config) config.style.display = 'none';
+                }
+            }
+            
+            toggle.addEventListener('change', updateChannelState);
+            updateChannelState(); // Estado inicial
+        }
+    });
+    
+    // Función para restablecer valores por defecto
+    window.resetToDefault = function() {
+        if (confirm('¿Estás seguro de que quieres restablecer todas las preferencias a los valores por defecto?')) {
+            // Activar email por defecto
+            document.getElementById('id_email_enabled').checked = true;
+            document.getElementById('id_email_address').value = '{{ user.email }}';
+            
+            // Desactivar otros canales
+            document.getElementById('id_sms_enabled').checked = false;
+            document.getElementById('id_whatsapp_enabled').checked = false;
+            document.getElementById('id_push_enabled').checked = true;
+            
+            // Activar todos los tipos de notificación
+            document.getElementById('id_order_notifications').checked = true;
+            document.getElementById('id_shipping_notifications').checked = true;
+            document.getElementById('id_promotional_notifications').checked = false;
+            document.getElementById('id_support_notifications').checked = true;
+            
+            // Limpiar configuración adicional
+            const notificationTypes = document.getElementById('id_notification_types');
+            if (notificationTypes) {
+                notificationTypes.value = '';
+            }
+            
+            // Actualizar estados visuales
+            channels.forEach(channel => {
+                const toggle = document.getElementById(`id_${channel}_enabled`);
+                if (toggle) {
+                    toggle.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+    };
+    
+    // Función para probar notificaciones
+    window.testNotifications = function() {
+        const activeChannels = [];
+        channels.forEach(channel => {
+            const toggle = document.getElementById(`id_${channel}_enabled`);
+            if (toggle && toggle.checked) {
+                activeChannels.push(channel);
+            }
+        });
+        
+        if (activeChannels.length === 0) {
+            alert('Por favor, activa al menos un canal de notificación antes de hacer la prueba.');
+            return;
+        }
+        
+        if (confirm(`¿Quieres enviar una notificación de prueba a los siguientes canales: ${activeChannels.join(', ')}?`)) {
+            // Aquí podrías hacer una petición AJAX para enviar notificación de prueba
+            alert('Funcionalidad de prueba pendiente de implementación.');
+        }
+    };
+});
+</script>
+{% endblock %}

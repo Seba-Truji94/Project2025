@@ -1,0 +1,22 @@
+# Requirements for Notifications System
+# Add these to your requirements.txt file
+
+# Core notification dependencies
+celery==5.3.4              # For async task processing
+redis==5.0.1               # For Celery broker (alternative: RabbitMQ)
+
+# SMS and WhatsApp providers
+twilio==8.10.3             # For SMS and WhatsApp via Twilio
+requests==2.31.0           # For HTTP API calls
+
+# Email enhancements (optional)
+django-ses==3.5.0          # For Amazon SES email backend
+sendgrid==6.10.0           # For SendGrid email backend
+
+# Additional utilities
+phonenumbers==8.13.25      # For phone number validation
+django-phonenumber-field==7.3.0  # Phone number field for Django
+
+# Development and testing
+factory-boy==3.3.0         # For testing factories
+django-extensions==3.2.3   # For shell_plus and other dev tools

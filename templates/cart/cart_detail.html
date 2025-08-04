@@ -3,6 +3,16 @@
 
 {% block title %}🛒 Mi Carrito - Dulce Bias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Fix para evitar que el navbar tape contenido */
+    .container:first-child {
+        margin-top: 40px !important;
+        padding-top: 20px !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <!-- Breadcrumb -->

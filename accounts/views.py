@@ -11,6 +11,14 @@ from .models import UserProfile, Address, Wishlist, WishlistItem
 from .forms import UserRegistrationForm, UserProfileForm, UserForm, AddressForm
 from shop.models import Product
 
+# Importar modelos de notificaciones
+try:
+    from notifications.models import UserNotificationPreference, Notification
+    from notifications.forms import NotificationPreferenceForm
+    NOTIFICATIONS_AVAILABLE = True
+except ImportError:
+    NOTIFICATIONS_AVAILABLE = False
+
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
     redirect_authenticated_user = True
@@ -42,6 +50,68 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         profile, created = UserProfile.objects.get_or_create(user=self.request.user)
         context['profile'] = profile
         context['recent_orders'] = []  # Agregar órdenes recientes cuando esté implementado
+        
+        # Agregar información de notificaciones si está disponible
+        if NOTIFICATIONS_AVAILABLE:
+            try:
+                notification_prefs, created = UserNotificationPreference.objects.get_or_create(
+                    user=self.request.user
+                )
+                context['notification_prefs'] = notification_prefs
+                context['has_notifications'] = True
+                
+                # Estadísticas de notificaciones para el usuario
+                context['notification_stats'] = {
+                    'total_received': Notification.objects.filter(recipient=self.request.user).count(),
+                    'unread_count': Notification.objects.filter(
+                        recipient=self.request.user, 
+                        status='pending'
+                    ).count(),
+                    'recent_notifications': Notification.objects.filter(
+                        recipient=self.request.user
+                    ).order_by('-created_at')[:5]
+                }
+                
+                # Si es superusuario, agregar estadísticas administrativas
+                if self.request.user.is_superuser:
+                    from django.db.models import Count, Q
+                    from datetime import datetime, timedelta
+                    
+                    today = datetime.now().date()
+                    week_ago = today - timedelta(days=7)
+                    
+                    context['is_admin'] = True
+                    context['admin_stats'] = {
+                        'total_notifications': Notification.objects.count(),
+                        'sent_today': Notification.objects.filter(
+                            created_at__date=today,
+                            status='sent'
+                        ).count(),
+                        'failed_today': Notification.objects.filter(
+                            created_at__date=today,
+                            status='failed'
+                        ).count(),
+                        'pending_notifications': Notification.objects.filter(
+                            status='pending'
+                        ).count(),
+                        'total_users': User.objects.count(),
+                        'users_with_notifications': UserNotificationPreference.objects.count(),
+                        'weekly_stats': Notification.objects.filter(
+                            created_at__date__gte=week_ago
+                        ).extra({
+                            'day': 'date(created_at)'
+                        }).values('day').annotate(
+                            sent=Count('id', filter=Q(status='sent')),
+                            failed=Count('id', filter=Q(status='failed'))
+                        ).order_by('day')
+                    }
+                    
+            except Exception as e:
+                context['has_notifications'] = False
+                context['notification_error'] = str(e)
+        else:
+            context['has_notifications'] = False
+            
         return context
 
 class ProfileEditView(LoginRequiredMixin, TemplateView):
@@ -213,3 +283,76 @@ def remove_from_wishlist(request, product_id):
     
     # Redirigir de vuelta a la página anterior o a la wishlist
     return redirect(request.META.get('HTTP_REFERER', 'accounts:wishlist'))
+
+
+class NotificationPreferencesView(LoginRequiredMixin, TemplateView):
+    """Vista para gestionar preferencias de notificaciones del usuario"""
+    template_name = 'accounts/notification_preferences.html'
+    login_url = reverse_lazy('accounts:login')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        if NOTIFICATIONS_AVAILABLE:
+            try:
+                notification_prefs, created = UserNotificationPreference.objects.get_or_create(
+                    user=self.request.user
+                )
+                context['form'] = NotificationPreferenceForm(instance=notification_prefs)
+                context['has_notifications'] = True
+                
+                # Estadísticas personales de notificaciones
+                context['user_stats'] = {
+                    'total_received': Notification.objects.filter(recipient=self.request.user).count(),
+                    'total_sent': Notification.objects.filter(
+                        recipient=self.request.user, 
+                        status__in=['sent', 'delivered']
+                    ).count(),
+                    'recent_notifications': Notification.objects.filter(
+                        recipient=self.request.user
+                    ).order_by('-created_at')[:10]
+                }
+                
+            except Exception as e:
+                context['has_notifications'] = False
+                context['error_message'] = f"Error al cargar preferencias: {str(e)}"
+        else:
+            context['has_notifications'] = False
+            context['error_message'] = "Sistema de notificaciones no disponible"
+            
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        if not NOTIFICATIONS_AVAILABLE:
+            messages.error(request, 'Sistema de notificaciones no disponible.')
+            return redirect('accounts:profile')
+            
+        try:
+            notification_prefs, created = UserNotificationPreference.objects.get_or_create(
+                user=request.user
+            )
+            form = NotificationPreferenceForm(request.POST, instance=notification_prefs)
+            
+            if form.is_valid():
+                form.save()
+                messages.success(request, '¡Preferencias de notificación actualizadas exitosamente! 📬')
+                return redirect('accounts:profile')
+            else:
+                messages.error(request, 'Por favor corrige los errores en el formulario.')
+                context = self.get_context_data(**kwargs)
+                context['form'] = form
+                return self.render_to_response(context)
+                
+        except Exception as e:
+            messages.error(request, f'Error al actualizar preferencias: {str(e)}')
+            return redirect('accounts:profile')
+
+
+def admin_notification_dashboard(request):
+    """Vista rápida para acceder al dashboard de notificaciones desde el perfil"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+        return redirect('accounts:profile')
+    
+    # Redirigir al dashboard de notificaciones
+    return redirect('notifications_admin:dashboard')

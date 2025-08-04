@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vista Previa - Plantilla{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-eye me-3"></i>Vista Previa de Plantilla
+                </h2>
+                <a href="{% url 'notifications_admin:templates' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Plantillas
+                </a>
+            </div>
+            
+            <div class="row">
+                <!-- Información de la Plantilla -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Información
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="text-muted small">Nombre:</label>
+                                <div class="fw-bold">{{ template.name }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Tipo:</label>
+                                <div>{{ template.get_notification_type_display }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Canal:</label>
+                                <div>{{ template.get_channel_display }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Estado:</label>
+                                <div>
+                                    <span class="badge bg-{{ template.is_active|yesno:'success,secondary' }}">
+                                        {{ template.is_active|yesno:'Activa,Inactiva' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Creada:</label>
+                                <div>{{ template.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            <div class="mb-0">
+                                <label class="text-muted small">Modificada:</label>
+                                <div>{{ template.updated_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vista Previa del Contenido -->
+                <div class="col-md-8 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-file-alt me-2"></i>Vista Previa del Contenido
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if template.channel == 'email' %}
+                                <!-- Vista Previa Email -->
+                                <div class="email-preview border rounded p-3">
+                                    <div class="email-header border-bottom pb-2 mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">Para: usuario@ejemplo.com</span>
+                                            <span class="text-muted small">{{ template.created_at|date:"d/m/Y H:i" }}</span>
+                                        </div>
+                                        <h5 class="mt-2 mb-0">{{ template.subject|default:"Sin asunto" }}</h5>
+                                    </div>
+                                    <div class="email-body">
+                                        {{ template.template_body|linebreaks }}
+                                    </div>
+                                </div>
+                            {% elif template.channel == 'sms' %}
+                                <!-- Vista Previa SMS -->
+                                <div class="sms-preview">
+                                    <div class="chat-container">
+                                        <div class="message-bubble sms-bubble p-3 rounded bg-primary text-white">
+                                            {{ template.template_body }}
+                                        </div>
+                                        <div class="message-info text-muted small mt-1">
+                                            <i class="fas fa-mobile-alt me-1"></i>SMS
+                                            <span class="ms-2">{{ template.template_body|length }} caracteres</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% elif template.channel == 'whatsapp' %}
+                                <!-- Vista Previa WhatsApp -->
+                                <div class="whatsapp-preview">
+                                    <div class="chat-container bg-light p-3 rounded">
+                                        <div class="whatsapp-message p-3 rounded-3 bg-success text-white position-relative">
+                                            {{ template.template_body|linebreaks }}
+                                            <div class="message-time text-end">
+                                                <small class="opacity-75">{{ template.created_at|date:"H:i" }}</small>
+                                                <i class="fas fa-check-double ms-1"></i>
+                                            </div>
+                                        </div>
+                                        <div class="message-info text-muted small mt-1">
+                                            <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- Vista Previa Genérica -->
+                                <div class="generic-preview border rounded p-3 bg-light">
+                                    <h6>{{ template.subject|default:"Notificación" }}</h6>
+                                    <div class="content">
+                                        {{ template.template_body|linebreaks }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Variables Disponibles -->
+                            {% if template.template_body %}
+                                <div class="mt-4">
+                                    <h6 class="text-muted">
+                                        <i class="fas fa-code me-2"></i>Variables en el contenido:
+                                    </h6>
+                                    <div class="variables-info">
+                                        {% with variables=template.template_body|extract_variables %}
+                                            {% if variables %}
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    {% for var in variables %}
+                                                        <span class="badge bg-info">{{ var }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">No hay variables definidas</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'notifications_admin:template_edit' template.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit me-1"></i>Editar
+                                </a>
+                                <a href="{% url 'notifications_admin:template_delete' template.id %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash me-1"></i>Eliminar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sms-bubble {
+    max-width: 250px;
+    border-radius: 18px;
+    word-wrap: break-word;
+}
+
+.whatsapp-message {
+    max-width: 300px;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+    word-wrap: break-word;
+}
+
+.email-preview {
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.variables-info .badge {
+    font-family: 'Courier New', monospace;
+}
+</style>
+{% endblock %}

@@ -16,6 +16,8 @@ urlpatterns = [
     path('support/', include('support.urls')),
     path('security/', include('security.urls')),
     path('management/', include('management.urls')),  # Módulo de gestión empresarial
+    path('notifications/', include('notifications.urls')),  # Sistema de notificaciones
+    path('notifications/', include('notifications.admin_urls')),  # Admin de notificaciones
     
     # Favicon
     path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.ico', permanent=True)),

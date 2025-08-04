@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Plantillas - Notificaciones{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .template-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    
+    .template-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .template-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .template-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .template-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    
+    .meta-item {
+        background: #f8f9fa;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .template-preview {
+        background: #f8f9fa;
+        border-radius: 5px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-left: 3px solid #667eea;
+        font-size: 0.9rem;
+        max-height: 100px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .template-preview.expanded {
+        max-height: none;
+    }
+    
+    .preview-fade {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(transparent, #f8f9fa);
+    }
+    
+    .template-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-template {
+        padding: 0.375rem 0.75rem;
+        border-radius: 5px;
+        font-size: 0.875rem;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-admin {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-admin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .search-filters {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .no-templates {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    
+    .channel-icon {
+        margin-right: 0.5rem;
+    }
+    
+    .template-stats {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-file-alt me-3"></i>Gestión de Plantillas</h1>
+                <p class="mb-0">Crear y administrar plantillas de notificación</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'notifications_admin:template_create' %}" class="btn btn-light me-2">
+                    <i class="fas fa-plus me-2"></i>Nueva Plantilla
+                </a>
+                <a href="{% url 'notifications_admin:dashboard' %}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {% if message.tags == 'success' %}
+                    <i class="fas fa-check-circle me-2"></i>
+                {% else %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Estadísticas de plantillas -->
+    <div class="template-stats">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_templates|default:0 }}</div>
+                    <div class="stat-label">Total Plantillas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.active_templates|default:0 }}</div>
+                    <div class="stat-label">Activas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.email_templates|default:0 }}</div>
+                    <div class="stat-label">Email</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.most_used|default:"-" }}</div>
+                    <div class="stat-label">Más Usada</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="search-filters">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Buscar plantilla</label>
+                <input type="text" name="search" class="form-control" placeholder="Nombre de plantilla..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tipo</label>
+                <select name="type" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="general" {% if request.GET.type == 'general' %}selected{% endif %}>General</option>
+                    <option value="promotion" {% if request.GET.type == 'promotion' %}selected{% endif %}>Promoción</option>
+                    <option value="system" {% if request.GET.type == 'system' %}selected{% endif %}>Sistema</option>
+                    <option value="reminder" {% if request.GET.type == 'reminder' %}selected{% endif %}>Recordatorio</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Canal</label>
+                <select name="channel" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="email" {% if request.GET.channel == 'email' %}selected{% endif %}>Email</option>
+                    <option value="sms" {% if request.GET.channel == 'sms' %}selected{% endif %}>SMS</option>
+                    <option value="whatsapp" {% if request.GET.channel == 'whatsapp' %}selected{% endif %}>WhatsApp</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Estado</label>
+                <select name="status" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activa</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactiva</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-admin">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'notifications_admin:templates' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de plantillas -->
+    {% if templates %}
+        <div class="row">
+            {% for template in templates %}
+                <div class="col-lg-6 col-xl-4">
+                    <div class="template-card">
+                        <div class="template-header">
+                            <div class="flex-grow-1">
+                                <div class="template-name">{{ template.name }}</div>
+                                <span class="status-badge status-{{ template.is_active|yesno:'active,inactive' }}">
+                                    {{ template.is_active|yesno:'Activa,Inactiva' }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="template-meta">
+                            <span class="meta-item">
+                                {% if template.channel == 'email' %}
+                                    <i class="fas fa-envelope channel-icon"></i>Email
+                                {% elif template.channel == 'sms' %}
+                                    <i class="fas fa-sms channel-icon"></i>SMS
+                                {% elif template.channel == 'whatsapp' %}
+                                    <i class="fab fa-whatsapp channel-icon"></i>WhatsApp
+                                {% else %}
+                                    <i class="fas fa-bell channel-icon"></i>{{ template.get_channel_display }}
+                                {% endif %}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-tag me-1"></i>{{ template.get_notification_type_display }}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-calendar me-1"></i>{{ template.created_at|date:"d/m/Y" }}
+                            </span>
+                        </div>
+                        
+                        {% if template.subject %}
+                            <div class="mb-2">
+                                <strong>Asunto:</strong> {{ template.subject|truncatechars:50 }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="template-preview" id="preview-{{ template.id }}">
+                            {{ template.template_body|truncatechars:200|linebreaks }}
+                            {% if template.template_body|length > 200 %}
+                                <div class="preview-fade"></div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if template.template_body|length > 200 %}
+                            <button class="btn btn-link btn-sm p-0 mb-2" onclick="togglePreview({{ template.id }})">
+                                <span id="toggle-text-{{ template.id }}">Ver completo</span>
+                            </button>
+                        {% endif %}
+                        
+                        {% if template.variables %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-code me-1"></i>
+                                    Variables: {{ template.variables|length }} definidas
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="template-actions">
+                            <a href="{% url 'notifications_admin:template_preview' template.id %}" 
+                               class="btn btn-template btn-outline-info btn-sm" target="_blank">
+                                <i class="fas fa-eye me-1"></i>Vista Previa
+                            </a>
+                            <a href="{% url 'notifications_admin:template_edit' template.id %}" 
+                               class="btn btn-template btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </a>
+                            <button class="btn btn-template btn-outline-success btn-sm" 
+                                    onclick="duplicateTemplate({{ template.id }})">
+                                <i class="fas fa-copy me-1"></i>Duplicar
+                            </button>
+                            {% if template.is_active %}
+                                <button class="btn btn-template btn-outline-warning btn-sm" 
+                                        onclick="toggleTemplate({{ template.id }}, false)">
+                                    <i class="fas fa-pause me-1"></i>Desactivar
+                                </button>
+                            {% else %}
+                                <button class="btn btn-template btn-outline-success btn-sm" 
+                                        onclick="toggleTemplate({{ template.id }}, true)">
+                                    <i class="fas fa-play me-1"></i>Activar
+                                </button>
+                            {% endif %}
+                            <button class="btn btn-template btn-outline-danger btn-sm" 
+                                    onclick="deleteTemplate({{ template.id }}, '{{ template.name }}')">
+                                <i class="fas fa-trash me-1"></i>Eliminar
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3 pt-2 border-top">
+                            <small class="text-muted">
+                                <i class="fas fa-chart-bar me-1"></i>
+                                Usada {{ template.usage_count|default:0 }} vez{{ template.usage_count|pluralize:"es" }}
+                                {% if template.last_used %}
+                                    • Última vez: {{ template.last_used|timesince }} ago
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+            <nav aria-label="Paginación de plantillas">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{{ request.GET.urlencode|slice:'1:' }}">&laquo; Primera</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|slice:'1:' }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|slice:'1:' }}">Siguiente</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|slice:'1:' }}">Última &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="no-templates">
+            <i class="fas fa-file-alt fa-4x mb-3"></i>
+            <h4>No hay plantillas disponibles</h4>
+            <p class="text-muted">Crea tu primera plantilla para comenzar a enviar notificaciones personalizadas.</p>
+            <a href="{% url 'notifications_admin:template_create' %}" class="btn btn-admin">
+                <i class="fas fa-plus me-2"></i>Crear Primera Plantilla
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para confirmaciones -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirmar Acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                ¿Estás seguro de que quieres realizar esta acción?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    
+    // Función para expandir/contraer vista previa
+    window.togglePreview = function(templateId) {
+        const preview = document.getElementById(`preview-${templateId}`);
+        const toggleText = document.getElementById(`toggle-text-${templateId}`);
+        
+        if (preview.classList.contains('expanded')) {
+            preview.classList.remove('expanded');
+            toggleText.textContent = 'Ver completo';
+        } else {
+            preview.classList.add('expanded');
+            toggleText.textContent = 'Ver menos';
+        }
+    };
+    
+    // Función para activar/desactivar plantilla
+    window.toggleTemplate = function(templateId, activate) {
+        const action = activate ? 'activar' : 'desactivar';
+        
+        document.getElementById('confirmModalTitle').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} Plantilla`;
+        document.getElementById('confirmModalBody').textContent = `¿Estás seguro de que quieres ${action} esta plantilla?`;
+        
+        document.getElementById('confirmButton').onclick = function() {
+            // Aquí harías la petición AJAX para cambiar el estado
+            fetch(`/notifications/admin/templates/${templateId}/toggle/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({active: activate})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al cambiar el estado de la plantilla');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cambiar el estado de la plantilla');
+            });
+            
+            confirmModal.hide();
+        };
+        
+        confirmModal.show();
+    };
+    
+    // Función para duplicar plantilla
+    window.duplicateTemplate = function(templateId) {
+        document.getElementById('confirmModalTitle').textContent = 'Duplicar Plantilla';
+        document.getElementById('confirmModalBody').textContent = '¿Quieres crear una copia de esta plantilla?';
+        
+        document.getElementById('confirmButton').onclick = function() {
+            window.location.href = `/notifications/admin/templates/${templateId}/duplicate/`;
+        };
+        
+        confirmModal.show();
+    };
+    
+    // Función para eliminar plantilla
+    window.deleteTemplate = function(templateId, templateName) {
+        document.getElementById('confirmModalTitle').textContent = 'Eliminar Plantilla';
+        document.getElementById('confirmModalBody').innerHTML = `
+            <p>¿Estás seguro de que quieres eliminar la plantilla <strong>"${templateName}"</strong>?</p>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Esta acción no se puede deshacer.
+            </div>
+        `;
+        
+        document.getElementById('confirmButton').onclick = function() {
+            window.location.href = `{% url 'notifications_admin:template_delete' 0 %}`.replace('0', templateId);
+        };
+        
+        confirmModal.show();
+    };
+    
+    // Función para obtener cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

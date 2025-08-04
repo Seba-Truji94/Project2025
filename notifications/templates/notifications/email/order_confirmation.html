@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .order-item {
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .total {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: right;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white !important;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .footer a {
+            color: #3498db;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-processing { background: #fff3cd; color: #856404; }
+        .status-shipped { background: #cce5ff; color: #004085; }
+        .status-delivered { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="logo">🍪</div>
+            <h1>Galletas Kati</h1>
+            <p>Las más deliciosas de Chile</p>
+        </div>
+        
+        <div class="content">
+            <h2>¡Hola {{ user.first_name|default:user.username }}!</h2>
+            
+            <p>{{ message }}</p>
+            
+            {% if extra_data.order_id %}
+            <div class="order-details">
+                <h3>📋 Detalles del Pedido #{{ extra_data.order_id }}</h3>
+                
+                {% if extra_data.new_status %}
+                <p>
+                    <strong>Estado:</strong> 
+                    <span class="status-badge status-{{ extra_data.new_status }}">
+                        {{ extra_data.new_status|capfirst }}
+                    </span>
+                </p>
+                {% endif %}
+                
+                {% if extra_data.total %}
+                <div class="total">
+                    Total: ${{ extra_data.total|floatformat:0 }}
+                </div>
+                {% endif %}
+                
+                {% if extra_data.tracking_number %}
+                <p><strong>Número de seguimiento:</strong> {{ extra_data.tracking_number }}</p>
+                {% endif %}
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="http://127.0.0.1:8002/orders/detail/{{ extra_data.order_id }}/" class="button">
+                    Ver Pedido Completo
+                </a>
+            </div>
+            {% endif %}
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+            
+            <p style="color: #6c757d; font-size: 14px;">
+                <strong>¿Por qué recibiste este email?</strong><br>
+                Estás recibiendo esta notificación porque tienes una cuenta en Galletas Kati 
+                y has habilitado las notificaciones por email.
+            </p>
+            
+            <p style="color: #6c757d; font-size: 14px;">
+                Si no deseas recibir estos emails, puedes 
+                <a href="http://127.0.0.1:8002/notifications/preferences/">cambiar tus preferencias</a> 
+                en cualquier momento.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Galletas Kati</strong></p>
+            <p>📧 contacto@galletaskati.cl | 📞 +56 9 1234 5678</p>
+            <p>
+                <a href="http://127.0.0.1:8002/">Sitio Web</a> | 
+                <a href="http://127.0.0.1:8002/notifications/preferences/">Preferencias</a> | 
+                <a href="http://127.0.0.1:8002/support/">Soporte</a>
+            </p>
+            <p style="font-size: 12px; margin-top: 20px;">
+                © 2025 Galletas Kati. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+🍪 GALLETAS KATI - INSTRUCCIONES DE EJECUCIÓN
+================================================================
+
+PASO 1: Abrir terminal en el directorio del proyecto
+   cd "c:\Users\cuent\Galletas Kati"
+
+PASO 2: Ejecutar script de configuración
+   .\CONFIGURAR_BD.bat
+
+O ALTERNATIVAMENTE, ejecutar comandos uno por uno:
+
+PASO 2a: Crear migraciones
+   python manage.py makemigrations notifications --verbosity=2
+
+PASO 2b: Aplicar migraciones
+   python manage.py migrate --verbosity=2
+
+PASO 2c: Verificar migraciones
+   python manage.py showmigrations
+
+PASO 2d: Iniciar servidor
+   python manage.py runserver 8002
+
+================================================================
+🌐 URLs IMPORTANTES:
+================================================================
+
+🏠 Página principal:
+   http://127.0.0.1:8002/
+
+📢 Sistema de notificaciones:
+   http://127.0.0.1:8002/notifications/
+
+📋 Panel administrativo:
+   http://127.0.0.1:8002/notifications/admin/
+
+👤 Django Admin (si tienes superuser):
+   http://127.0.0.1:8002/admin/
+
+🎫 Sistema de tickets:
+   http://127.0.0.1:8002/support/tickets/
+
+================================================================
+✅ FUNCIONALIDADES DISPONIBLES:
+================================================================
+
+🔔 Sistema completo de notificaciones:
+   - Email, SMS, WhatsApp
+   - Plantillas personalizables
+   - Envío masivo
+   - Estadísticas en tiempo real
+
+👨‍💼 Panel de administración:
+   - Gestión de plantillas
+   - Configuración de canales
+   - Métricas y reportes
+   - Exportación a CSV
+
+📊 Dashboard de notificaciones:
+   - Gráficos interactivos
+   - Estado de envíos
+   - Historial completo
+
+================================================================
+🛠️ SOLUCIÓN DE PROBLEMAS:
+================================================================
+
+Si aparece error "no such column":
+   1. Ejecuta: python manage.py makemigrations notifications
+   2. Ejecuta: python manage.py migrate
+
+Si no funciona el servidor:
+   1. Verifica que estés en el directorio correcto
+   2. Ejecuta: python verificar.py
+
+Si hay errores de template:
+   - Ya están corregidos en el código
+
+================================================================

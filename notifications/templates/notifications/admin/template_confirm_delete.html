@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Eliminación - Plantilla{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning me-2"></i>
+                        <strong>¿Estás seguro?</strong> Esta acción no se puede deshacer.
+                    </div>
+                    
+                    <h6>Plantilla a eliminar:</h6>
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <h6 class="text-primary">{{ template.name }}</h6>
+                        <p class="text-muted mb-1">
+                            <strong>Tipo:</strong> {{ template.get_notification_type_display }}
+                        </p>
+                        <p class="text-muted mb-1">
+                            <strong>Canal:</strong> {{ template.get_channel_display }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <strong>Estado:</strong> 
+                            <span class="badge bg-{{ template.is_active|yesno:'success,secondary' }}">
+                                {{ template.is_active|yesno:'Activa,Inactiva' }}
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex gap-3">
+                        <form method="post" class="flex-grow-1">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fas fa-trash me-2"></i>Sí, Eliminar Plantilla
+                            </button>
+                        </form>
+                        <a href="{% url 'notifications_admin:templates' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        .alert-info {
+            background: #cce5ff;
+            color: #004085;
+            border-left: 4px solid #0066cc;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white !important;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+        .button-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .footer a {
+            color: #3498db;
+        }
+        .icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="logo">🍪</div>
+            <h1>Galletas Kati</h1>
+            <p>Las más deliciosas de Chile</p>
+        </div>
+        
+        <div class="content">
+            <h2>¡Hola {{ user.first_name|default:user.username }}!</h2>
+            
+            {% if notification_type == 'general' %}
+            <div class="alert alert-info">
+                <span class="icon">📢</span>
+                {{ message }}
+            </div>
+            
+            {% elif notification_type == 'promotion' %}
+            <div class="alert alert-success">
+                <span class="icon">🎉</span>
+                {{ message }}
+            </div>
+            
+            {% if extra_data.discount_code %}
+            <div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin: 0 0 10px 0;">Código de Descuento</h3>
+                <div style="font-size: 24px; font-weight: bold; color: #28a745; font-family: monospace; background: white; padding: 10px; border-radius: 5px; border: 2px dashed #28a745;">
+                    {{ extra_data.discount_code }}
+                </div>
+                {% if extra_data.discount_percentage %}
+                <p style="margin: 10px 0 0 0; color: #6c757d;">
+                    Descuento del {{ extra_data.discount_percentage }}%
+                </p>
+                {% endif %}
+                {% if extra_data.expiry_date %}
+                <p style="margin: 5px 0 0 0; color: #dc3545; font-size: 14px;">
+                    Válido hasta: {{ extra_data.expiry_date|date:"d/m/Y" }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% elif notification_type == 'reminder' %}
+            <div class="alert alert-warning">
+                <span class="icon">⏰</span>
+                {{ message }}
+            </div>
+            
+            {% elif notification_type == 'welcome' %}
+            <div class="alert alert-success">
+                <span class="icon">🎊</span>
+                {{ message }}
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3>¿Qué puedes hacer ahora?</h3>
+                <ul style="padding-left: 20px;">
+                    <li>🛒 Explora nuestro catálogo de galletas artesanales</li>
+                    <li>📋 Personaliza tu perfil y preferencias</li>
+                    <li>🎯 Suscríbete a nuestras ofertas especiales</li>
+                    <li>📞 Contacta a nuestro equipo de soporte</li>
+                </ul>
+            </div>
+            
+            {% else %}
+            <p>{{ message }}</p>
+            {% endif %}
+            
+            {% if extra_data.action_url and extra_data.action_text %}
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ extra_data.action_url }}" class="button">
+                    {{ extra_data.action_text }}
+                </a>
+            </div>
+            {% endif %}
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+            
+            <p style="color: #6c757d; font-size: 14px;">
+                <strong>¿Por qué recibiste este email?</strong><br>
+                Estás recibiendo esta notificación porque tienes una cuenta en Galletas Kati 
+                y has habilitado las notificaciones por email.
+            </p>
+            
+            <p style="color: #6c757d; font-size: 14px;">
+                Si no deseas recibir estos emails, puedes 
+                <a href="http://127.0.0.1:8002/notifications/preferences/">cambiar tus preferencias</a> 
+                en cualquier momento.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Galletas Kati</strong></p>
+            <p>📧 contacto@galletaskati.cl | 📞 +56 9 1234 5678</p>
+            <p>
+                <a href="http://127.0.0.1:8002/">Sitio Web</a> | 
+                <a href="http://127.0.0.1:8002/notifications/preferences/">Preferencias</a> | 
+                <a href="http://127.0.0.1:8002/support/">Soporte</a>
+            </p>
+            <p style="font-size: 12px; margin-top: 20px;">
+                © 2025 Galletas Kati. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

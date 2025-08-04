@@ -4,9 +4,10 @@
 
 {% block extra_css %}
 <style>
-    /* Corrección para que el navbar no tape el contenido */
-    .container {
-        padding-top: 2rem !important;
+    /* Fix para evitar que el navbar tape contenido */
+    .container:first-child {
+        margin-top: 40px !important;
+        padding-top: 20px !important;
     }
     
     /* Asegurar que los títulos sean visibles */

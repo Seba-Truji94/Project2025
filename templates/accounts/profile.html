@@ -3,6 +3,16 @@
 
 {% block title %}Mi Perfil - Dulce Bias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Fix para evitar que el navbar tape contenido */
+    .container:first-child {
+        margin-top: 40px !important;
+        padding-top: 20px !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="row">
@@ -61,6 +71,16 @@
                     <i class="fas fa-cog me-2"></i>Configuración
                 </a>
                 
+                <!-- Notificaciones -->
+                {% if has_notifications %}
+                <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    <i class="fas fa-bell me-2"></i>Notificaciones
+                    {% if notification_stats.unread_count > 0 %}
+                        <span class="badge bg-danger rounded-pill float-end">{{ notification_stats.unread_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+                
                 <!-- Gestión Empresarial (solo para superusuarios) -->
                 {% if user.is_superuser %}
                 <div class="list-group-item list-group-item-action bg-gradient-primary text-white mt-2">
@@ -101,6 +121,13 @@
                 <a href="{% url 'support:admin_management' %}" class="list-group-item list-group-item-action">
                     <i class="fas fa-headset me-2"></i>Admin Soporte
                 </a>
+                
+                <!-- Sistema de Notificaciones (solo para superusuarios) -->
+                {% if has_notifications %}
+                <a href="{% url 'notifications_admin:dashboard' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-broadcast-tower me-2"></i>Admin Notificaciones
+                </a>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -445,6 +472,214 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Notificaciones -->
+                {% if has_notifications %}
+                <div class="tab-pane fade" id="notifications">
+                    <div class="row">
+                        <!-- Estadísticas de notificaciones -->
+                        <div class="col-12 mb-4">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card text-center bg-primary text-white">
+                                        <div class="card-body">
+                                            <h3 class="card-title">{{ notification_stats.total_received|default:0 }}</h3>
+                                            <p class="card-text">Total Recibidas</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card text-center bg-warning text-white">
+                                        <div class="card-body">
+                                            <h3 class="card-title">{{ notification_stats.unread_count|default:0 }}</h3>
+                                            <p class="card-text">Sin Leer</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card text-center bg-success text-white">
+                                        <div class="card-body">
+                                            <h3 class="card-title">{{ notification_prefs.email_enabled|yesno:"Sí,No" }}</h3>
+                                            <p class="card-text">Email Activo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card text-center bg-info text-white">
+                                        <div class="card-body">
+                                            <h3 class="card-title">{{ notification_prefs.sms_enabled|yesno:"Sí,No" }}</h3>
+                                            <p class="card-text">SMS Activo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel de control para superusuarios -->
+                        {% if user.is_superuser and is_admin %}
+                        <div class="col-12 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-crown me-2"></i>Panel de Administración de Notificaciones
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center mb-3">
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-3">
+                                                <h4 class="text-primary">{{ admin_stats.total_notifications|default:0 }}</h4>
+                                                <small class="text-muted">Total Notificaciones</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-3">
+                                                <h4 class="text-success">{{ admin_stats.sent_today|default:0 }}</h4>
+                                                <small class="text-muted">Enviadas Hoy</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-3">
+                                                <h4 class="text-warning">{{ admin_stats.pending_notifications|default:0 }}</h4>
+                                                <small class="text-muted">Pendientes</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-3">
+                                                <h4 class="text-danger">{{ admin_stats.failed_today|default:0 }}</h4>
+                                                <small class="text-muted">Fallidas Hoy</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="{% url 'notifications_admin:dashboard' %}" class="btn btn-primary">
+                                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard Completo
+                                        </a>
+                                        <a href="{% url 'notifications_admin:bulk_send' %}" class="btn btn-success">
+                                            <i class="fas fa-broadcast-tower me-2"></i>Envío Masivo
+                                        </a>
+                                        <a href="{% url 'notifications_admin:templates' %}" class="btn btn-info">
+                                            <i class="fas fa-file-alt me-2"></i>Plantillas
+                                        </a>
+                                        <a href="{% url 'notifications_admin:logs' %}" class="btn btn-secondary">
+                                            <i class="fas fa-history me-2"></i>Logs
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Preferencias de notificaciones -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-cog me-2"></i>Preferencias
+                                    </h5>
+                                    <a href="{% url 'accounts:notification_preferences' %}" class="btn btn-light btn-sm">
+                                        <i class="fas fa-edit me-1"></i>Editar
+                                    </a>
+                                </div>
+                                <div class="card-body">
+                                    {% if notification_prefs %}
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <h6>Canales Activos:</h6>
+                                            <div class="d-flex gap-2 flex-wrap">
+                                                {% if notification_prefs.email_enabled %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-envelope me-1"></i>Email
+                                                    </span>
+                                                {% endif %}
+                                                {% if notification_prefs.sms_enabled %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-sms me-1"></i>SMS
+                                                    </span>
+                                                {% endif %}
+                                                {% if notification_prefs.whatsapp_enabled %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                                    </span>
+                                                {% endif %}
+                                                {% if notification_prefs.push_enabled %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-bell me-1"></i>Push
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <h6>Contactos:</h6>
+                                            {% if notification_prefs.email_address %}
+                                                <p class="mb-1"><i class="fas fa-envelope me-2 text-primary"></i>{{ notification_prefs.email_address }}</p>
+                                            {% endif %}
+                                            {% if notification_prefs.phone_number %}
+                                                <p class="mb-1"><i class="fas fa-phone me-2 text-success"></i>{{ notification_prefs.phone_number }}</p>
+                                            {% endif %}
+                                            {% if notification_prefs.whatsapp_number %}
+                                                <p class="mb-1"><i class="fab fa-whatsapp me-2 text-success"></i>{{ notification_prefs.whatsapp_number }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No has configurado tus preferencias de notificación.</p>
+                                    <a href="{% url 'accounts:notification_preferences' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Configurar Ahora
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notificaciones recientes -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-history me-2"></i>Actividad Reciente
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if notification_stats.recent_notifications %}
+                                        {% for notification in notification_stats.recent_notifications %}
+                                        <div class="d-flex align-items-center mb-3 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                                            <div class="me-3">
+                                                {% if notification.channel == 'email' %}
+                                                    <i class="fas fa-envelope text-primary"></i>
+                                                {% elif notification.channel == 'sms' %}
+                                                    <i class="fas fa-sms text-success"></i>
+                                                {% elif notification.channel == 'whatsapp' %}
+                                                    <i class="fab fa-whatsapp text-success"></i>
+                                                {% else %}
+                                                    <i class="fas fa-bell text-info"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold">{{ notification.subject|default:"Sin asunto" }}</div>
+                                                <small class="text-muted">
+                                                    {{ notification.notification_type|title }} • {{ notification.created_at|timesince }} ago
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-{{ notification.status|yesno:'success,warning' }}">
+                                                    {{ notification.get_status_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center text-muted py-3">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <p>No hay notificaciones recientes</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

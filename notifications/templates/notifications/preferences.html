@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Preferencias de Notificaciones - Galletas Kati{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-preferences {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin: 20px 0;
+    }
+
+    .preference-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        background: #f8f9fa;
+    }
+
+    .preference-section h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-check {
+        margin-bottom: 10px;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+
+    .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .form-check-label {
+        margin-left: 10px;
+        font-weight: 500;
+    }
+
+    .channel-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .channel-card.enabled {
+        border-color: #28a745;
+        background: #f8fff9;
+    }
+
+    .channel-icon {
+        font-size: 2em;
+        margin-bottom: 10px;
+    }
+
+    .email-icon { color: #dc3545; }
+    .sms-icon { color: #007bff; }
+    .whatsapp-icon { color: #25d366; }
+    .push-icon { color: #6f42c1; }
+
+    .save-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(40,167,69,0.4);
+    }
+
+    .test-notification {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+
+    .contact-info {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="notification-preferences">
+                <div class="text-center mb-4">
+                    <h1><i class="fas fa-bell"></i> Preferencias de Notificaciones</h1>
+                    <p class="text-muted">Configura cómo y cuándo quieres recibir notificaciones</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Canales de Notificación -->
+                    <div class="preference-section">
+                        <h3><i class="fas fa-broadcast-tower"></i> Canales de Notificación</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="channel-card {% if form.email_enabled.value %}enabled{% endif %}">
+                                    <div class="text-center">
+                                        <i class="fas fa-envelope channel-icon email-icon"></i>
+                                        <h5>Email</h5>
+                                        <div class="form-check">
+                                            {{ form.email_enabled }}
+                                            <label class="form-check-label" for="{{ form.email_enabled.id_for_label }}">
+                                                Activar notificaciones por email
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="channel-card {% if form.sms_enabled.value %}enabled{% endif %}">
+                                    <div class="text-center">
+                                        <i class="fas fa-sms channel-icon sms-icon"></i>
+                                        <h5>SMS</h5>
+                                        <div class="form-check">
+                                            {{ form.sms_enabled }}
+                                            <label class="form-check-label" for="{{ form.sms_enabled.id_for_label }}">
+                                                Activar notificaciones por SMS
+                                            </label>
+                                        </div>
+                                        {% if form.sms_enabled.value %}
+                                        <div class="contact-info">
+                                            <label for="{{ form.phone_number.id_for_label }}">Teléfono:</label>
+                                            {{ form.phone_number }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="channel-card {% if form.whatsapp_enabled.value %}enabled{% endif %}">
+                                    <div class="text-center">
+                                        <i class="fab fa-whatsapp channel-icon whatsapp-icon"></i>
+                                        <h5>WhatsApp</h5>
+                                        <div class="form-check">
+                                            {{ form.whatsapp_enabled }}
+                                            <label class="form-check-label" for="{{ form.whatsapp_enabled.id_for_label }}">
+                                                Activar notificaciones por WhatsApp
+                                            </label>
+                                        </div>
+                                        {% if form.whatsapp_enabled.value %}
+                                        <div class="contact-info">
+                                            <label for="{{ form.whatsapp_number.id_for_label }}">WhatsApp:</label>
+                                            {{ form.whatsapp_number }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="channel-card {% if form.push_enabled.value %}enabled{% endif %}">
+                                    <div class="text-center">
+                                        <i class="fas fa-mobile-alt channel-icon push-icon"></i>
+                                        <h5>Push</h5>
+                                        <div class="form-check">
+                                            {{ form.push_enabled }}
+                                            <label class="form-check-label" for="{{ form.push_enabled.id_for_label }}">
+                                                Activar notificaciones push
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tipos de Notificaciones -->
+                    <div class="preference-section">
+                        <h3><i class="fas fa-list"></i> Tipos de Notificaciones</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.order_notifications }}
+                                    <label class="form-check-label" for="{{ form.order_notifications.id_for_label }}">
+                                        <i class="fas fa-shopping-bag text-primary"></i>
+                                        Notificaciones de Pedidos
+                                        <small class="d-block text-muted">Confirmaciones, actualizaciones de estado</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.shipping_notifications }}
+                                    <label class="form-check-label" for="{{ form.shipping_notifications.id_for_label }}">
+                                        <i class="fas fa-truck text-success"></i>
+                                        Notificaciones de Envío
+                                        <small class="d-block text-muted">Estado del envío, entregas</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.promotional_notifications }}
+                                    <label class="form-check-label" for="{{ form.promotional_notifications.id_for_label }}">
+                                        <i class="fas fa-tags text-warning"></i>
+                                        Notificaciones Promocionales
+                                        <small class="d-block text-muted">Ofertas especiales, descuentos</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.support_notifications }}
+                                    <label class="form-check-label" for="{{ form.support_notifications.id_for_label }}">
+                                        <i class="fas fa-headset text-info"></i>
+                                        Notificaciones de Soporte
+                                        <small class="d-block text-muted">Respuestas a tickets, actualizaciones</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn save-btn">
+                            <i class="fas fa-save"></i> Guardar Preferencias
+                        </button>
+                        <a href="{% url 'notifications:test' %}" class="btn btn-outline-info ms-3">
+                            <i class="fas fa-paper-plane"></i> Enviar Prueba
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Información adicional -->
+                <div class="test-notification">
+                    <h5><i class="fas fa-info-circle"></i> Información Importante</h5>
+                    <ul class="mb-0">
+                        <li>Las notificaciones de pedidos y envío son altamente recomendadas</li>
+                        <li>Puedes cambiar estas preferencias en cualquier momento</li>
+                        <li>Los números de teléfono deben incluir el código de país (+56 para Chile)</li>
+                        <li>Las notificaciones promocionales te ayudan a no perderte ofertas especiales</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar/ocultar campos de contacto según canales habilitados
+    function toggleContactFields() {
+        const smsEnabled = document.getElementById('id_sms_enabled').checked;
+        const whatsappEnabled = document.getElementById('id_whatsapp_enabled').checked;
+        
+        // Actualizar clases de cards
+        document.querySelectorAll('.channel-card').forEach(card => {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                card.classList.add('enabled');
+            } else {
+                card.classList.remove('enabled');
+            }
+        });
+    }
+    
+    // Event listeners para checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', toggleContactFields);
+    });
+    
+    // Inicializar estado
+    toggleContactFields();
+});
+</script>
+{% endblock %}

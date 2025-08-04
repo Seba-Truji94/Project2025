@@ -217,16 +217,32 @@ body {
 main {
     position: relative;
     z-index: 1;
+    margin-top: 20px; /* Margen extra para separación del navbar */
+}
+
+/* Los títulos de página necesitan margen superior */
+.page-title,
+.section-title,
+h1.main-title,
+.container h1:first-child,
+.container h2:first-child {
+    margin-top: 30px !important;
+    padding-top: 20px !important;
 }
 
 /* Espaciado adicional para el main cuando hay barra financiera */
 body[data-user-authenticated="true"] main {
-    padding-top: 10px; /* Espacio adicional para la barra financiera (reducido) */
+    margin-top: 30px; /* Margen mayor para usuarios autenticados */
 }
 
-/* Ajustar padding del body para usuarios autenticados con barra financiera */
+/* Padding dinámico del body - será controlado por JavaScript */
+body {
+    padding-top: 0; /* Se establece dinámicamente */
+}
+
+/* Fallback para usuarios autenticados sin JavaScript */
 body[data-user-authenticated="true"] {
-    padding-top: 160px; /* Espacio para announcement (44px) + financial (36px) + navbar (80px) */
+    padding-top: 160px; /* Fallback: announcement (44px) + financial (36px) + navbar (80px) */
 }
 
 /* Typography System */
@@ -975,6 +991,39 @@ header {
 .dropdown-item.admin-item:hover {
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
     color: #b8860b;
+}
+
+/* Estilos especiales para paneles de administración destacados */
+.dropdown-item.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    color: white !important;
+    border-left: 3px solid #0056b3;
+    font-weight: bold;
+    margin: 2px 0;
+    border-radius: 6px;
+}
+
+.dropdown-item.bg-gradient-primary:hover {
+    background: linear-gradient(135deg, #0056b3, #004085) !important;
+    color: white !important;
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.dropdown-item.bg-gradient-info {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    color: white !important;
+    border-left: 3px solid #138496;
+    font-weight: bold;
+    margin: 2px 0;
+    border-radius: 6px;
+}
+
+.dropdown-item.bg-gradient-info:hover {
+    background: linear-gradient(135deg, #138496, #117a8b) !important;
+    color: white !important;
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
 }
 
 .dropdown-item.logout-item {

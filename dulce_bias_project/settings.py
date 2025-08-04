@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     # Third party apps
     'crispy_forms',
     'crispy_bootstrap5',
+    # 'phonenumber_field',  # Para campos de teléfono (temporalmente deshabilitado)
     
     # Local apps
     'shop',
@@ -130,6 +131,7 @@ INSTALLED_APPS = [
     'orders',
     'support',
     'management',  # Nuevo módulo de gestión empresarial
+    'notifications',  # Sistema de notificaciones multi-canal
 ]
 
 MIDDLEWARE = [

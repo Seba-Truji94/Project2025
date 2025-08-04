@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Envío Masivo - Notificaciones{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .channel-selector {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .channel-option {
+        flex: 1;
+        min-width: 150px;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .channel-option:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .channel-option.selected {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+    }
+    
+    .channel-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .preview-panel {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .user-count {
+        background: #e3f2fd;
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-weight: bold;
+        color: #1565c0;
+    }
+    
+    .btn-admin {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-admin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    .variable-helper {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .variable-tag {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        margin: 0.25rem;
+        display: inline-block;
+        cursor: pointer;
+    }
+    
+    .priority-selector {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .priority-option {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .priority-low { border-color: #28a745; }
+    .priority-medium { border-color: #ffc107; }
+    .priority-high { border-color: #fd7e14; }
+    .priority-urgent { border-color: #dc3545; }
+    
+    .priority-option.selected {
+        background: var(--bs-primary);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-broadcast-tower me-3"></i>Envío Masivo de Notificaciones</h1>
+                <p class="mb-0">Enviar notificaciones a múltiples usuarios simultáneamente</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'notifications_admin:dashboard' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {% if message.tags == 'success' %}
+                    <i class="fas fa-check-circle me-2"></i>
+                {% else %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="bulkNotificationForm">
+        {% csrf_token %}
+        
+        <!-- Configuración de destinatarios -->
+        <div class="form-card">
+            <h4 class="mb-3"><i class="fas fa-users me-2"></i>Destinatarios</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="{{ form.user_filter.id_for_label }}" class="form-label">Filtro de usuarios</label>
+                    {{ form.user_filter }}
+                    <div id="userCount" class="user-count mt-2" style="display: none;">
+                        <i class="fas fa-users me-1"></i>
+                        <span id="userCountNumber">0</span> usuarios seleccionados
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.specific_users.id_for_label }}" class="form-label">Usuarios específicos (opcional)</label>
+                    {{ form.specific_users }}
+                    <small class="form-text text-muted">Solo se usará si seleccionas "Usuarios específicos" en el filtro</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración del mensaje -->
+        <div class="form-card">
+            <h4 class="mb-3"><i class="fas fa-edit me-2"></i>Contenido del Mensaje</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="{{ form.notification_type.id_for_label }}" class="form-label">Tipo de notificación</label>
+                    {{ form.notification_type }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.priority.id_for_label }}" class="form-label">Prioridad</label>
+                    {{ form.priority }}
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <label for="{{ form.subject.id_for_label }}" class="form-label">Asunto</label>
+                    {{ form.subject }}
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <label for="{{ form.message.id_for_label }}" class="form-label">Mensaje</label>
+                    {{ form.message }}
+                    
+                    <div class="variable-helper">
+                        <strong><i class="fas fa-info-circle me-2"></i>Variables disponibles:</strong>
+                        <br>
+                        <span class="variable-tag" onclick="insertVariable('{user.first_name}')">{user.first_name}</span>
+                        <span class="variable-tag" onclick="insertVariable('{user.last_name}')">{user.last_name}</span>
+                        <span class="variable-tag" onclick="insertVariable('{user.email}')">{user.email}</span>
+                        <span class="variable-tag" onclick="insertVariable('{company}')">{company}</span>
+                        <span class="variable-tag" onclick="insertVariable('{date}')">{date}</span>
+                        <span class="variable-tag" onclick="insertVariable('{time}')">{time}</span>
+                        <small class="d-block mt-2 text-muted">Haz clic en cualquier variable para insertarla en el mensaje</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de canales -->
+        <div class="form-card">
+            <h4 class="mb-3"><i class="fas fa-satellite-dish me-2"></i>Canales de Envío</h4>
+            
+            <div class="channel-selector">
+                <div class="channel-option" data-channel="email">
+                    <i class="fas fa-envelope channel-icon"></i>
+                    <div class="fw-bold">Email</div>
+                    <small class="text-muted">Notificación por correo</small>
+                </div>
+                <div class="channel-option" data-channel="sms">
+                    <i class="fas fa-sms channel-icon"></i>
+                    <div class="fw-bold">SMS</div>
+                    <small class="text-muted">Mensaje de texto</small>
+                </div>
+                <div class="channel-option" data-channel="whatsapp">
+                    <i class="fab fa-whatsapp channel-icon"></i>
+                    <div class="fw-bold">WhatsApp</div>
+                    <small class="text-muted">Mensaje WhatsApp</small>
+                </div>
+                <div class="channel-option" data-channel="push">
+                    <i class="fas fa-bell channel-icon"></i>
+                    <div class="fw-bold">Push</div>
+                    <small class="text-muted">Notificación push</small>
+                </div>
+            </div>
+            
+            <!-- Hidden checkboxes for form submission -->
+            <div style="display: none;">
+                {{ form.channels }}
+            </div>
+        </div>
+
+        <!-- Configuración de programación -->
+        <div class="form-card">
+            <h4 class="mb-3"><i class="fas fa-clock me-2"></i>Programación</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="{{ form.scheduled_at.id_for_label }}" class="form-label">Programar envío</label>
+                    {{ form.scheduled_at }}
+                    <small class="form-text text-muted">Dejar vacío para enviar inmediatamente</small>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check mt-4">
+                        {{ form.test_mode }}
+                        <label class="form-check-label" for="{{ form.test_mode.id_for_label }}">
+                            <strong>Modo de prueba</strong>
+                            <br><small class="text-muted">Solo envía la notificación al administrador</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos adicionales -->
+        <div class="form-card">
+            <h4 class="mb-3"><i class="fas fa-code me-2"></i>Datos Adicionales (Opcional)</h4>
+            
+            <div class="row">
+                <div class="col-12">
+                    <label for="{{ form.extra_data.id_for_label }}" class="form-label">Datos en formato JSON</label>
+                    {{ form.extra_data }}
+                    <small class="form-text text-muted">
+                        Ejemplo: {"discount_code": "PROMO20", "expiry_date": "2025-12-31"}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista previa -->
+        <div class="form-card">
+            <h4 class="mb-3"><i class="fas fa-eye me-2"></i>Vista Previa</h4>
+            <div id="preview-panel" class="preview-panel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Destinatarios:</strong> <span id="preview-recipients">Selecciona un filtro</span><br>
+                        <strong>Canales:</strong> <span id="preview-channels">Ninguno seleccionado</span><br>
+                        <strong>Tipo:</strong> <span id="preview-type">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Prioridad:</strong> <span id="preview-priority">-</span><br>
+                        <strong>Programación:</strong> <span id="preview-schedule">Inmediato</span><br>
+                        <strong>Modo:</strong> <span id="preview-mode">Normal</span>
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <strong>Asunto:</strong> <span id="preview-subject">Sin asunto</span><br>
+                    <strong>Mensaje:</strong>
+                    <div id="preview-message" class="mt-2 p-2 bg-white border rounded">
+                        Sin mensaje
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="form-card text-center">
+            <div class="d-flex gap-3 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                    <i class="fas fa-undo me-2"></i>Limpiar Formulario
+                </button>
+                <button type="button" class="btn btn-outline-info" onclick="previewMessage()">
+                    <i class="fas fa-eye me-2"></i>Vista Previa
+                </button>
+                <button type="submit" class="btn btn-admin" id="sendButton">
+                    <i class="fas fa-paper-plane me-2"></i>Enviar Notificaciones
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejo de selección de canales
+    const channelOptions = document.querySelectorAll('.channel-option');
+    const channelsInput = document.getElementById('{{ form.channels.id_for_label }}');
+    let selectedChannels = [];
+
+    channelOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const channel = this.dataset.channel;
+            
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selectedChannels = selectedChannels.filter(c => c !== channel);
+            } else {
+                this.classList.add('selected');
+                selectedChannels.push(channel);
+            }
+            
+            updateChannelsInput();
+            updatePreview();
+        });
+    });
+
+    function updateChannelsInput() {
+        // Actualizar checkboxes hidden
+        const checkboxes = document.querySelectorAll('input[name="channels"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectedChannels.includes(checkbox.value);
+        });
+    }
+
+    // Actualización de vista previa en tiempo real
+    function updatePreview() {
+        const userFilter = document.getElementById('{{ form.user_filter.id_for_label }}').value;
+        const notificationType = document.getElementById('{{ form.notification_type.id_for_label }}').value;
+        const priority = document.getElementById('{{ form.priority.id_for_label }}').value;
+        const subject = document.getElementById('{{ form.subject.id_for_label }}').value;
+        const message = document.getElementById('{{ form.message.id_for_label }}').value;
+        const scheduledAt = document.getElementById('{{ form.scheduled_at.id_for_label }}').value;
+        const testMode = document.getElementById('{{ form.test_mode.id_for_label }}').checked;
+
+        // Actualizar preview
+        document.getElementById('preview-recipients').textContent = 
+            document.querySelector(`#{{ form.user_filter.id_for_label }} option[value="${userFilter}"]`).textContent;
+        document.getElementById('preview-channels').textContent = 
+            selectedChannels.length > 0 ? selectedChannels.join(', ') : 'Ninguno seleccionado';
+        document.getElementById('preview-type').textContent = 
+            document.querySelector(`#{{ form.notification_type.id_for_label }} option[value="${notificationType}"]`).textContent;
+        document.getElementById('preview-priority').textContent = 
+            document.querySelector(`#{{ form.priority.id_for_label }} option[value="${priority}"]`).textContent;
+        document.getElementById('preview-schedule').textContent = 
+            scheduledAt ? new Date(scheduledAt).toLocaleString() : 'Inmediato';
+        document.getElementById('preview-mode').textContent = testMode ? 'Prueba' : 'Normal';
+        document.getElementById('preview-subject').textContent = subject || 'Sin asunto';
+        document.getElementById('preview-message').textContent = message || 'Sin mensaje';
+    }
+
+    // Event listeners para actualización de preview
+    document.getElementById('{{ form.user_filter.id_for_label }}').addEventListener('change', updatePreview);
+    document.getElementById('{{ form.notification_type.id_for_label }}').addEventListener('change', updatePreview);
+    document.getElementById('{{ form.priority.id_for_label }}').addEventListener('change', updatePreview);
+    document.getElementById('{{ form.subject.id_for_label }}').addEventListener('input', updatePreview);
+    document.getElementById('{{ form.message.id_for_label }}').addEventListener('input', updatePreview);
+    document.getElementById('{{ form.scheduled_at.id_for_label }}').addEventListener('change', updatePreview);
+    document.getElementById('{{ form.test_mode.id_for_label }}').addEventListener('change', updatePreview);
+
+    // Contador de usuarios
+    document.getElementById('{{ form.user_filter.id_for_label }}').addEventListener('change', function() {
+        updateUserCount(this.value);
+    });
+
+    function updateUserCount(filterType) {
+        // Simulación - en realidad esto vendría de una API
+        const userCounts = {
+            'all': {{ user_counts.all|default:0 }},
+            'active': {{ user_counts.active|default:0 }},
+            'staff': {{ user_counts.staff|default:0 }},
+            'has_orders': {{ user_counts.has_orders|default:0 }},
+            'new_users': {{ user_counts.new_users|default:0 }},
+            'inactive': {{ user_counts.inactive|default:0 }},
+            'subscribers': {{ user_counts.subscribers|default:0 }}
+        };
+
+        const count = userCounts[filterType] || 0;
+        document.getElementById('userCountNumber').textContent = count;
+        document.getElementById('userCount').style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    // Funciones globales para los botones
+    window.insertVariable = function(variable) {
+        const messageTextarea = document.getElementById('{{ form.message.id_for_label }}');
+        const start = messageTextarea.selectionStart;
+        const end = messageTextarea.selectionEnd;
+        const text = messageTextarea.value;
+        
+        messageTextarea.value = text.substring(0, start) + variable + text.substring(end);
+        messageTextarea.focus();
+        messageTextarea.setSelectionRange(start + variable.length, start + variable.length);
+        updatePreview();
+    };
+
+    window.resetForm = function() {
+        if (confirm('¿Estás seguro de que quieres limpiar el formulario?')) {
+            document.getElementById('bulkNotificationForm').reset();
+            channelOptions.forEach(option => option.classList.remove('selected'));
+            selectedChannels = [];
+            updatePreview();
+        }
+    };
+
+    window.previewMessage = function() {
+        const subject = document.getElementById('{{ form.subject.id_for_label }}').value;
+        const message = document.getElementById('{{ form.message.id_for_label }}').value;
+        
+        if (!subject && !message) {
+            alert('Por favor, ingresa al menos un asunto o mensaje para la vista previa.');
+            return;
+        }
+
+        // Aquí podrías abrir un modal con la vista previa completa
+        const previewWindow = window.open('', 'preview', 'width=600,height=400');
+        previewWindow.document.write(`
+            <html>
+                <head><title>Vista Previa - Notificación</title></head>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2>Vista Previa de Notificación</h2>
+                    <hr>
+                    <p><strong>Asunto:</strong> ${subject}</p>
+                    <p><strong>Mensaje:</strong></p>
+                    <div style="border: 1px solid #ccc; padding: 15px; background: #f9f9f9;">
+                        ${message.replace(/\n/g, '<br>')}
+                    </div>
+                </body>
+            </html>
+        `);
+    };
+
+    // Validación del formulario antes del envío
+    document.getElementById('bulkNotificationForm').addEventListener('submit', function(e) {
+        if (selectedChannels.length === 0) {
+            e.preventDefault();
+            alert('Por favor, selecciona al menos un canal de envío.');
+            return;
+        }
+
+        const subject = document.getElementById('{{ form.subject.id_for_label }}').value;
+        const message = document.getElementById('{{ form.message.id_for_label }}').value;
+
+        if (!subject && !message) {
+            e.preventDefault();
+            alert('Por favor, ingresa al menos un asunto o mensaje.');
+            return;
+        }
+
+        if (!confirm('¿Estás seguro de que quieres enviar estas notificaciones?')) {
+            e.preventDefault();
+        }
+    });
+
+    // Inicializar vista previa
+    updatePreview();
+});
+</script>
+{% endblock %}

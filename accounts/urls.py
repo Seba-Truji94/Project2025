@@ -14,6 +14,10 @@ urlpatterns = [
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('profile/edit/', views.ProfileEditView.as_view(), name='profile_edit'),
     
+    # Notificaciones
+    path('profile/notifications/', views.NotificationPreferencesView.as_view(), name='notification_preferences'),
+    path('admin/notifications/', views.admin_notification_dashboard, name='admin_notifications'),
+    
     # Direcciones
     path('addresses/', views.AddressListView.as_view(), name='address_list'),
     path('addresses/add/', views.AddressCreateView.as_view(), name='address_add'),

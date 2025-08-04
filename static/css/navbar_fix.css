@@ -1,0 +1,143 @@
+/* CORRECCIÓN GLOBAL DEL NAVBAR - NO TAPA CONTENIDO */
+
+/* Asegurar que todos los contenidos principales tengan suficiente espacio */
+.container:first-child,
+.container-fluid:first-child,
+main .container:first-child,
+main .container-fluid:first-child {
+    margin-top: 30px !important;
+}
+
+/* Específicamente para títulos que aparecen al inicio de páginas */
+.page-header,
+.admin-header,
+.form-header,
+.dashboard-header,
+.content-header {
+    padding-top: 40px !important;
+    margin-top: 20px !important;
+}
+
+/* Para formularios que aparecen al inicio */
+.form-container,
+.auth-form,
+.profile-form,
+.ticket-form {
+    margin-top: 40px !important;
+    padding-top: 20px !important;
+}
+
+/* Para dashboards y paneles administrativos */
+.admin-dashboard,
+.management-panel,
+.notification-panel {
+    margin-top: 40px !important;
+    padding-top: 30px !important;
+}
+
+/* Para vistas de lista */
+.list-view,
+.table-container,
+.results-container {
+    margin-top: 30px !important;
+}
+
+/* Para botones de acción que aparecen arriba */
+.action-buttons,
+.page-actions,
+.toolbar {
+    margin-top: 25px !important;
+}
+
+/* Específico para cartas/cards al inicio */
+.card:first-child,
+.card-container:first-child {
+    margin-top: 30px !important;
+}
+
+/* Para alertas y mensajes en la parte superior */
+.alert:first-child,
+.message:first-child {
+    margin-top: 30px !important;
+}
+
+/* Para navegación de breadcrumbs */
+.breadcrumb,
+.nav-breadcrumb {
+    margin-top: 25px !important;
+    padding-top: 10px !important;
+}
+
+/* Específico para el sistema de notificaciones */
+.notifications-admin .navbar,
+.management-admin .navbar {
+    position: fixed !important;
+    top: 0 !important;
+    z-index: 1030 !important;
+}
+
+.notifications-admin main,
+.management-admin main {
+    margin-top: 80px !important;
+    padding-top: 20px !important;
+}
+
+/* Para vistas que extienden base.html */
+body[data-extends-base] .container:first-child {
+    margin-top: 40px !important;
+}
+
+/* Responsive - en móviles el navbar es más alto */
+@media (max-width: 768px) {
+    .container:first-child,
+    .container-fluid:first-child,
+    .page-header,
+    .admin-header,
+    .form-header {
+        margin-top: 60px !important;
+        padding-top: 20px !important;
+    }
+}
+
+/* Específico para cada sección */
+
+/* Soporte */
+.support-header,
+.ticket-header {
+    margin-top: 50px !important;
+    padding-top: 25px !important;
+}
+
+/* Gestión de stock */
+.stock-management .page-title,
+.inventory-header {
+    margin-top: 45px !important;
+    padding-top: 20px !important;
+}
+
+/* Perfil de usuario */
+.profile-header,
+.account-header {
+    margin-top: 40px !important;
+    padding-top: 25px !important;
+}
+
+/* Carrito y checkout */
+.cart-header,
+.checkout-header {
+    margin-top: 35px !important;
+    padding-top: 20px !important;
+}
+
+/* Pedidos */
+.orders-header,
+.order-detail-header {
+    margin-top: 40px !important;
+    padding-top: 20px !important;
+}
+
+/* Fix específico para cuando no hay announcement bar */
+body:not([data-has-announcement]) .container:first-child,
+body:not([data-has-announcement]) .page-header {
+    margin-top: 25px !important;
+}

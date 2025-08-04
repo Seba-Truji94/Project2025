@@ -28,6 +28,8 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <!-- Button Fix CSS -->
     <link rel="stylesheet" href="{% static 'css/button_fix.css' %}">
+    <!-- Navbar Fix CSS - Evita que el navbar tape contenido -->
+    <link rel="stylesheet" href="{% static 'css/navbar_fix.css' %}">>
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -150,6 +152,10 @@
                                             <i class="fas fa-tachometer-alt me-2"></i>
                                             Panel Empresarial
                                         </a></li>
+                                        <li><a class="dropdown-item admin-item bg-gradient-info text-white fw-bold" href="{% url 'notifications_admin:dashboard' %}">
+                                            <i class="fas fa-bell me-2"></i>
+                                            Panel de Notificaciones
+                                        </a></li>
                                         <li><a class="dropdown-item admin-item" href="{% url 'management:stock_management' %}">
                                             <i class="fas fa-boxes me-2"></i>
                                             Control de Stock
@@ -175,6 +181,10 @@
                                         <li><a class="dropdown-item admin-item" href="{% url 'support:admin_management' %}">
                                             <i class="fas fa-headset me-2"></i>
                                             Admin Soporte
+                                        </a></li>
+                                        <li><a class="dropdown-item admin-item" href="{% url 'notifications_admin:templates' %}">
+                                            <i class="fas fa-envelope-open-text me-2"></i>
+                                            Plantillas de Notificaciones
                                         </a></li>
                                         <li><a class="dropdown-item admin-item" href="{% url 'admin:index' %}">
                                             <i class="fas fa-database me-2"></i>
@@ -635,22 +645,26 @@
         
         // Configurar navbar de manera que no tape contenido
         if (navbar) {
+            // Calcular altura total de las barras superiores
+            let topBarsHeight = 0;
+            if (announcementBar) topBarsHeight += announcementBar.offsetHeight;
+            if (financialBar) topBarsHeight += financialBar.offsetHeight;
+            
             // Agregar padding al body para compensar el navbar fijo
-            const navbarHeight = navbar.offsetHeight + 80; // altura navbar + barras
-            body.style.paddingTop = navbarHeight + 'px';
+            const navbarHeight = navbar.offsetHeight;
+            const totalTopHeight = topBarsHeight + navbarHeight + 20; // 20px extra de margen
+            body.style.paddingTop = totalTopHeight + 'px';
             
             // Forzar posición fija permanente
             navbar.style.position = 'fixed';
             navbar.style.zIndex = '1000';
+            navbar.style.width = '100%';
+            navbar.style.left = '0';
             
-            // Configurar posición inicial
-            if (financialBar) {
-                navbar.style.top = '80px'; // announcement (44px) + financial (36px)
-            } else {
-                navbar.style.top = '44px'; // solo announcement
-            }
+            // Configurar posición inicial basada en barras superiores
+            navbar.style.top = topBarsHeight + 'px';
             
-            // Manejar el scroll para efectos visuales (sin mover navbar)
+            // Manejar el scroll para efectos visuales y posicionamiento
             let lastScrollTop = 0;
             let ticking = false;
             
@@ -658,26 +672,33 @@
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 
                 if (scrollTop > 100) {
-                    // Al hacer scroll, solo agregar efectos visuales
+                    // Al hacer scroll, mantener navbar visible pero con efectos
                     navbar.classList.add('scrolled');
                     
-                    // Ocultar announcement bar pero mantener navbar fijo
+                    // Opcional: ocultar announcement bar en scroll
                     if (announcementBar) {
                         announcementBar.style.transform = 'translateY(-100%)';
-                        // Mover navbar hacia arriba cuando se oculta announcement
-                        if (financialBar) {
-                            navbar.style.top = '36px'; // solo financial bar
-                            body.style.paddingTop = (navbar.offsetHeight + 36) + 'px';
-                        } else {
-                            navbar.style.top = '0px'; // sin barras
-                            body.style.paddingTop = navbar.offsetHeight + 'px';
-                        }
+                        // Ajustar posición del navbar cuando se oculta announcement
+                        const newTopBarsHeight = financialBar ? financialBar.offsetHeight : 0;
+                        navbar.style.top = newTopBarsHeight + 'px';
+                        body.style.paddingTop = (newTopBarsHeight + navbarHeight + 20) + 'px';
                     }
                 } else {
-                    // Al volver arriba, mostrar announcement bar
+                    // Al volver arriba, mostrar todo
                     navbar.classList.remove('scrolled');
                     
                     if (announcementBar) {
+                        announcementBar.style.transform = 'translateY(0)';
+                        // Restaurar posición original
+                        const originalTopBarsHeight = (announcementBar.offsetHeight || 0) + (financialBar ? financialBar.offsetHeight : 0);
+                        navbar.style.top = originalTopBarsHeight + 'px';
+                        body.style.paddingTop = (originalTopBarsHeight + navbarHeight + 20) + 'px';
+                    }
+                }
+                
+                lastScrollTop = scrollTop;
+                ticking = false;
+            }
                         announcementBar.style.transform = 'translateY(0)';
                         // Restaurar posición original del navbar
                         if (financialBar) {

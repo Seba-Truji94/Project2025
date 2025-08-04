@@ -1,0 +1,496 @@
+{% extends 'notifications/admin/base.html' %}
+{% load static %}
+
+{% block title %}Crear Plantilla de Notificación{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-header {
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+    
+    .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+    
+    .preview-section {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .channel-indicator {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .channel-email { background: #e3f2fd; color: #1976d2; }
+    .channel-sms { background: #fff3e0; color: #f57c00; }
+    .channel-whatsapp { background: #e8f5e8; color: #388e3c; }
+    .channel-push { background: #fce4ec; color: #c2185b; }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .alert {
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .variable-hint {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .variable-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .variable-tag {
+        background: #007bff;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    
+    .variable-tag:hover {
+        background: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-plus-circle text-primary me-2"></i>
+                Crear Plantilla de Notificación
+            </h1>
+            <p class="text-muted mt-1">Crea una nueva plantilla para notificaciones multi-canal</p>
+        </div>
+        <a href="{% url 'notifications_admin:templates' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Volver
+        </a>
+    </div>
+
+    <!-- Formulario -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <div class="form-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit text-primary me-2"></i>
+                        Información de la Plantilla
+                    </h4>
+                </div>
+
+                <form method="post" id="templateForm">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Por favor corrige los siguientes errores:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field|title }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.name.id_for_label }}">
+                                    <i class="fas fa-tag me-1"></i>
+                                    Nombre de la Plantilla
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.help_text %}
+                                    <div class="help-text">{{ form.name.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.is_active.id_for_label }}">
+                                    <i class="fas fa-toggle-on me-1"></i>
+                                    Estado
+                                </label>
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Plantilla activa
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.notification_type.id_for_label }}">
+                                    <i class="fas fa-bell me-1"></i>
+                                    Tipo de Notificación
+                                </label>
+                                {{ form.notification_type }}
+                                {% if form.notification_type.help_text %}
+                                    <div class="help-text">{{ form.notification_type.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.channel.id_for_label }}">
+                                    <i class="fas fa-broadcast-tower me-1"></i>
+                                    Canal de Comunicación
+                                </label>
+                                {{ form.channel }}
+                                <span id="channelIndicator" class="channel-indicator"></span>
+                                {% if form.channel.help_text %}
+                                    <div class="help-text">{{ form.channel.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.subject.id_for_label }}">
+                            <i class="fas fa-envelope me-1"></i>
+                            Asunto
+                        </label>
+                        {{ form.subject }}
+                        <div class="help-text">Para SMS y WhatsApp, este campo es opcional</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.template_body.id_for_label }}">
+                            <i class="fas fa-file-alt me-1"></i>
+                            Contenido del Mensaje
+                        </label>
+                        {{ form.template_body }}
+                        {% if form.template_body.help_text %}
+                            <div class="help-text">{{ form.template_body.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Variables Disponibles -->
+                    <div class="variable-hint">
+                        <h6><i class="fas fa-info-circle me-1"></i>Variables Disponibles</h6>
+                        <p class="mb-2">Puedes usar estas variables en tu plantilla. Haz clic para insertar:</p>
+                        <div class="variable-list">
+                            <span class="variable-tag" onclick="insertVariable('{{user.first_name}}')">{{user.first_name}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{user.last_name}}')">{{user.last_name}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{user.email}}')">{{user.email}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{order.id}}')">{{order.id}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{order.total}}')">{{order.total}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{product.name}}')">{{product.name}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{date}}')">{{date}}</span>
+                            <span class="variable-tag" onclick="insertVariable('{{time}}')">{{time}}</span>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'notifications_admin:templates' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Cancelar
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="previewTemplate()">
+                                <i class="fas fa-eye me-1"></i>
+                                Vista Previa
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                Guardar Plantilla
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Panel de Vista Previa -->
+        <div class="col-lg-4">
+            <div class="form-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-eye text-info me-2"></i>
+                    Vista Previa
+                </h5>
+                <div id="previewContainer" class="preview-section">
+                    <p class="text-muted text-center mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Completa el formulario para ver una vista previa
+                    </p>
+                </div>
+            </div>
+
+            <!-- Ayuda -->
+            <div class="form-card">
+                <h6 class="text-primary mb-3">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    Consejos
+                </h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        Usa nombres descriptivos para las plantillas
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        Las variables se reemplazan automáticamente
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        Email: HTML permitido
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        SMS: Máximo 160 caracteres
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        WhatsApp: Emojis permitidos
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Actualizar indicador de canal
+    function updateChannelIndicator() {
+        const channel = $('#id_channel').val();
+        const indicator = $('#channelIndicator');
+        
+        indicator.removeClass('channel-email channel-sms channel-whatsapp channel-push');
+        
+        switch(channel) {
+            case 'email':
+                indicator.addClass('channel-email').text('📧 Email');
+                break;
+            case 'sms':
+                indicator.addClass('channel-sms').text('📱 SMS');
+                break;
+            case 'whatsapp':
+                indicator.addClass('channel-whatsapp').text('💬 WhatsApp');
+                break;
+            case 'push':
+                indicator.addClass('channel-push').text('🔔 Push');
+                break;
+            default:
+                indicator.text('');
+        }
+    }
+    
+    // Inicializar y escuchar cambios
+    updateChannelIndicator();
+    $('#id_channel').change(updateChannelIndicator);
+    
+    // Validación en tiempo real
+    $('#templateForm input, #templateForm select, #templateForm textarea').on('input change', function() {
+        validateForm();
+        updatePreview();
+    });
+    
+    function validateForm() {
+        let isValid = true;
+        
+        // Validar nombre
+        const name = $('#id_name').val().trim();
+        if (name.length < 3) {
+            $('#id_name').addClass('is-invalid');
+            isValid = false;
+        } else {
+            $('#id_name').removeClass('is-invalid').addClass('is-valid');
+        }
+        
+        // Validar contenido
+        const content = $('#id_template_body').val().trim();
+        if (content.length < 10) {
+            $('#id_template_body').addClass('is-invalid');
+            isValid = false;
+        } else {
+            $('#id_template_body').removeClass('is-invalid').addClass('is-valid');
+        }
+        
+        return isValid;
+    }
+    
+    function updatePreview() {
+        const name = $('#id_name').val();
+        const subject = $('#id_subject').val();
+        const content = $('#id_template_body').val();
+        const channel = $('#id_channel').val();
+        
+        if (!name || !content) {
+            $('#previewContainer').html(`
+                <p class="text-muted text-center mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Completa el formulario para ver una vista previa
+                </p>
+            `);
+            return;
+        }
+        
+        let preview = '';
+        
+        if (channel === 'email' && subject) {
+            preview += `<div class="mb-2"><strong>Asunto:</strong> ${subject}</div>`;
+        }
+        
+        preview += `<div><strong>Contenido:</strong></div>`;
+        preview += `<div class="mt-2 p-2 border rounded" style="background: #f8f9fa;">${content.replace(/\n/g, '<br>')}</div>`;
+        
+        $('#previewContainer').html(preview);
+    }
+});
+
+// Función para insertar variables
+function insertVariable(variable) {
+    const textarea = document.getElementById('id_template_body');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    
+    textarea.value = text.substring(0, start) + variable + text.substring(end);
+    textarea.focus();
+    textarea.setSelectionRange(start + variable.length, start + variable.length);
+    
+    // Trigger change event
+    $(textarea).trigger('input');
+}
+
+// Vista previa modal
+function previewTemplate() {
+    const name = $('#id_name').val();
+    const subject = $('#id_subject').val();
+    const content = $('#id_template_body').val();
+    const channel = $('#id_channel').val();
+    
+    if (!name || !content) {
+        alert('Por favor completa los campos obligatorios');
+        return;
+    }
+    
+    // Aquí podrías abrir un modal con la vista previa
+    const previewWindow = window.open('', '_blank', 'width=600,height=400');
+    previewWindow.document.write(`
+        <html>
+            <head>
+                <title>Vista Previa - ${name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .header { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+                    .content { line-height: 1.6; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h3>${name}</h3>
+                    <p><strong>Canal:</strong> ${channel}</p>
+                    ${subject ? `<p><strong>Asunto:</strong> ${subject}</p>` : ''}
+                </div>
+                <div class="content">
+                    ${content.replace(/\n/g, '<br>')}
+                </div>
+            </body>
+        </html>
+    `);
+}
+</script>
+{% endblock %}
