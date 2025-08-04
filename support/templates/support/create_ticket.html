@@ -2,6 +2,43 @@
 
 {% block title %}Crear Ticket de Soporte - Galletas Kati{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Corrección para que el navbar no tape el contenido */
+    .container {
+        padding-top: 2rem !important;
+    }
+    
+    /* Asegurar que los títulos sean visibles */
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 1rem !important;
+        padding-top: 0.5rem;
+    }
+    
+    /* Mejorar visibilidad del formulario */
+    .card {
+        margin-top: 1rem !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .card-header h4 {
+        margin-top: 0 !important;
+        padding-top: 0;
+    }
+    
+    /* Responsive fix para móviles */
+    @media (max-width: 768px) {
+        .container {
+            padding-top: 3rem !important;
+        }
+        
+        .card-header h4 {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">

@@ -669,6 +669,22 @@
         setupMovementTypes();
         setupProductSearch();
         
+        // Preseleccionar producto si se pasa en la URL
+        {% if preselected_product %}
+        const productSelect = document.getElementById('id_product');
+        if (productSelect) {
+            productSelect.value = '{{ preselected_product.id }}';
+            loadProductData('{{ preselected_product.id }}');
+            updatePreview();
+            
+            // Mostrar mensaje informativo
+            const productMessage = document.createElement('div');
+            productMessage.className = 'alert alert-info mt-2';
+            productMessage.innerHTML = '<i class="fas fa-info-circle"></i> Producto preseleccionado: <strong>{{ preselected_product.name }}</strong>';
+            productSelect.parentNode.appendChild(productMessage);
+        }
+        {% endif %}
+        
         // Event listeners para actualizar vista previa
         document.getElementById('id_quantity').addEventListener('input', updatePreview);
         document.getElementById('id_reason').addEventListener('input', updatePreview);

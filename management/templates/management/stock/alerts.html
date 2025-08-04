@@ -340,6 +340,50 @@
         font-weight: bold;
         color: #5a5c69;
     }
+    
+    /* Animaciones para auto-refresh */
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .auto-refresh-notification {
+        animation: slideInRight 0.5s ease;
+    }
+    
+    /* Indicador de carga en tiempo real */
+    .refresh-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #4e73df;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
@@ -575,13 +619,25 @@
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = `/management/purchase-orders/create/?product=${productId}`;
+                // Por ahora redirigir a proveedores para gestionar órdenes manualmente
+                Swal.fire({
+                    title: 'Funcionalidad en Desarrollo',
+                    text: 'El sistema de órdenes de compra automáticas está en desarrollo. Por ahora puedes gestionar el reabastecimiento desde Proveedores.',
+                    icon: 'info',
+                    confirmButtonText: 'Ir a Proveedores',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancelar'
+                }).then((providerResult) => {
+                    if (providerResult.isConfirmed) {
+                        window.location.href = `/management/proveedores/`;
+                    }
+                });
             }
         });
     }
     
     function editStock(productId) {
-        window.location.href = `/management/stock/movement/?product=${productId}`;
+        window.location.href = `/management/stock/movimiento/?product=${productId}`;
     }
     
     function viewHistory(productId) {
@@ -673,9 +729,11 @@
     }
     
     function refreshAlerts() {
+        console.log('🔄 Actualizando alertas de stock...');
+        
         Swal.fire({
             title: 'Actualizando alertas...',
-            text: 'Verificando niveles de stock',
+            text: 'Verificando niveles de stock en tiempo real',
             icon: 'info',
             allowOutsideClick: false,
             showConfirmButton: false,
@@ -684,13 +742,347 @@
             }
         });
         
-        setTimeout(() => {
-            location.reload();
-        }, 2000);
+        // Obtener los filtros actuales
+        const currentParams = new URLSearchParams(window.location.search);
+        const alertType = currentParams.get('alert_type') || '';
+        const category = currentParams.get('category') || '';
+        const priority = currentParams.get('priority') || '';
+        
+        // Construir URL de la API con filtros
+        let apiUrl = '{% url "management:stock_alerts_api" %}';
+        const params = new URLSearchParams();
+        if (alertType) params.append('alert_type', alertType);
+        if (category) params.append('category', category);
+        if (priority) params.append('priority', priority);
+        
+        if (params.toString()) {
+            apiUrl += '?' + params.toString();
+        }
+        
+        // Llamada AJAX
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('✅ Datos de alertas actualizados:', data);
+            
+            if (data.success) {
+                // Actualizar estadísticas
+                updateStatistics(data.data.statistics);
+                
+                // Actualizar lista de alertas
+                updateAlertsDisplay(data.data.alerts);
+                
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                    title: '¡Alertas actualizadas!',
+                    text: `Se encontraron ${data.data.statistics.total_alerts} alertas activas`,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                // Actualizar timestamp
+                updateLastRefreshTime();
+                
+            } else {
+                throw new Error('Error en la respuesta del servidor');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al actualizar alertas:', error);
+            Swal.fire({
+                title: 'Error al actualizar',
+                text: `No se pudieron actualizar las alertas: ${error.message}`,
+                icon: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        });
+    }
+    
+    // Función para actualizar las estadísticas en tiempo real
+    function updateStatistics(stats) {
+        const criticalCard = document.querySelector('.summary-critical .summary-number');
+        const lowCard = document.querySelector('.summary-low .summary-number');
+        const outCard = document.querySelector('.summary-out .summary-number');
+        const totalCard = document.querySelector('.summary-total .summary-number');
+        
+        if (criticalCard) {
+            animateNumber(criticalCard, parseInt(criticalCard.textContent) || 0, stats.critical_alerts);
+        }
+        if (lowCard) {
+            animateNumber(lowCard, parseInt(lowCard.textContent) || 0, stats.low_stock_alerts);
+        }
+        if (outCard) {
+            animateNumber(outCard, parseInt(outCard.textContent) || 0, stats.out_of_stock);
+        }
+        if (totalCard) {
+            animateNumber(totalCard, parseInt(totalCard.textContent) || 0, stats.total_alerts);
+        }
+    }
+    
+    // Función para animar el cambio de números
+    function animateNumber(element, from, to) {
+        const duration = 800;
+        const steps = 20;
+        const stepValue = (to - from) / steps;
+        let current = from;
+        let step = 0;
+        
+        const timer = setInterval(() => {
+            step++;
+            current += stepValue;
+            
+            if (step >= steps) {
+                current = to;
+                clearInterval(timer);
+            }
+            
+            element.textContent = Math.round(current);
+        }, duration / steps);
+    }
+    
+    // Función para actualizar la visualización de alertas
+    function updateAlertsDisplay(alerts) {
+        const alertsContainer = document.querySelector('.alerts-container');
+        const existingAlertsSection = alertsContainer.querySelector('h5');
+        
+        // Limpiar alertas existentes (mantener el header)
+        const alertItems = alertsContainer.querySelectorAll('.alert-item');
+        alertItems.forEach(item => item.remove());
+        
+        if (alerts.length === 0) {
+            // Mostrar estado vacío
+            const emptyState = `
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h4>¡Excelente! No hay alertas de stock</h4>
+                    <p>Todos los productos tienen niveles de stock adecuados.</p>
+                    <button class="btn btn-primary mt-3" onclick="refreshAlerts()">
+                        <i class="fas fa-sync-alt"></i> Verificar Nuevamente
+                    </button>
+                </div>
+            `;
+            alertsContainer.insertAdjacentHTML('beforeend', emptyState);
+        } else {
+            // Actualizar el header
+            if (existingAlertsSection) {
+                existingAlertsSection.innerHTML = `<i class="fas fa-bell"></i> Alertas Activas (${alerts.length})`;
+            }
+            
+            // Añadir nuevas alertas
+            alerts.forEach((alert, index) => {
+                const alertHtml = createAlertHTML(alert);
+                alertsContainer.insertAdjacentHTML('beforeend', alertHtml);
+                
+                // Animación de entrada
+                const newAlert = alertsContainer.lastElementChild;
+                newAlert.style.opacity = '0';
+                newAlert.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    newAlert.style.transition = 'all 0.5s ease';
+                    newAlert.style.opacity = '1';
+                    newAlert.style.transform = 'translateX(0)';
+                }, index * 100);
+            });
+        }
+    }
+    
+    // Función para crear HTML de una alerta
+    function createAlertHTML(alert) {
+        const typeIcons = {
+            'critical': 'fas fa-exclamation-triangle',
+            'low': 'fas fa-exclamation-circle',
+            'out': 'fas fa-times-circle'
+        };
+        
+        const typeLabels = {
+            'critical': 'Crítico',
+            'low': 'Stock Bajo',
+            'out': 'Sin Stock'
+        };
+        
+        const imageHtml = alert.image_url 
+            ? `<img src="${alert.image_url}" alt="${alert.name}" class="product-image">`
+            : `<div class="product-placeholder"><i class="fas fa-box"></i></div>`;
+        
+        return `
+            <div class="alert-item alert-${alert.type} position-relative">
+                <div class="priority-indicator priority-${alert.priority}"></div>
+                
+                <div class="alert-header">
+                    <div class="alert-product">
+                        ${imageHtml}
+                        <div class="product-info">
+                            <h5>${alert.name}</h5>
+                            <p>
+                                SKU: ${alert.sku} | 
+                                Categoría: ${alert.category}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="alert-badge badge-${alert.type}">
+                        <i class="${typeIcons[alert.type]}"></i> ${typeLabels[alert.type]}
+                    </div>
+                </div>
+                
+                <div class="alert-details">
+                    <div class="detail-item">
+                        <div class="detail-number">${alert.current_stock}</div>
+                        <div class="detail-label">Stock Actual</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-number">${alert.minimum_stock}</div>
+                        <div class="detail-label">Stock Mínimo</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-number">${alert.recommended_order}</div>
+                        <div class="detail-label">Orden Sugerida</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-number">${alert.days_out}</div>
+                        <div class="detail-label">Días Agotado</div>
+                    </div>
+                </div>
+                
+                <div class="alert-actions">
+                    <button class="action-btn btn-restock" onclick="createRestockOrder(${alert.id})">
+                        <i class="fas fa-plus"></i> Reabastecer
+                    </button>
+                    <button class="action-btn btn-edit" onclick="editStock(${alert.id})">
+                        <i class="fas fa-edit"></i> Ajustar Stock
+                    </button>
+                    <button class="action-btn btn-history" onclick="viewHistory(${alert.id})">
+                        <i class="fas fa-history"></i> Historial
+                    </button>
+                    <button class="action-btn btn-supplier" onclick="contactSupplier(${alert.id})">
+                        <i class="fas fa-phone"></i> Contactar Proveedor
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Función para actualizar el timestamp de última actualización
+    function updateLastRefreshTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('es-ES');
+        
+        // Crear o actualizar indicador de última actualización
+        let lastUpdateIndicator = document.querySelector('.last-update-indicator');
+        if (!lastUpdateIndicator) {
+            const header = document.querySelector('.d-sm-flex.align-items-center');
+            lastUpdateIndicator = document.createElement('small');
+            lastUpdateIndicator.className = 'last-update-indicator text-muted';
+            lastUpdateIndicator.style.position = 'absolute';
+            lastUpdateIndicator.style.top = '100%';
+            lastUpdateIndicator.style.left = '0';
+            lastUpdateIndicator.style.fontSize = '0.8em';
+            header.style.position = 'relative';
+            header.appendChild(lastUpdateIndicator);
+        }
+        
+        lastUpdateIndicator.innerHTML = `
+            <i class="fas fa-clock"></i> Última actualización: ${timeString}
+        `;
+    }
+    
+    // Variables globales para auto-refresh
+    let refreshInterval;
+    
+    // Función para iniciar auto-refresh
+    function startAutoRefresh() {
+        // Limpiar intervalo existente si existe
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+        
+        // Configurar nuevo intervalo
+        refreshInterval = setInterval(() => {
+            console.log('🔄 Auto-refresh: Actualizando alertas de stock...');
+            refreshAlerts();
+        }, 30000); // 30 segundos
+        
+        console.log('✅ Auto-refresh activado cada 30 segundos');
+    }
+    
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+            console.log('⏹️ Auto-refresh desactivado');
+        }
+    }
+    
+    // Función para configurar el auto-refresh basado en el número de alertas
+    function configureAutoRefresh() {
+        const totalAlerts = document.querySelector('.summary-total .summary-number');
+        const alertCount = totalAlerts ? parseInt(totalAlerts.textContent) : 0;
+        
+        if (alertCount > 0) {
+            startAutoRefresh();
+            
+            // Mostrar notificación de auto-refresh activo
+            const notification = document.createElement('div');
+            notification.className = 'auto-refresh-notification';
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 10px 15px;
+                border-radius: 8px;
+                font-size: 0.9em;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideInRight 0.5s ease;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-sync-alt fa-spin"></i>
+                Actualización automática activa (30s)
+                <button onclick="this.parentElement.remove(); stopAutoRefresh();" 
+                        style="background: none; border: none; color: white; margin-left: 10px; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Remover notificación anterior si existe
+            const existingNotification = document.querySelector('.auto-refresh-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.style.animation = 'slideOutRight 0.5s ease';
+                    setTimeout(() => notification.remove(), 500);
+                }
+            }, 5000);
+        } else {
+            stopAutoRefresh();
+        }
     }
     
     // Inicialización
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Inicializando alertas de stock en tiempo real...');
+        
         // Animaciones de entrada para las alertas
         const alertItems = document.querySelectorAll('.alert-item');
         alertItems.forEach((item, index) => {
@@ -716,11 +1108,13 @@
             });
         });
         
-        // Auto-refresh cada 5 minutos
-        setInterval(() => {
-            console.log('Auto-refreshing stock alerts...');
-            // Aquí se podría implementar una actualización automática via AJAX
-        }, 300000); // 5 minutos
+        // Configurar auto-refresh basado en alertas existentes
+        configureAutoRefresh();
+        
+        // Actualizar tiempo inicial
+        updateLastRefreshTime();
+        
+        console.log('✅ Sistema de alertas en tiempo real inicializado');
     });
 </script>
 {% endblock %}

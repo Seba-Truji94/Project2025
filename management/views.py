@@ -400,6 +400,30 @@ class StockMovementCreateView(SuperuserRequiredMixin, CreateView):
     fields = ['product', 'movement_type', 'quantity', 'reason', 'reference']
     success_url = reverse_lazy('management:stock_management')
     
+    def get_initial(self):
+        """Preseleccionar producto si se pasa en la URL"""
+        initial = super().get_initial()
+        product_id = self.request.GET.get('product')
+        if product_id:
+            try:
+                product = Product.objects.get(id=product_id)
+                initial['product'] = product
+            except Product.DoesNotExist:
+                pass
+        return initial
+    
+    def get_context_data(self, **kwargs):
+        """Agregar contexto adicional"""
+        context = super().get_context_data(**kwargs)
+        product_id = self.request.GET.get('product')
+        if product_id:
+            try:
+                product = Product.objects.get(id=product_id)
+                context['preselected_product'] = product
+            except Product.DoesNotExist:
+                pass
+        return context
+    
     def form_valid(self, form):
         messages.success(self.request, 'Movimiento de stock registrado exitosamente.')
         return super().form_valid(form)
@@ -441,13 +465,194 @@ class StockAlertsView(SuperuserRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Filtros desde la URL
+        alert_type = self.request.GET.get('alert_type', '')
+        category_id = self.request.GET.get('category', '')
+        priority = self.request.GET.get('priority', '')
+        
+        # Productos base con stock
+        products = Product.objects.filter(available=True).select_related('category')
+        
+        # Aplicar filtro por categoría si existe
+        if category_id:
+            products = products.filter(category_id=category_id)
+        
+        # Obtener productos críticos, con stock bajo y sin stock
+        critical_stock = products.filter(stock__lte=5, stock__gt=0)
+        low_stock = products.filter(stock__lte=20, stock__gt=5)
+        out_of_stock = products.filter(stock=0)
+        
+        # Crear lista de alertas con información detallada
+        alerts = []
+        
+        # Alertas críticas (stock ≤ 5)
+        for product in critical_stock:
+            alerts.append({
+                'product': product,
+                'type': 'critical',
+                'priority': 'high' if product.stock <= 2 else 'medium',
+                'current_stock': product.stock,
+                'minimum_stock': 5,
+                'recommended_order': max(50, product.stock * 10),
+                'days_out': 0,
+            })
+        
+        # Alertas de stock bajo (stock ≤ 20)
+        for product in low_stock:
+            alerts.append({
+                'product': product,
+                'type': 'low',
+                'priority': 'medium' if product.stock <= 10 else 'low',
+                'current_stock': product.stock,
+                'minimum_stock': 20,
+                'recommended_order': max(30, product.stock * 5),
+                'days_out': 0,
+            })
+        
+        # Alertas sin stock
+        for product in out_of_stock:
+            alerts.append({
+                'product': product,
+                'type': 'out',
+                'priority': 'high',
+                'current_stock': 0,
+                'minimum_stock': 20,
+                'recommended_order': 100,
+                'days_out': 1,  # Esto se podría calcular basado en la última venta
+            })
+        
+        # Aplicar filtros adicionales
+        if alert_type:
+            alerts = [alert for alert in alerts if alert['type'] == alert_type]
+        
+        if priority:
+            alerts = [alert for alert in alerts if alert['priority'] == priority]
+        
+        # Ordenar por prioridad y luego por stock
+        priority_order = {'high': 0, 'medium': 1, 'low': 2}
+        alerts.sort(key=lambda x: (priority_order[x['priority']], x['current_stock']))
+        
+        # Estadísticas
+        critical_alerts = len([a for a in alerts if a['type'] == 'critical'])
+        low_stock_alerts = len([a for a in alerts if a['type'] == 'low'])
+        out_of_stock_alerts = len([a for a in alerts if a['type'] == 'out'])
+        
         context.update({
-            'critical_stock': Product.objects.filter(stock__lte=5),
-            'low_stock': Product.objects.filter(stock__lte=10, stock__gt=5),
-            'out_of_stock': Product.objects.filter(stock=0),
+            'alerts': alerts,
+            'critical_alerts': critical_alerts,
+            'low_stock_alerts': low_stock_alerts,
+            'out_of_stock': out_of_stock_alerts,
+            'total_alerts': len(alerts),
+            'categories': Category.objects.all(),
         })
         
         return context
+
+
+class StockAlertsAPIView(SuperuserRequiredMixin, View):
+    """API para obtener alertas de stock en tiempo real"""
+    
+    def get(self, request, *args, **kwargs):
+        # Filtros desde la URL
+        alert_type = request.GET.get('alert_type', '')
+        category_id = request.GET.get('category', '')
+        priority = request.GET.get('priority', '')
+        
+        # Productos base con stock
+        products = Product.objects.filter(available=True).select_related('category')
+        
+        # Aplicar filtro por categoría si existe
+        if category_id:
+            products = products.filter(category_id=category_id)
+        
+        # Obtener productos críticos, con stock bajo y sin stock
+        critical_stock = products.filter(stock__lte=5, stock__gt=0)
+        low_stock = products.filter(stock__lte=20, stock__gt=5)
+        out_of_stock = products.filter(stock=0)
+        
+        # Crear lista de alertas con información detallada
+        alerts = []
+        
+        # Alertas críticas (stock ≤ 5)
+        for product in critical_stock:
+            alerts.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': f'PRD-{product.id:04d}',  # Crear SKU basado en ID
+                'category': product.category.name if product.category else 'Sin categoría',
+                'image_url': product.image.url if product.image else None,
+                'type': 'critical',
+                'priority': 'high' if product.stock <= 2 else 'medium',
+                'current_stock': product.stock,
+                'minimum_stock': 5,
+                'recommended_order': max(50, product.stock * 10),
+                'days_out': 0,
+                'last_updated': timezone.now().isoformat(),
+            })
+        
+        # Alertas de stock bajo (stock ≤ 20)
+        for product in low_stock:
+            alerts.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': f'PRD-{product.id:04d}',  # Crear SKU basado en ID
+                'category': product.category.name if product.category else 'Sin categoría',
+                'image_url': product.image.url if product.image else None,
+                'type': 'low',
+                'priority': 'medium' if product.stock <= 10 else 'low',
+                'current_stock': product.stock,
+                'minimum_stock': 20,
+                'recommended_order': max(30, product.stock * 5),
+                'days_out': 0,
+                'last_updated': timezone.now().isoformat(),
+            })
+        
+        # Alertas sin stock
+        for product in out_of_stock:
+            alerts.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': f'PRD-{product.id:04d}',  # Crear SKU basado en ID
+                'category': product.category.name if product.category else 'Sin categoría',
+                'image_url': product.image.url if product.image else None,
+                'type': 'out',
+                'priority': 'high',
+                'current_stock': 0,
+                'minimum_stock': 20,
+                'recommended_order': 100,
+                'days_out': 1,
+                'last_updated': timezone.now().isoformat(),
+            })
+        
+        # Aplicar filtros adicionales
+        if alert_type:
+            alerts = [alert for alert in alerts if alert['type'] == alert_type]
+        
+        if priority:
+            alerts = [alert for alert in alerts if alert['priority'] == priority]
+        
+        # Ordenar por prioridad y luego por stock
+        priority_order = {'high': 0, 'medium': 1, 'low': 2}
+        alerts.sort(key=lambda x: (priority_order[x['priority']], x['current_stock']))
+        
+        # Estadísticas
+        critical_alerts = len([a for a in alerts if a['type'] == 'critical'])
+        low_stock_alerts = len([a for a in alerts if a['type'] == 'low'])
+        out_of_stock_alerts = len([a for a in alerts if a['type'] == 'out'])
+        
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'alerts': alerts,
+                'statistics': {
+                    'critical_alerts': critical_alerts,
+                    'low_stock_alerts': low_stock_alerts,
+                    'out_of_stock': out_of_stock_alerts,
+                    'total_alerts': len(alerts),
+                },
+                'last_updated': timezone.now().isoformat(),
+            }
+        })
 
 
 # ===== RELACIONES PRODUCTO-PROVEEDOR =====
@@ -678,3 +883,54 @@ class StockMovementDetailView(SuperuserRequiredMixin, View):
                 'success': False,
                 'error': str(e)
             }, status=500)
+
+
+class StockHistoryView(SuperuserRequiredMixin, TemplateView):
+    """Vista para mostrar el historial de movimientos de stock de un producto"""
+    template_name = 'management/stock/history.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        product_id = kwargs.get('product_id')
+        
+        try:
+            # Obtener el producto
+            product = get_object_or_404(Product, id=product_id)
+            context['product'] = product
+            
+            # Obtener historial de movimientos
+            movements = ProductStock.objects.filter(
+                product=product
+            ).select_related('user').order_by('-created_at')
+            
+            context['movements'] = movements
+            
+            # Estadísticas del historial
+            context['stats'] = {
+                'total_movements': movements.count(),
+                'total_inbound': movements.filter(movement_type='entry').aggregate(
+                    total=Sum('quantity')
+                )['total'] or 0,
+                'total_outbound': movements.filter(movement_type='exit').aggregate(
+                    total=Sum('quantity')  
+                )['total'] or 0,
+                'total_adjustments': movements.filter(movement_type='adjustment').count(),
+                'current_stock': product.stock,
+                'minimum_stock': product.minimum_stock if hasattr(product, 'minimum_stock') else 0,
+            }
+            
+            # Calcular valor total del inventario histórico
+            if hasattr(product, 'price'):
+                context['stats']['current_value'] = product.stock * product.price
+            
+            # Obtener categoría del producto
+            if product.category:
+                context['category'] = product.category
+                
+        except Product.DoesNotExist:
+            context['error'] = 'Producto no encontrado'
+            context['product'] = None
+            context['movements'] = []
+            context['stats'] = {}
+            
+        return context

@@ -11,7 +11,6 @@ urlpatterns = [
     # Panel principal de gestión
     path('', views.ManagementDashboardView.as_view(), name='dashboard'),
     path('api/statistics/', views.APIStatisticsView.as_view(), name='api_statistics'),
-    path('stock/alertas/', views.StockAlertsView.as_view(), name='stock_alerts'),
     
     # Gestión de impuestos
     path('impuestos/', views.TaxManagementView.as_view(), name='tax_management'),
@@ -40,6 +39,8 @@ urlpatterns = [
     path('stock/movimiento/', views.StockMovementCreateView.as_view(), name='stock_movement_create'),
     path('stock/reporte/', views.StockReportView.as_view(), name='stock_report'),
     path('stock/alertas/', views.StockAlertsView.as_view(), name='stock_alerts'),
+    path('stock/alertas/api/', views.StockAlertsAPIView.as_view(), name='stock_alerts_api'),
+    path('stock/history/<int:product_id>/', views.StockHistoryView.as_view(), name='stock_history'),
     path('stock/movimiento/<int:movement_id>/', views.StockMovementDetailView.as_view(), name='stock_movement_detail'),
     
     # Relaciones producto-proveedor

@@ -625,8 +625,20 @@
         const announcementBar = document.querySelector('.announcement-bar');
         const financialBar = document.querySelector('.financial-info-bar');
         
-        // Asegurar que el navbar siempre esté fijo
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbar = document.querySelector('.navbar');
+        const searchBtn = document.querySelector('.search-btn');
+        const searchForm = document.getElementById('searchForm');
+        const body = document.body;
+        const announcementBar = document.querySelector('.announcement-bar');
+        const financialBar = document.querySelector('.financial-info-bar');
+        
+        // Configurar navbar de manera que no tape contenido
         if (navbar) {
+            // Agregar padding al body para compensar el navbar fijo
+            const navbarHeight = navbar.offsetHeight + 80; // altura navbar + barras
+            body.style.paddingTop = navbarHeight + 'px';
+            
             // Forzar posición fija permanente
             navbar.style.position = 'fixed';
             navbar.style.zIndex = '1000';
@@ -655,8 +667,10 @@
                         // Mover navbar hacia arriba cuando se oculta announcement
                         if (financialBar) {
                             navbar.style.top = '36px'; // solo financial bar
+                            body.style.paddingTop = (navbar.offsetHeight + 36) + 'px';
                         } else {
                             navbar.style.top = '0px'; // sin barras
+                            body.style.paddingTop = navbar.offsetHeight + 'px';
                         }
                     }
                 } else {
@@ -668,8 +682,10 @@
                         // Restaurar posición original del navbar
                         if (financialBar) {
                             navbar.style.top = '80px';
+                            body.style.paddingTop = (navbar.offsetHeight + 80) + 'px';
                         } else {
                             navbar.style.top = '44px';
+                            body.style.paddingTop = (navbar.offsetHeight + 44) + 'px';
                         }
                     }
                 }
